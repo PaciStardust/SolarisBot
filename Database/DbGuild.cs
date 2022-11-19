@@ -32,7 +32,7 @@ namespace SolarisBot.Database
         /// <returns></returns>
         internal static IReadOnlyList<DbGuild> Get(string conditions, params SqliteParameter[] parameters)
         {
-            var selector = DbMain.Get("SELECT * FROM guildSettings WHERE " + conditions, false, parameters);
+            var selector = DbMain.Get("SELECT * FROM guilds WHERE " + conditions, false, parameters);
 
             if (selector == null || !selector.HasRows)
             {
@@ -58,7 +58,7 @@ namespace SolarisBot.Database
                 catch (Exception ex)
                 {
                     Logger.Warning(ex.GetType().Name, ex.Message);
-                    if (DbMain.Run($"DELETE FROM guildSettings WHERE id = {selector.GetValue(0)}") < 1)
+                    if (DbMain.Run($"DELETE FROM guilds WHERE id = {selector.GetValue(0)}") < 1)
                         Logger.Warning("Invalid guildSetting in DB could not be removed");
                 }
             }
@@ -87,7 +87,7 @@ namespace SolarisBot.Database
         /// <param name="silent">Logged as error on fail</param>
         /// <returns></returns>
         internal static bool SetOne(string changeName, object? changeValue, ulong id, bool silent = true)
-            => DbMain.SetOne("guildSettings", changeName, changeValue, "id", id, silent);
+            => DbMain.SetOne("guilds", changeName, changeValue, "id", id, silent);
 
         /// <summary>
         /// Updates or creates an entry
@@ -111,7 +111,7 @@ namespace SolarisBot.Database
             //We add the id later so it doesnt cause issues
             parameters.Add(new("ID", Id));
 
-            var query = new StringBuilder ("INSERT INTO guildSettings (");
+            var query = new StringBuilder ("INSERT INTO guilds (");
             query.Append(string.Join(", ", paramNames));
             query.Append(") VALUES (");
             query.Append(string.Join(", ", parameters.Select(x => $"@{x.ParameterName}")));

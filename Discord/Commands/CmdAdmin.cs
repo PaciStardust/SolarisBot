@@ -105,7 +105,7 @@ namespace SolarisBot.Discord.Commands
                 new("ID", Context.Guild.Id),
             };
 
-            if (DbMain.Run("UPDATE guildSettings SET renaming = @RENAMING where id = @ID", true, parameters) < 1)
+            if (DbMain.Run("UPDATE guilds SET renaming = @RENAMING where id = @ID", true, parameters) < 1)
             {
                 var guild = new DbGuild()
                 {
@@ -142,7 +142,7 @@ namespace SolarisBot.Discord.Commands
                 new("ID", Context.Guild.Id)
             };
 
-            if (DbMain.Run("UPDATE guildSettings SET magicrole = @MAGICROLE, magictimeout = @MAGICTIMEOUT, magicrename = @MAGICRENAME, magiclast = 0 where id = @ID", true, parameter) < 1)
+            if (DbMain.Run("UPDATE guilds SET magicrole = @MAGICROLE, magictimeout = @MAGICTIMEOUT, magicrename = @MAGICRENAME, magiclast = 0 where id = @ID", true, parameter) < 1)
             {
                 var guild = new DbGuild()
                 {

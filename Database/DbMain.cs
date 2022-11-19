@@ -168,7 +168,7 @@ namespace SolarisBot.Database
         #region DB Upgrade 
         private static readonly Func<int>[] _upgradeFunctions = 
         {
-            new(() => Run("CREATE TABLE guildSettings (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)) //0
+            new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)) //0
         };
 
         private static bool UpgradeDatabase()
