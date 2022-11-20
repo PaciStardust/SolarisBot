@@ -207,10 +207,14 @@ namespace SolarisBot.Database
                 }
                 else
                     Logger.Info("Updated database to version " + i);
-            }
 
-            if (!SetValue("version", newVer.ToString()))
-                Logger.Warning("Updated database but unable to save new version");
+                if (!SetValue("version", newVer.ToString()))
+                {
+                    Logger.Warning("Updated database but unable to save new version");
+                    return false;
+                }
+                    
+            }
 
             return true;
         }
