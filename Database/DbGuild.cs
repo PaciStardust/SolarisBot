@@ -16,6 +16,8 @@ namespace SolarisBot.Database
         internal readonly bool MagicRename { get; init; } = false;
         internal readonly ushort MagicTimeout { get; init; } = 1800;
         internal readonly ulong MagicLast { get; init; } = 0;
+        internal readonly ulong? VouchRole { get; init; } = null;
+        internal readonly bool VouchUser { get; init; } = false;
 
         internal DbGuild(ulong id)
         {
@@ -52,7 +54,9 @@ namespace SolarisBot.Database
                         MagicRole = selector.IsDBNull(2) ? null : Convert.ToUInt64(selector.GetValue(2)),
                         MagicRename = selector.GetBoolean(3),
                         MagicTimeout = Convert.ToUInt16(selector.GetValue(4)),
-                        MagicLast = Convert.ToUInt64(selector.GetValue(5))
+                        MagicLast = Convert.ToUInt64(selector.GetValue(5)),
+                        VouchRole = selector.IsDBNull(6) ? null : Convert.ToUInt64(selector.GetValue(6)),
+                        VouchUser = selector.GetBoolean(7)
                     });
                 }
                 catch (Exception ex)
@@ -102,9 +106,12 @@ namespace SolarisBot.Database
                 new("MAGICLAST", MagicLast),
                 new("MAGICTIMEOUT", MagicTimeout),
                 new("MAGICRENAME", MagicRename),
+                new("VOUCHUSER", VouchUser)
             };
             if (MagicRole != null)
                 parameters.Add(new("MAGICROLE", MagicRole));
+            if (VouchRole != null)
+                parameters.Add(new("VOUCHROLE", VouchRole));
 
             var paramNames = parameters.Select(x => x.ParameterName);
 

@@ -4,6 +4,7 @@ using SolarisBot.Database;
 using SolarisBot.Discord;
 using Microsoft.Data.Sqlite;
 using System.Runtime.InteropServices;
+using System.Reflection.Metadata;
 
 namespace SolarisBot.Discord.Commands
 {
@@ -90,8 +91,8 @@ namespace SolarisBot.Discord.Commands
             await RespondAsync(embed: infoEmbed.Build());
         }
 
-        [SlashCommand("renaming-enable", "Allow renaming on \"I am\" messages, off by default")]
-        public async Task RenamingEnable(bool enabled)
+        [SlashCommand("config-renaming", "Allow renaming on \"I am\" messages, off by default")]
+        public async Task ConfigRenaming(bool enabled)
         {
             if (Context.Guild == null)
             {
@@ -120,11 +121,12 @@ namespace SolarisBot.Discord.Commands
                 }
             }
 
+            Logger.Log($"Renaming has been {(enabled ? "enabled" : "disabled")} in {Context.Guild.Id}");
             await RespondAsync(embed: Embeds.Info("Renaming", "Renaming has been " + (enabled ? "enabled" : "disabled")));
         }
 
-        [SlashCommand("magic-configure", "[ADMIN ONLY] Configures the magic role")]
-        public async Task MagicSet(IRole? role = null, ushort timeout = 1800, bool rename = false)
+        [SlashCommand("config-magic", "[ADMIN ONLY] Configures the magic role")]
+        public async Task ConfigMagic(IRole? role = null, ushort timeout = 1800, bool rename = false)
         {
             if (Context.Guild == null)
             {
@@ -159,7 +161,46 @@ namespace SolarisBot.Discord.Commands
                 }
             }
 
+            Logger.Log($"Magic has been configured ({DbMain.SummarizeSqlParameters(parameter)})");
             await RespondAsync(embed: Embeds.Info("Magic", "Magic has been configured"));
+        }
+
+        [SlashCommand("config-vouch", "[ADMIN ONLY] Configures the vouch command")]
+        public async Task ConfigVouch(IRole? role = null, bool uservouch = false)
+        {
+            if (Context.Guild == null)
+            {
+                await ReplyAsync(embed: Embeds.GuildOnly);
+                return;
+            }
+
+            var roleId = role?.Id;
+
+            var parameter = new SqliteParameter[]
+            {
+                new("VOUCHROLE", roleId),
+                new("VOUCHUSER", uservouch),
+                new("ID", Context.Guild.Id)
+            };
+
+            if (DbMain.Run("UPDATE guilds SET vouchrole = @VOUCHROLE, vouchuser = @VOUCHUSER, magiclast = 0 where id = @ID", true, parameter) < 1)
+            {
+                var guild = new DbGuild()
+                {
+                    Id = Context.Guild.Id,
+                    VouchRole = roleId,
+                    VouchUser = uservouch
+                };
+
+                if (!guild.Create())
+                {
+                    await RespondAsync(embed: Embeds.DbFailure);
+                    return;
+                }
+            }
+
+            Logger.Log($"Vouch has been configured ({DbMain.SummarizeSqlParameters(parameter)})");
+            await RespondAsync(embed: Embeds.Info("Vouch", "Vouch has been configured"));
         }
     }
 }

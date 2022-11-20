@@ -95,7 +95,46 @@ namespace SolarisBot.Discord.Commands
                     await RespondAsync(embed: Embeds.DbFailure);
                     return;
                 }
+
+                Logger.Log($"Magic has been used in {Context.Guild.Id}");
                 await RespondAsync(embed: Embeds.Info("Magic", "Something has been changed" + (guild.MagicRename ? $", smells like {role.Name}" : ""), color));
+            }
+            catch (Exception ex)
+            {
+                await RespondAsync(embed: Embeds.Error(ex));
+            }
+        }
+
+        [SlashCommand("vouch", "Vouch for a user")]
+        public async Task MagicUse(IUser user)
+        {
+            if (user is not IGuildUser gUser)
+            {
+                await RespondAsync(embed: Embeds.GuildOnly);
+                return;
+            }
+
+            var guild = DbGuild.GetOne(Context.Guild.Id) ?? DbGuild.Default;
+            if (guild.VouchRole == null)
+            {
+                await RespondAsync(embed: Embeds.Info("Vouch", "Vouching has not been set up in this guild"));
+                return;
+            }
+            else if (!guild.VouchUser && !gUser.GuildPermissions.Administrator)
+            {
+                await RespondAsync(embed: Embeds.Info("Vouch", "You do not have permission to vouch"));
+                return;
+            }
+            else if (gUser.RoleIds.Contains(guild.VouchRole.Value))
+            {
+                await RespondAsync(embed: Embeds.Info("Vouch", "You cannot vouch for someone who already has been vouched for"));
+                return;
+            }
+
+            try
+            {
+                await gUser.AddRoleAsync(guild.VouchRole.Value);
+                await RespondAsync(embed: Embeds.Info("Vouch", $"You have vouched for {gUser.Mention}"));
             }
             catch (Exception ex)
             {

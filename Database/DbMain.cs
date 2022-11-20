@@ -53,7 +53,7 @@ namespace SolarisBot.Database
             var command = new SqliteCommand(query, _connection);
             command.Parameters.AddRange(parameters);
 
-            var parameterString = string.Join(", ", parameters.Select(x => $"{x.ParameterName}={x.Value}"));
+            var parameterString = SummarizeSqlParameters(parameters);
             try
             {
                 var lines = command.ExecuteNonQuery();
@@ -85,7 +85,7 @@ namespace SolarisBot.Database
             var command = new SqliteCommand(query, _connection);
             command.Parameters.AddRange(parameters);
 
-            var parameterString = string.Join(", ", parameters.Select(x => $"{x.ParameterName}={x.Value}"));
+            var parameterString = SummarizeSqlParameters(parameters);
             try
             {
                 var reader = command.ExecuteReader();
@@ -168,7 +168,8 @@ namespace SolarisBot.Database
         #region DB Upgrade 
         private static readonly Func<int>[] _upgradeFunctions = 
         {
-            new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)) //0
+            /*0*/   new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)),
+            /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0"))
         };
 
         private static bool UpgradeDatabase()
@@ -193,17 +194,17 @@ namespace SolarisBot.Database
 
             for (int i = versionNumber + 1; i <= newVer; i++)
             {
-                if (_upgradeFunctions[i].Invoke() == -1)
+                if (_upgradeFunctions[i].Invoke() < 1)
                 {
                     Logger.Info("Failed to update database to version " + i);
                     return false;
                 }
                 else
                     Logger.Info("Updated database to version " + i);
-
-                if (!SetValue("version", newVer.ToString()))
-                    Logger.Warning("Updated database but unable to save new version");
             }
+
+            if (!SetValue("version", newVer.ToString()))
+                Logger.Warning("Updated database but unable to save new version");
 
             return true;
         }
@@ -217,6 +218,9 @@ namespace SolarisBot.Database
         private static readonly Regex _validator = new("[a-zA-Z0-9_]+");
         internal static bool Sanitized(string input)
             => _validator.IsMatch(input);
+
+        internal static string SummarizeSqlParameters(params SqliteParameter[] parameters)
+            => string.Join(", ", parameters.Select(x => $"{x.ParameterName}={x.Value}"));
 
         private static readonly string _letters = "aeiouybcdfghjklmnpqrstvwxz";
         /// <summary>
