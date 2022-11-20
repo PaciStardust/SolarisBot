@@ -74,9 +74,34 @@ namespace SolarisBot.Discord.Commands
 
             await RespondAsync(embed: Embeds.Info("Executed SQL-GET", $"```{embedText}```", Embeds.ColorImportant));
         }
-
+        
         [SlashCommand("sql-metrics", "[OWNER-ONLY] Gets amount of run SQL queries")]
         public async Task SqlMetrics()
-            => await RespondAsync(embed: Embeds.Info("SQL-Metrics", $"```Get: {DbMain.ExecutedGet}x\nRun: {DbMain.ExecutedRun}x\nTot: {DbMain.ExecutedRun + DbMain.ExecutedGet}x```"));
+        {
+            int[] values = { DbMain.ExecutedRun, DbMain.FailedRun, DbMain.ExecutedGet, DbMain.FailedGet };
+
+            var runSum = values[0] + values[1];
+            var getSum = values[2] + values[3];
+
+            string[] metrics = 
+            {
+                "RUN Queries:",
+                "> Exec: " + values[0],
+                "> Fail: " + values[1],
+                "> Sum : " + runSum,
+                "",
+                "GET Queries:",
+                "> Exec: " + values[2],
+                "> Fail: " + values[3],
+                "> Sum : " + getSum,
+                "",
+                "RUN + GET sum:",
+                "> Exec: " + (values[0] + values[2]),
+                "> Fail: " + (values[1] + values[3]),
+                "> Sum : " + (runSum + getSum)
+            };
+
+            await RespondAsync(embed: Embeds.Info("SQL-Metrics", $"```{string.Join("\n", metrics)}```"));
+        }
     }
 }

@@ -11,8 +11,11 @@ namespace SolarisBot.Database
     {
         private static readonly SqliteConnection? _connection;
 
+        // Statistics for runtime checkups
         internal static int ExecutedRun { get; private set; } = 0;
         internal static int ExecutedGet { get; private set; } = 0;
+        internal static int FailedRun { get; private set; } = 0;
+        internal static int FailedGet { get; private set; } = 0;
 
         static DbMain()
         {
@@ -68,6 +71,7 @@ namespace SolarisBot.Database
             catch (Exception e)
             {
                 Logger.Error($"Encountered a {e.GetType().FullName} perfoming RUN Query \"{command.CommandText}\" ({parameterString}): {e.Message}", silent);
+                FailedRun++;
                 return -1;
             }
         }
@@ -101,6 +105,7 @@ namespace SolarisBot.Database
             catch (Exception e)
             {
                 Logger.Error($"Encountered a {e.GetType().FullName} perfoming GET Query \"{command.CommandText}\" ({parameterString}): {e.Message}", silent);
+                FailedGet++;
                 return null;
             }
         }
@@ -177,7 +182,10 @@ namespace SolarisBot.Database
             /*0*/   new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)),
             /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0"))
         };
-
+        /// <summary>
+        /// Runs through entirety of upgradeFunctions to update database
+        /// </summary>
+        /// <returns>Success?</returns>
         private static bool UpgradeDatabase()
         {
             //Making sure uniques table exists
@@ -222,13 +230,27 @@ namespace SolarisBot.Database
 
         #region Utils
         internal static Random Random => new();
+        /// <summary>
+        /// Gets current Unix as ULong
+        /// </summary>
+        /// <returns>Current Uunix Timestamp (seconds)</returns>
         internal static ulong GetCurrentUnix()
             => Convert.ToUInt64(Math.Max(0, DateTimeOffset.Now.ToUnixTimeSeconds()));
 
         private static readonly Regex _validator = new("[a-zA-Z0-9_]+");
+        /// <summary>
+        /// Validator for table and field names
+        /// </summary>
+        /// <param name="input">String to validate</param>
+        /// <returns>Is string a valid table or field name?</returns>
         internal static bool Sanitized(string input)
             => _validator.IsMatch(input);
 
+        /// <summary>
+        /// Summarizes all SQL Parameters into a single string
+        /// </summary>
+        /// <param name="parameters">SQL Parameters</param>
+        /// <returns>Summary string</returns>
         internal static string SummarizeSqlParameters(params SqliteParameter[] parameters)
             => string.Join(", ", parameters.Select(x => $"{x.ParameterName}={x.Value}"));
 
