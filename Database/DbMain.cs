@@ -10,6 +10,10 @@ namespace SolarisBot.Database
     internal static class DbMain
     {
         private static readonly SqliteConnection? _connection;
+
+        internal static int ExecutedRun { get; private set; } = 0;
+        internal static int ExecutedGet { get; private set; } = 0;
+
         static DbMain()
         {
             try
@@ -58,6 +62,7 @@ namespace SolarisBot.Database
             {
                 var lines = command.ExecuteNonQuery();
                 Logger.Debug($"Performed RUN Query \"{command.CommandText}\" ({parameterString}) ({lines} changes)");
+                ExecutedRun++;
                 return lines;
             }
             catch (Exception e)
@@ -90,6 +95,7 @@ namespace SolarisBot.Database
             {
                 var reader = command.ExecuteReader();
                 Logger.Debug($"Performed GET Query \"{command.CommandText}\" ({parameterString})");
+                ExecutedGet++;
                 return reader;
             }
             catch (Exception e)

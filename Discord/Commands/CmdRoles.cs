@@ -108,7 +108,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("vouch", "Vouch for a user")]
         public async Task MagicUse(IUser user)
         {
-            if (user is not IGuildUser gUser)
+            if (user is not IGuildUser gUser || Context.User is not IGuildUser vUser)
             {
                 await RespondAsync(embed: Embeds.GuildOnly);
                 return;
@@ -120,7 +120,7 @@ namespace SolarisBot.Discord.Commands
                 await RespondAsync(embed: Embeds.Info("Vouch", "Vouching has not been set up in this guild"));
                 return;
             }
-            else if (!guild.VouchUser && !gUser.GuildPermissions.Administrator)
+            else if (!(vUser.RoleIds.Contains(guild.VouchRole.Value) && guild.VouchUser) && !gUser.GuildPermissions.Administrator)
             {
                 await RespondAsync(embed: Embeds.Info("Vouch", "You do not have permission to vouch"));
                 return;
