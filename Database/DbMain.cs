@@ -180,7 +180,8 @@ namespace SolarisBot.Database
         private static readonly Func<int>[] _upgradeFunctions = 
         {
             /*0*/   new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)),
-            /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0"))
+            /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0")),
+            /*2*/   new(() => Run("CREATE TABLE quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL DEFAULT 'Unnamed Quote', quote TEXT NOT NULL DEFAULT '', authorid INT NOT NULL DEFAULT 0 CHECK(authorid > 0), authorname TEXT NOT NULL DEFAULT 'Unknown', time INT NOT NULL DEFAULT 0 CHECK(time > 0))"))
         };
         /// <summary>
         /// Runs through entirety of upgradeFunctions to update database
@@ -208,9 +209,9 @@ namespace SolarisBot.Database
 
             for (int i = versionNumber + 1; i <= newVer; i++)
             {
-                if (_upgradeFunctions[i].Invoke() < 1)
+                if (_upgradeFunctions[i].Invoke() == -1)
                 {
-                    Logger.Info("Failed to update database to version " + i);
+                    Logger.Error("Failed to update database to version " + i);
                     return false;
                 }
                 else
@@ -218,7 +219,7 @@ namespace SolarisBot.Database
 
                 if (!SetValue("version", newVer.ToString()))
                 {
-                    Logger.Warning("Updated database but unable to save new version");
+                    Logger.Error("Updated database but unable to save new version");
                     return false;
                 }
                     

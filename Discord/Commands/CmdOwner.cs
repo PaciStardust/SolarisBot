@@ -101,7 +101,7 @@ namespace SolarisBot.Discord.Commands
                 "> Sum : " + (runSum + getSum)
             };
 
-            await RespondAsync(embed: Embeds.Info("SQL-Metrics", $"```{string.Join("\n", metrics)}```"));
+            await RespondAsync(embed: Embeds.Info("SQL-Metrics", $"```{string.Join("\n", metrics)}```", Embeds.ColorImportant));
         }
     }
 }

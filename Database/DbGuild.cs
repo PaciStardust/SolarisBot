@@ -89,15 +89,15 @@ namespace SolarisBot.Database
         /// <param name="changeValue">Value</param>
         /// <param name="id">Guild ID</param>
         /// <param name="silent">Logged as error on fail</param>
-        /// <returns></returns>
+        /// <returns>Success?</returns>
         internal static bool SetOne(string changeName, object? changeValue, ulong id, bool silent = true)
             => DbMain.SetOne("guilds", changeName, changeValue, "id", id, silent);
 
         /// <summary>
-        /// Updates or creates an entry
+        /// Creates an entry
         /// </summary>
         /// <param name="direct"></param>
-        /// <returns></returns>
+        /// <returns>Success?</returns>
         internal bool Create()
         {
             var parameters = new List<SqliteParameter>
