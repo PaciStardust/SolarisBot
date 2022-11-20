@@ -77,6 +77,6 @@ namespace SolarisBot.Discord.Commands
 
         [SlashCommand("sql-metrics", "[OWNER-ONLY] Gets amount of run SQL queries")]
         public async Task SqlMetrics()
-            => await RespondAsync(embed: Embeds.Info("SQL-Metrics", $"```Get: {DbMain.ExecutedGet}x\nRun: {DbMain.ExecutedRun}\nTot: {DbMain.ExecutedRun + DbMain.ExecutedGet}```"));
+            => await RespondAsync(embed: Embeds.Info("SQL-Metrics", $"```Get: {DbMain.ExecutedGet}x\nRun: {DbMain.ExecutedRun}x\nTot: {DbMain.ExecutedRun + DbMain.ExecutedGet}x```"));
     }
 }
