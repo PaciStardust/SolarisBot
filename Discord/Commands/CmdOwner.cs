@@ -60,7 +60,11 @@ namespace SolarisBot.Discord.Commands
                 {
                     var name = result.GetName(i);
                     var value = result.IsDBNull(i) ? "*NULL*" : result.GetValue(i).ToString() ?? "*UNKNOWN*";
-                    values.Add($"{name} = {value}");
+
+                    if (result.GetFieldType(i) == typeof(string))
+                        values.Add($"{name} = '{value}'");
+                    else
+                        values.Add($"{name} = {value}");
                 }
                 strings.Add($"Result {resCount}:\n{string.Join("\n", values)}");
                 resCount++;

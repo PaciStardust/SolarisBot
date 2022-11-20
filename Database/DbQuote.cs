@@ -10,11 +10,12 @@ namespace SolarisBot.Database
     internal readonly struct DbQuote
     {
         internal readonly ulong Id { get; init; } = 0;
-        internal readonly string Title { get; init; } = "Unnamed Quote";
         internal readonly string Quote { get; init; } = string.Empty;
         internal readonly ulong AuthorId { get; init; } = 0;
         internal readonly string AuthorName { get; init; } = "Unknown";
         internal readonly ulong Time { get; init; } = 0;
+        internal readonly ulong CreatorId { get; init; } = 0;
+        internal readonly ulong MessageId { get; init; } = 0;
 
         internal DbQuote(ulong id)
         {
@@ -47,11 +48,12 @@ namespace SolarisBot.Database
                     quotes.Add(new()
                     {
                         Id = Convert.ToUInt64(selector.GetValue(0)),
-                        Title = selector.GetString(1),
-                        Quote = selector.GetString(2),
-                        AuthorId = Convert.ToUInt64(selector.GetValue(3)),
-                        AuthorName = selector.GetString(4),
-                        Time = Convert.ToUInt64(selector.GetValue(5))
+                        Quote = selector.GetString(1),
+                        AuthorId = Convert.ToUInt64(selector.GetValue(2)),
+                        AuthorName = selector.GetString(3),
+                        Time = Convert.ToUInt64(selector.GetValue(4)),
+                        CreatorId = Convert.ToUInt64(selector.GetValue(5)),
+                        MessageId = Convert.ToUInt64(selector.GetValue(6))
                     });
                 }
                 catch (Exception ex)
@@ -86,11 +88,12 @@ namespace SolarisBot.Database
         {
             var parameters = new List<SqliteParameter>
             {
-                new("TITLE", Title),
                 new("QUOTE", Quote),
                 new("AUTHORID", AuthorId),
                 new("AUTHORNAME", AuthorName),
-                new("TIME", Time)
+                new("TIME", Time),
+                new("CREATORID", CreatorId),
+                new("MESSAGEID", MessageId)
             };
 
             var paramNames = parameters.Select(x => x.ParameterName);
@@ -110,5 +113,7 @@ namespace SolarisBot.Database
             return true;
         }
         #endregion
+
+        //todo: to embed function
     }
 }

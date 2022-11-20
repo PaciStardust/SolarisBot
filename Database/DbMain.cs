@@ -179,9 +179,9 @@ namespace SolarisBot.Database
         #region DB Upgrade 
         private static readonly Func<int>[] _upgradeFunctions = 
         {
-            /*0*/   new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)),
-            /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0")),
-            /*2*/   new(() => Run("CREATE TABLE quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL DEFAULT 'Unnamed Quote', quote TEXT NOT NULL DEFAULT '', authorid INT NOT NULL DEFAULT 0 CHECK(authorid > 0), authorname TEXT NOT NULL DEFAULT 'Unknown', time INT NOT NULL DEFAULT 0 CHECK(time > 0))"))
+            /*0*/   new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)), //Creation of guilds
+            /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0")), //Adding vouchrole and vouchuser to guilds
+            /*2*/   new(() => Run("CREATE TABLE quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL DEFAULT '', authorid INT NOT NULL DEFAULT 0 CHECK(authorid > 0), authorname TEXT NOT NULL DEFAULT 'Unknown', time INT NOT NULL DEFAULT 0 CHECK(time > 0), creatorid INT CHECK(creatorid >= 0), messageid INT CHECK(messageid >= 0))")) //Creation of quotes
         };
         /// <summary>
         /// Runs through entirety of upgradeFunctions to update database
@@ -236,7 +236,25 @@ namespace SolarisBot.Database
         /// </summary>
         /// <returns>Current Uunix Timestamp (seconds)</returns>
         internal static ulong GetCurrentUnix()
-            => Convert.ToUInt64(Math.Max(0, DateTimeOffset.Now.ToUnixTimeSeconds()));
+            => LongToUlong(DateTimeOffset.Now.ToUnixTimeSeconds());
+
+        /// <summary>
+        /// Converts a long value to a ulong value
+        /// </summary>
+        /// <param name="value">Long to convert</param>
+        /// <returns>ulong value or 0, if parsing fails</returns>
+        internal static ulong LongToUlong(long value)
+        {
+            try
+            {
+                return Convert.ToUInt64(value);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                return 0;
+            }
+        }
 
         private static readonly Regex _validator = new("[a-zA-Z0-9_]+");
         /// <summary>
