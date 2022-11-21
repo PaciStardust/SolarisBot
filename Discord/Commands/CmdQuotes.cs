@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Microsoft.Data.Sqlite;
 using SolarisBot.Database;
 using System;
 using System.Collections.Generic;
@@ -65,7 +66,7 @@ namespace SolarisBot.Discord.Commands
         {
             if (Context.Guild == null)
             {
-                await RespondAsync(embed: Embeds.NoResult);
+                await RespondAsync(embed: Embeds.GuildOnly);
                 return;
             }
 
@@ -75,11 +76,75 @@ namespace SolarisBot.Discord.Commands
             var quote = DbQuote.Get(query + " ORDER BY RANDOM() LIMIT 1");
             if (quote.Count == 0)
             {
-                await RespondAsync(embed: Embeds.DbFailure);
+                await RespondAsync(embed: Embeds.NoResult);
                 return;
             }
 
             await RespondWithQuoteAsync(quote[0]);
+        }
+
+        [SlashCommand("id", "Displays a quote with id")]
+        public async Task Id(ulong id)
+        {
+            if (Context.Guild == null)
+            {
+                await RespondAsync(embed: Embeds.GuildOnly);
+                return;
+            }
+
+            var quote = DbQuote.GetOne(id);
+            if (quote == null)
+            {
+                await RespondAsync(embed: Embeds.NoResult);
+                return;
+            }
+
+            await RespondWithQuoteAsync(quote.Value);
+        }
+
+        [SlashCommand("search", "Search for a quote")]
+        public async Task Search(IUser? author = null, IUser? creator = null, ulong? guild = null, string? content = null, uint offset = 0, bool direct = true)
+        {
+            if (Context.Guild == null)
+            {
+                await RespondAsync(embed: Embeds.GuildOnly);
+                return;
+            }
+
+            var queryParts = new List<string>();
+            var sqlParts = new List<SqliteParameter>();
+
+            if (author != null)
+                queryParts.Add("authorid = " + author.Id);
+            if (creator != null)
+                queryParts.Add("creatorid = " + creator.Id);
+            if (guild != null)
+                queryParts.Add("guildid = " + guild);
+            if (content != null)
+            {
+                content = $"%{content.ToLower()}%";
+                queryParts.Add("LOWER(quote) LIKE @QUOTE");
+                sqlParts.Add(new("QUOTE", content));
+            }
+
+            var query = (queryParts.Count > 0 ? string.Join(" AND ", queryParts) : "1 = 1") + $" LIMIT {(direct ? 1 : 10)} OFFSET {offset}";
+
+            var result = DbQuote.Get(query, sqlParts.ToArray());
+
+            if (result.Count == 0)
+            {
+                await RespondAsync(embed: Embeds.NoResult);
+                return;
+            }
+            
+            if (direct)
+            {
+                await RespondWithQuoteAsync(result[0]);
+                return;
+            }
+
+            var quoteStrings = result.Select(x => $"Nr.{x.Id} from {x.AuthorName}\n> {(x.Quote.Length > 50 ? x.Quote[..50] : x.Quote)}");
+            await RespondAsync(embed: Embeds.Info("Quote search results", $"```{string.Join("\n\n", quoteStrings)}```"));
         }
 
         /// <summary>
@@ -88,7 +153,7 @@ namespace SolarisBot.Discord.Commands
         /// <param name="quote">Quote to reply with</param>
         private async Task RespondWithQuoteAsync(DbQuote quote) //todo: date
         {
-            var title = new StringBuilder("Quote from ");
+            var title = new StringBuilder($"Quote Nr.{quote.Id} from ");
             if (Config.Command.TagQuoteIfPossible)
             {
                 var gUser = await Context.Guild.GetUserAsync(quote.AuthorId);
@@ -100,9 +165,7 @@ namespace SolarisBot.Discord.Commands
             else
                 title.Append(quote.AuthorName);
 
-            title.Append($" *(Nr.{quote.Id})*");
-
-            await RespondAsync(embed: Embeds.Info(title.ToString(), "> " + quote.Quote));
+            await RespondAsync(embed: Embeds.Info(title.ToString(), quote.Quote));
         }
     }
 }
