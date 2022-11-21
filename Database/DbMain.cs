@@ -272,7 +272,7 @@ namespace SolarisBot.Database
         /// <returns>Summary string</returns>
         internal static string SummarizeSqlParameters(params SqliteParameter[] parameters)
             => parameters.Length > 0
-                ? string.Join(", ", parameters.Select(x => $"{x.ParameterName}={x.Value}"))
+                ? string.Join(", ", parameters.Select(x => $"{x.ParameterName}={(x.Value.GetType() == typeof(string) ? $"'{x.Value}'" : x.Value)}"))
                 : "Parameterless";
 
         private static readonly string _letters = "aeiouybcdfghjklmnpqrstvwxz";

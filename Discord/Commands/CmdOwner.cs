@@ -30,7 +30,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("sql-run", "[OWNER ONLY] Run an SQL-RUN query")]
         public async Task SqlRun(string query)
         {
-            Logger.Info($"A RUN query has been called manually \"{query}\"");
+            Logger.Warning($"A RUN query has been called manually \"{query}\"");
             var result = DbMain.Run(query, false);
 
             var embedText = $"{query}\n\n" + (result == -1 ? "Database encountered an error, please check logs for more details"
@@ -42,7 +42,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("sql-get", "[OWNER ONLY] Run an SQL-GET query")]
         public async Task SqlGet(string query)
         {
-            Logger.Warning($"A GET query has been called manually \"{query}\"");
+            Logger.Info($"A GET query has been called manually \"{query}\"");
             var result = DbMain.Get(query, false);
 
             if (result == null)
