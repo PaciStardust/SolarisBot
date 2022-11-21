@@ -32,7 +32,6 @@ namespace SolarisBot.Discord
             await _client.StartAsync();
         }
 
-        private static readonly Regex _amVerification = new(@"\b(?:am|i'?m) +(.+)$");
         private static async Task MessageReceivedAsync(SocketMessage arg)
         {
             await CheckForAutoRename(arg);
@@ -60,6 +59,12 @@ namespace SolarisBot.Discord
             await _services.GetRequiredService<InteractionService>().RegisterCommandsGloballyAsync(true);
         }
 
+        internal static async Task ChangeStatus(string status)
+        {
+            var game = new Game(status);
+            await _client.SetActivityAsync(game);
+        }
+
         /// <summary>
         /// Logger proxy
         /// </summary>
@@ -79,6 +84,7 @@ namespace SolarisBot.Discord
             .BuildServiceProvider();
 
         #region Extras
+        private static readonly Regex _amVerification = new(@"\b(?:am|i'?m) +(.+)$", RegexOptions.IgnoreCase);
         private static async Task CheckForAutoRename(SocketMessage arg)
         {
             if (arg is not IUserMessage message || arg.Author is not IGuildUser gUser || gUser.IsBot || gUser.IsWebhook)

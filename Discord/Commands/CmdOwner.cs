@@ -107,5 +107,12 @@ namespace SolarisBot.Discord.Commands
 
             await RespondAsync(embed: Embeds.Info("SQL-Metrics", $"```{string.Join("\n", metrics)}```", Embeds.ColorImportant));
         }
+
+        [SlashCommand("status", "Set the bots status")]
+        public async Task Status(string status)
+        {
+            await DiscordClient.ChangeStatus(status);
+            await RespondAsync(embed: Embeds.Info("Status changed", $"Bot status has been changed to \"{status}\""));
+        }
     }
 }
