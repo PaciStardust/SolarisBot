@@ -35,7 +35,7 @@ namespace SolarisBot.Discord.Commands
                 await RespondAsync(embed: Embeds.Info("Duplicate quote", "You cannot quote the same message twice"));
                 return;
             }
-            else if (message.Content.Length > 1000)
+            else if (message.CleanContent.Length > 1000)
             {
                 await RespondAsync(embed: Embeds.Info("Quote too long", "You cannot quote a message longer than 1000 characters"));
                 return;
@@ -43,7 +43,7 @@ namespace SolarisBot.Discord.Commands
 
             var quote = new DbQuote()
             {
-                Quote = message.Content,
+                Quote = message.CleanContent,
                 AuthorId = message.Author.Id,
                 AuthorName = message.Author.Username,
                 Time = DbMain.LongToUlong(message.Timestamp.ToUnixTimeMilliseconds()),
@@ -58,7 +58,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            await RespondAsync(embed: Embeds.Info($"Quote from {message.Author.Mention}", message.Content));
+            await RespondAsync(embed: Embeds.Info($"Quote from {message.Author.Mention}", message.CleanContent));
         }
 
         [SlashCommand("random", "Displays a random quote")]

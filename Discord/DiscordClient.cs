@@ -90,7 +90,7 @@ namespace SolarisBot.Discord
             if (arg is not IUserMessage message || arg.Author is not IGuildUser gUser || gUser.IsBot || gUser.IsWebhook)
                 return;
 
-            var match = _amVerification.Match(arg.Content);
+            var match = _amVerification.Match(arg.CleanContent);
             if (!match.Success)
                 return;
 
