@@ -58,7 +58,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            await RespondAsync(embed: Embeds.Info($"Quote from {message.Author.Mention}", "> " + message.Content));
+            await RespondAsync(embed: Embeds.Info($"Quote from {message.Author.Mention}", message.Content));
         }
 
         [SlashCommand("random", "Displays a random quote")]
@@ -103,7 +103,7 @@ namespace SolarisBot.Discord.Commands
         }
 
         [SlashCommand("search", "Search for a quote")]
-        public async Task Search(IUser? author = null, IUser? creator = null, ulong? guild = null, string? content = null, uint offset = 0, bool direct = true)
+        public async Task Search(IUser? author = null, IUser? creator = null, ulong? guild = null, string? content = null, uint offset = 0, DisplayMode dMode = DisplayMode.Random)
         {
             if (Context.Guild == null)
             {
@@ -127,7 +127,13 @@ namespace SolarisBot.Discord.Commands
                 sqlParts.Add(new("QUOTE", content));
             }
 
-            var query = (queryParts.Count > 0 ? string.Join(" AND ", queryParts) : "1 = 1") + $" LIMIT {(direct ? 1 : 10)} OFFSET {offset}";
+            var query = (queryParts.Count > 0 ? string.Join(" AND ", queryParts) : "1 = 1") + dMode switch
+            {
+                DisplayMode.First => " LIMIT 1",
+                DisplayMode.TopTen => " LIMIT 10",
+                DisplayMode.Random => " ORDER BY RANDOM() LIMIT 1",
+                _ => " LIMIT 1"
+            } + " OFFSET " + offset;
 
             var result = DbQuote.Get(query, sqlParts.ToArray());
 
@@ -137,7 +143,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
             
-            if (direct)
+            if (dMode != DisplayMode.TopTen)
             {
                 await RespondWithQuoteAsync(result[0]);
                 return;
@@ -145,6 +151,13 @@ namespace SolarisBot.Discord.Commands
 
             var quoteStrings = result.Select(x => $"Nr.{x.Id} from {x.AuthorName}\n> {(x.Quote.Length > 50 ? x.Quote[..50] : x.Quote)}");
             await RespondAsync(embed: Embeds.Info("Quote search results", $"```{string.Join("\n\n", quoteStrings)}```"));
+        }
+
+        public enum DisplayMode
+        {
+            First,
+            TopTen,
+            Random
         }
 
         [SlashCommand("delete", "Delete a quote")]
