@@ -147,6 +147,38 @@ namespace SolarisBot.Discord.Commands
             await RespondAsync(embed: Embeds.Info("Quote search results", $"```{string.Join("\n\n", quoteStrings)}```"));
         }
 
+        [SlashCommand("delete", "Delete a quote")]
+        public async Task Delete(ulong id)
+        {
+            if (Context.Guild == null)
+            {
+                await RespondAsync(embed: Embeds.GuildOnly);
+                return;
+            }
+
+            var quote = DbQuote.GetOne(id);
+
+            if (quote == null)
+            {
+                await RespondAsync(embed: Embeds.NoResult);
+                return;
+            }
+
+            if (quote.Value.AuthorId != Context.User.Id && quote.Value.CreatorId != Context.User.Id)
+            {
+                await RespondAsync(embed: Embeds.Info("Quote deletion denied", "You are not the author or creator of this quote"));
+                return;
+            }
+
+            if (DbMain.Run("DELETE FROM quotes WHERE id = " + id) < 1)
+            {
+                await RespondAsync(embed: Embeds.DbFailure);
+                return;
+            }
+
+            await RespondAsync(embed: Embeds.Info("Quote deleted", $"Quote Nr.{id} has been deleted"));
+        }
+
         /// <summary>
         /// Responds with a quote as an embed
         /// </summary>
