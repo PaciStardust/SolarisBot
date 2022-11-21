@@ -181,7 +181,7 @@ namespace SolarisBot.Database
         {
             /*0*/   new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)), //Creation of guilds
             /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0")), //Adding vouchrole and vouchuser to guilds
-            /*2*/   new(() => Run("CREATE TABLE quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL DEFAULT '', authorid INT NOT NULL DEFAULT 0 CHECK(authorid > 0), authorname TEXT NOT NULL DEFAULT 'Unknown', time INT NOT NULL DEFAULT 0 CHECK(time > 0), creatorid INT CHECK(creatorid >= 0), messageid INT CHECK(messageid >= 0))")) //Creation of quotes
+            /*2*/   new(() => Run("CREATE TABLE quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL DEFAULT '', authorid INT NOT NULL DEFAULT 0 CHECK(authorid > 0), authorname TEXT NOT NULL DEFAULT 'Unknown', time INT NOT NULL DEFAULT 0 CHECK(time > 0), creatorid INT NOT NULL DEFAULT 0 CHECK(creatorid >= 0), messageid INT NOT NULL DEFAULT 0 CHECK(messageid >= 0), guildid INT NOT NULL DEFAULT 0 CHECK(guildid >= 0))")) //Creation of quotes
         };
         /// <summary>
         /// Runs through entirety of upgradeFunctions to update database
@@ -271,7 +271,9 @@ namespace SolarisBot.Database
         /// <param name="parameters">SQL Parameters</param>
         /// <returns>Summary string</returns>
         internal static string SummarizeSqlParameters(params SqliteParameter[] parameters)
-            => string.Join(", ", parameters.Select(x => $"{x.ParameterName}={x.Value}"));
+            => parameters.Length > 0
+                ? string.Join(", ", parameters.Select(x => $"{x.ParameterName}={x.Value}"))
+                : "Parameterless";
 
         private static readonly string _letters = "aeiouybcdfghjklmnpqrstvwxz";
         /// <summary>

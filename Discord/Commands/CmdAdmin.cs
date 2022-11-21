@@ -122,7 +122,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             Logger.Log($"Renaming has been {(enabled ? "enabled" : "disabled")} in {Context.Guild.Id}");
-            await RespondAsync(embed: Embeds.Info("Renaming", "Renaming has been " + (enabled ? "enabled" : "disabled")));
+            await RespondAsync(embed: Embeds.Info("Renaming configured", "Renaming has been " + (enabled ? "enabled" : "disabled")));
         }
 
         [SlashCommand("config-magic", "[ADMIN ONLY] Configures the magic role")]
@@ -162,7 +162,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             Logger.Log($"Magic has been configured ({DbMain.SummarizeSqlParameters(parameter)})");
-            await RespondAsync(embed: Embeds.Info("Magic", "Magic has been configured"));
+            await RespondAsync(embed: Embeds.Info("Magic configured", "Magic has been configured"));
         }
 
         [SlashCommand("config-vouch", "[ADMIN ONLY] Configures the vouch command")]
@@ -200,7 +200,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             Logger.Log($"Vouch has been configured ({DbMain.SummarizeSqlParameters(parameter)})");
-            await RespondAsync(embed: Embeds.Info("Vouch", "Vouch has been configured"));
+            await RespondAsync(embed: Embeds.Info("Vouch configured", "Vouch has been configured"));
         }
     }
 }

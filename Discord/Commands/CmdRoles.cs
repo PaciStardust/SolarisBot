@@ -26,7 +26,7 @@ namespace SolarisBot.Discord.Commands
 
             if (guild.MagicRole == null)
             {
-                await RespondAsync(embed: Embeds.Info("Magic","No Magic has been set for this guild"));
+                await RespondAsync(embed: Embeds.Info("Magic disabled","No Magic has been set for this guild"));
                 return;
             }
 
@@ -38,13 +38,13 @@ namespace SolarisBot.Discord.Commands
                     if (role == guild.MagicRole)
                     {
                         await gUser.RemoveRoleAsync(guild.MagicRole.Value);
-                        await RespondAsync(embed: Embeds.Info("Magic", "You have removed your magic"));
+                        await RespondAsync(embed: Embeds.Info("Magic lost", "You have removed your magic"));
                         return;
                     }
                 }
 
                 await gUser.AddRoleAsync(guild.MagicRole.Value);
-                await RespondAsync(embed: Embeds.Info("Magic", "You have obtained magic"));
+                await RespondAsync(embed: Embeds.Info("Magic obtained", "You have obtained magic"));
             }
             catch (Exception ex)
             {
@@ -64,7 +64,7 @@ namespace SolarisBot.Discord.Commands
             var guild = DbGuild.GetOne(Context.Guild.Id) ?? DbGuild.Default;
             if (guild.MagicRole == null)
             {
-                await RespondAsync(embed: Embeds.Info("Magic", "No Magic has been set for this guild"));
+                await RespondAsync(embed: Embeds.Info("Magic disabled", "No Magic has been set for this guild"));
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace SolarisBot.Discord.Commands
             if (timeNext > timeNow)
             {
                 var waitTime = TimeSpan.FromSeconds(timeNext - timeNow);
-                await RespondAsync(embed: Embeds.Info("Magic", $"Magic is on cooldown, please wait {waitTime}"));
+                await RespondAsync(embed: Embeds.Info("Magic on cooldown", $"Magic is on cooldown, please wait {waitTime}"));
                 return;
             }
 
@@ -97,7 +97,7 @@ namespace SolarisBot.Discord.Commands
                 }
 
                 Logger.Log($"Magic has been used in {Context.Guild.Id}");
-                await RespondAsync(embed: Embeds.Info("Magic", "Something has been changed" + (guild.MagicRename ? $", smells like {role.Name}" : ""), color));
+                await RespondAsync(embed: Embeds.Info("Magic used", "Something has been changed", color));
             }
             catch (Exception ex)
             {
@@ -117,24 +117,24 @@ namespace SolarisBot.Discord.Commands
             var guild = DbGuild.GetOne(Context.Guild.Id) ?? DbGuild.Default;
             if (guild.VouchRole == null)
             {
-                await RespondAsync(embed: Embeds.Info("Vouch", "Vouching has not been set up in this guild"));
+                await RespondAsync(embed: Embeds.Info("Vouch disabled", "Vouching has not been set up in this guild"));
                 return;
             }
             else if (!(vUser.RoleIds.Contains(guild.VouchRole.Value) && guild.VouchUser) && !gUser.GuildPermissions.Administrator)
             {
-                await RespondAsync(embed: Embeds.Info("Vouch", "You do not have permission to vouch"));
+                await RespondAsync(embed: Embeds.Info("Vouch locked", "You do not have permission to vouch"));
                 return;
             }
             else if (gUser.RoleIds.Contains(guild.VouchRole.Value))
             {
-                await RespondAsync(embed: Embeds.Info("Vouch", "You cannot vouch for someone who already has been vouched for"));
+                await RespondAsync(embed: Embeds.Info("Vouched already", "You cannot vouch for someone who already has been vouched for"));
                 return;
             }
 
             try
             {
                 await gUser.AddRoleAsync(guild.VouchRole.Value);
-                await RespondAsync(embed: Embeds.Info("Vouch", $"You have vouched for {gUser.Mention}"));
+                await RespondAsync(embed: Embeds.Info("Vouch Successful", $"You have vouched for {gUser.Mention}"));
             }
             catch (Exception ex)
             {

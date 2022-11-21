@@ -39,7 +39,8 @@ namespace SolarisBot.Discord
         }.Build();
 
         internal static Embed InvalidInput => Info("Invalid input", "The input you have given is invalid");
-        internal static Embed GuildOnly => Info("Guild Only", "Command requires usage to be done within a guild");
+        internal static Embed GuildOnly => Info("Guild only", "Command requires usage to be done within a guild");
+        internal static Embed NoResult => Info("No result", "The request yielded no result in the database");
         #endregion
 
         #region Error Embeds

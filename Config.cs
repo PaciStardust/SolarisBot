@@ -9,6 +9,7 @@ namespace SolarisBot
         internal static ConfigModel Data { get; private set; }
         internal static ConfigLoggerModel Logging => Data.Logging;
         internal static ConfigDiscordModel Discord => Data.Discord;
+        internal static ConfigCommandModel Command => Data.Command;
 
         internal static string ResourcePath { get; private set; }
         internal static string ConfigPath { get; private set; }
@@ -128,6 +129,7 @@ namespace SolarisBot
         {
             public ConfigLoggerModel Logging { get; init; } = new();
             public ConfigDiscordModel Discord { get; init; } = new();
+            public ConfigCommandModel Command { get; init; } = new();
         }
 
         /// <summary>
@@ -154,5 +156,14 @@ namespace SolarisBot
             public ulong MainGuild { get; set; } = 0;
         }
         #endregion
+
+        /// <summary>
+        /// Model for all command configuration
+        /// </summary>
+        internal class ConfigCommandModel
+        {
+            public uint MaxQuotesPerPerson { get; set; } = 100;
+            public bool TagQuoteIfPossible { get; set; } = false;
+        }
     }
 }

@@ -16,6 +16,7 @@ namespace SolarisBot.Database
         internal readonly ulong Time { get; init; } = 0;
         internal readonly ulong CreatorId { get; init; } = 0;
         internal readonly ulong MessageId { get; init; } = 0;
+        internal readonly ulong GuildId { get; init; } = 0;
 
         internal DbQuote(ulong id)
         {
@@ -53,7 +54,8 @@ namespace SolarisBot.Database
                         AuthorName = selector.GetString(3),
                         Time = Convert.ToUInt64(selector.GetValue(4)),
                         CreatorId = Convert.ToUInt64(selector.GetValue(5)),
-                        MessageId = Convert.ToUInt64(selector.GetValue(6))
+                        MessageId = Convert.ToUInt64(selector.GetValue(6)),
+                        GuildId = Convert.ToUInt64(selector.GetValue(7))
                     });
                 }
                 catch (Exception ex)
@@ -93,7 +95,8 @@ namespace SolarisBot.Database
                 new("AUTHORNAME", AuthorName),
                 new("TIME", Time),
                 new("CREATORID", CreatorId),
-                new("MESSAGEID", MessageId)
+                new("MESSAGEID", MessageId),
+                new("GUILDID", GuildId)
             };
 
             var paramNames = parameters.Select(x => x.ParameterName);
@@ -113,7 +116,5 @@ namespace SolarisBot.Database
             return true;
         }
         #endregion
-
-        //todo: to embed function
     }
 }
