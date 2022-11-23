@@ -118,11 +118,11 @@ namespace SolarisBot.Database
             //We add the id later so it doesnt cause issues
             parameters.Add(new("ID", Id));
 
-            var query = new StringBuilder ("INSERT INTO guilds (");
-            query.Append(string.Join(", ", paramNames));
-            query.Append(") VALUES (");
-            query.Append(string.Join(", ", parameters.Select(x => $"@{x.ParameterName}")));
-            query.Append(')');
+            var query = new StringBuilder ("INSERT INTO guilds (")
+                .Append(string.Join(", ", paramNames))
+                .Append(") VALUES (")
+                .Append(string.Join(", ", parameters.Select(x => $"@{x.ParameterName}")))
+                .Append(')');
 
             if (DbMain.Run(query.ToString(), false, parameters.ToArray()) == -1)
                 return false;
