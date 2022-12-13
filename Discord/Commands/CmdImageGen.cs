@@ -12,7 +12,7 @@ namespace TesseractBot.Commands
     {
         private static bool IsImageValid(IAttachment attachment)
         {
-            return attachment.ContentType.StartsWith("image");
+            return (attachment.ContentType.StartsWith("image") && attachment.Size <= 50000000);
         }
 
         [SlashCommand("fonts", "List all fonts")]
