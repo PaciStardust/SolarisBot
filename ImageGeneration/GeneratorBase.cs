@@ -1,7 +1,10 @@
 ﻿using SixLabors.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.ColorSpaces;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SolarisBot;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -83,7 +86,20 @@ namespace SolarisBot.ImageGeneration
                 var client = new HttpClient();
                 var result = await client.GetStreamAsync(url);
                 Logger.Log("Successfully downloaded image at " + url);
-                return await Image.LoadAsync<Rgba32>(result);
+                var img = await Image.LoadAsync<Rgba32>(result);
+
+                var difHeight = img.Height / 1080f;
+                var difWidth = img.Width / 1920f;
+
+                if (difHeight <= 1 && difWidth <= 1)
+                    return img;
+
+                if (difHeight > difWidth)
+                    img.Mutate(x => x.Resize((int)(img.Width / difHeight), 1080, false));
+                else
+                    img.Mutate(x => x.Resize(1920, (int)(img.Height / difWidth), false));
+
+                return img;
             }
             catch
             {
