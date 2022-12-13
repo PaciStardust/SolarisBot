@@ -91,8 +91,8 @@ namespace SolarisBot.Discord.Commands
             await RespondAsync(embed: infoEmbed.Build());
         }
 
-        [SlashCommand("config-renaming", "Allow renaming on \"I am\" messages, off by default")]
-        public async Task ConfigRenaming(bool enabled)
+        [SlashCommand("config-features", "Toggle bot features in this guild")]
+        public async Task ConfigRenaming(bool renaming = false, bool imagegen = false)
         {
             if (Context.Guild == null)
             {
@@ -102,16 +102,18 @@ namespace SolarisBot.Discord.Commands
 
             var parameters = new SqliteParameter[]
             {
-                new SqliteParameter("RENAMING", enabled),
+                new SqliteParameter("RENAMING", renaming),
+                new SqliteParameter("IMAGEGEN", imagegen),
                 new("ID", Context.Guild.Id),
             };
 
-            if (DbMain.Run("UPDATE guilds SET renaming = @RENAMING where id = @ID", true, parameters) < 1)
+            if (DbMain.Run("UPDATE guilds SET renaming = @RENAMING, imagegen = @IMAGEGEN WHERE id = @ID", true, parameters) < 1)
             {
                 var guild = new DbGuild()
                 {
                     Id = Context.Guild.Id,
-                    Renaming = enabled
+                    Renaming = renaming,
+                    ImageGen = imagegen,
                 };
 
                 if (!guild.Create())
@@ -121,8 +123,8 @@ namespace SolarisBot.Discord.Commands
                 }
             }
 
-            Logger.Log($"Renaming has been {(enabled ? "enabled" : "disabled")} in {Context.Guild.Id}");
-            await RespondAsync(embed: Embeds.Info("Renaming configured", "Renaming has been " + (enabled ? "enabled" : "disabled")));
+            Logger.Log($"Features have been changed in {Context.Guild.Id}");
+            await RespondAsync(embed: Embeds.Info("Features configured", "Features have successfully been configured"));
         }
 
         [SlashCommand("config-magic", "[ADMIN ONLY] Configures the magic role")]

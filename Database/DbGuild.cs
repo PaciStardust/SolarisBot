@@ -18,6 +18,7 @@ namespace SolarisBot.Database
         internal readonly ulong MagicLast { get; init; } = 0;
         internal readonly ulong? VouchRole { get; init; } = null;
         internal readonly bool VouchUser { get; init; } = false;
+        internal readonly bool ImageGen { get; init; } = false;
 
         internal DbGuild(ulong id)
         {
@@ -56,7 +57,8 @@ namespace SolarisBot.Database
                         MagicTimeout = Convert.ToUInt16(selector.GetValue(4)),
                         MagicLast = Convert.ToUInt64(selector.GetValue(5)),
                         VouchRole = selector.IsDBNull(6) ? null : Convert.ToUInt64(selector.GetValue(6)),
-                        VouchUser = selector.GetBoolean(7)
+                        VouchUser = selector.GetBoolean(7),
+                        ImageGen = selector.GetBoolean(8)
                     });
                 }
                 catch (Exception ex)
@@ -106,7 +108,8 @@ namespace SolarisBot.Database
                 new("MAGICLAST", MagicLast),
                 new("MAGICTIMEOUT", MagicTimeout),
                 new("MAGICRENAME", MagicRename),
-                new("VOUCHUSER", VouchUser)
+                new("VOUCHUSER", VouchUser),
+                new("IMAGEGEN", ImageGen)
             };
             if (MagicRole != null)
                 parameters.Add(new("MAGICROLE", MagicRole));

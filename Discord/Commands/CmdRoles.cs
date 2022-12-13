@@ -87,7 +87,7 @@ namespace SolarisBot.Discord.Commands
                 await role.ModifyAsync(x =>
                 {
                     x.Color = new(color);
-                    x.Name = guild.MagicRename ? DbMain.GetName(3, 5) : x.Name;
+                    x.Name = guild.MagicRename ? DbMain.GetName(1, 3) : x.Name;
                 });
 
                 if (!DbGuild.SetOne("magiclast", timeNow, guild.Id))
