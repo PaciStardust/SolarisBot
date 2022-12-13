@@ -14,6 +14,7 @@ namespace SolarisBot.ImageGeneration
         internal string InputText { get; init; } = "Placeholder Text";
         internal string TextImageLink { get; init; } = "";
         internal bool NoImpact { get; init; } = false;
+        internal bool BottomText { get; init; } = false;
 
         //Comments in code below related to alternate fix to the Gradient drawing issue (Masking)
         internal override async Task<MemoryStream?> GenerateAsync() 
@@ -55,8 +56,16 @@ namespace SolarisBot.ImageGeneration
 
             //Creation of final image
             var finalImage = new Image<Rgba32>(downImage.Width, downImage.Height + textImage.Height);
-            finalImage.Mutate(x => x.DrawImage(textImage, new Point(0, 0), 1));
-            finalImage.Mutate(x => x.DrawImage(downImage, new Point(0, textImage.Height), 1));
+            if (BottomText)
+            {
+                finalImage.Mutate(x => x.DrawImage(textImage, new Point(0, downImage.Height), 1));
+                finalImage.Mutate(x => x.DrawImage(downImage, new Point(0, 0), 1));
+            }
+            else
+            {
+                finalImage.Mutate(x => x.DrawImage(textImage, new Point(0, 0), 1));
+                finalImage.Mutate(x => x.DrawImage(downImage, new Point(0, textImage.Height), 1));
+            }
             textImage.Dispose();
             downImage.Dispose();
 

@@ -20,7 +20,7 @@ namespace SolarisBot.ImageGeneration
 
 
         //Comments in code below related to alternate fix to the Gradient drawing issue (Masking)
-        internal override async Task<MemoryStream> GenerateAsync() 
+        internal override async Task<MemoryStream?> GenerateAsync() 
         {
             Logger.Log($"Started creating GradientText Image \"{InputText.Replace("\n", " ")}\"");
 

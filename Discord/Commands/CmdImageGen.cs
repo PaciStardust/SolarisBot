@@ -85,7 +85,8 @@ namespace TesseractBot.Commands
         public async Task GenCaption(
             [Summary(description: "Text for caption")] string text,
             [Summary(description: "Image to caption")] IAttachment textimage,
-            [Summary(description: "Use Arial instead")] bool noImpact = false
+            [Summary(description: "Use Arial instead")] bool noImpact = false,
+            [Summary(description: "Put text on bottom instead")] bool bottomText = false
         )
         {
             if (Context.User is not IGuildUser gUser)
@@ -114,7 +115,8 @@ namespace TesseractBot.Commands
             {
                 InputText = text.Replace("\\n", "\n"),
                 TextImageLink = textimage.Url,
-                NoImpact = noImpact
+                NoImpact = noImpact,
+                BottomText = bottomText
             };
 
             var img = await capGen.GenerateAsync();
