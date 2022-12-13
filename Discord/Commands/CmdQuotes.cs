@@ -196,7 +196,7 @@ namespace SolarisBot.Discord.Commands
         /// Responds with a quote as an embed
         /// </summary>
         /// <param name="quote">Quote to reply with</param>
-        private async Task RespondWithQuoteAsync(DbQuote quote) //todo: date
+        private async Task RespondWithQuoteAsync(DbQuote quote)
         {
             var title = new StringBuilder($"Quote Nr.{quote.Id} from ");
             if (Config.Command.TagQuoteIfPossible)

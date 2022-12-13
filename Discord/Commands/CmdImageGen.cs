@@ -5,8 +5,6 @@ using SolarisBot.Database;
 using SolarisBot.Discord;
 using SolarisBot.ImageGeneration;
 
-//todo: perm checks
-
 namespace TesseractBot.Commands
 {
     [Group("img-gen", "Generate images")]
