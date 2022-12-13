@@ -13,7 +13,7 @@ namespace SolarisBot.ImageGeneration
         internal static Random r = new();
         private static readonly Regex RGBColorRegEX = new("^\\d{1,3},\\d{1,3},\\d{1,3}$");
 
-        internal abstract Task<MemoryStream> GenerateAsync();
+        internal abstract Task<MemoryStream?> GenerateAsync();
 
         #region Color Related
         internal static Color GetRandomColor()
@@ -82,12 +82,12 @@ namespace SolarisBot.ImageGeneration
             {
                 var client = new HttpClient();
                 var result = await client.GetStreamAsync(url);
-                Logger.Info("Successfully downloaded image at " + url, "ImgGen");
+                Logger.Log("Successfully downloaded image at " + url);
                 return await Image.LoadAsync<Rgba32>(result);
             }
             catch
             {
-                Logger.Info("Failed to download image at " + url, "ImgGen");
+                Logger.Warning("Failed to download image at " + url);
                 return null;
             }
         }

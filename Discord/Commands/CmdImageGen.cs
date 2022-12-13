@@ -80,5 +80,52 @@ namespace TesseractBot.Commands
             IEnumerable<FileAttachment> enumerable = new List<FileAttachment>() { new FileAttachment(await gradGen.GenerateAsync(), "file.png") };
             await ModifyOriginalResponseAsync(properties => { properties.Attachments = new(enumerable); properties.Content = new($"\"{text.Replace("\\n", " ")}\""); });
         }
+
+        [SlashCommand("gen-caption", "Generate captioned image")]
+        public async Task GenCaption(
+            [Summary(description: "Text for caption")] string text,
+            [Summary(description: "Image to caption")] IAttachment textimage,
+            [Summary(description: "Use Arial instead")] bool noImpact = false
+        )
+        {
+            if (Context.User is not IGuildUser gUser)
+            {
+                await RespondAsync(embed: Embeds.GuildOnly);
+                return;
+            }
+
+            var guild = DbGuild.GetOne(Context.Guild.Id) ?? DbGuild.Default;
+
+            if (!guild.ImageGen)
+            {
+                await RespondAsync(embed: Embeds.Info("Image generation disabled", "You are not allowed to generate images in this guild"));
+                return;
+            }
+
+            if (text.Length > 250 || !IsImageValid(textimage))
+            {
+                await RespondAsync(embed: Embeds.InvalidInput);
+                return;
+            }
+
+            await DeferAsync();
+
+            var capGen = new CaptionGenerator()
+            {
+                InputText = text.Replace("\\n", "\n"),
+                TextImageLink = textimage.Url,
+                NoImpact = noImpact
+            };
+
+            var img = await capGen.GenerateAsync();
+            if (img == null)
+            {
+                await ModifyOriginalResponseAsync(properties => { properties.Embed = Embeds.InvalidInput; properties.Content = new($"\"{text.Replace("\\n", " ")}\""); });
+                return;
+            }
+
+            IEnumerable<FileAttachment> enumerable = new List<FileAttachment>() { new FileAttachment(img, "file.png") };
+            await ModifyOriginalResponseAsync(properties => { properties.Attachments = new(enumerable); properties.Content = new($"\"{text.Replace("\\n", " ")}\""); });
+        }
     }
 }

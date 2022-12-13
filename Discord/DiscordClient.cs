@@ -97,18 +97,7 @@ namespace SolarisBot.Discord
             var name = match.Groups[1].Value;
 
             if (name.Length > 32)
-            {
-                bool cutExtra = name[32] != ' ';
-                name = name[..32];
-
-                if (cutExtra)
-                {
-                    int index = name.LastIndexOf(' ');
-                    if (index == -1)
-                        return;
-                    name = name[..index];
-                }
-            }
+                return;
 
             var guild = DbGuild.GetOne(gUser.Guild.Id) ?? DbGuild.Default;
             if (!guild.Renaming)
