@@ -78,7 +78,7 @@ namespace TesseractBot.Commands
             };
 
             IEnumerable<FileAttachment> enumerable = new List<FileAttachment>() { new FileAttachment(await gradGen.GenerateAsync(), "file.png") };
-            await ModifyOriginalResponseAsync(properties => { properties.Attachments = new(enumerable); properties.Content = new($"\"{text.Replace("\\n", " ")}\""); });
+            await ModifyOriginalResponseAsync(properties => { properties.Attachments = new(enumerable); properties.Content = new($"{text.Replace("\\n", " ")}"); });
         }
 
         [SlashCommand("gen-caption", "Generate captioned image")]
@@ -120,12 +120,12 @@ namespace TesseractBot.Commands
             var img = await capGen.GenerateAsync();
             if (img == null)
             {
-                await ModifyOriginalResponseAsync(properties => { properties.Embed = Embeds.InvalidInput; properties.Content = new($"\"{text.Replace("\\n", " ")}\""); });
+                await ModifyOriginalResponseAsync(properties => { properties.Embed = Embeds.InvalidInput; properties.Content = new($"{text.Replace("\\n", " ")}"); });
                 return;
             }
 
             IEnumerable<FileAttachment> enumerable = new List<FileAttachment>() { new FileAttachment(img, "file.png") };
-            await ModifyOriginalResponseAsync(properties => { properties.Attachments = new(enumerable); properties.Content = new($"\"{text.Replace("\\n", " ")}\""); });
+            await ModifyOriginalResponseAsync(properties => { properties.Attachments = new(enumerable); properties.Content = new($"{text.Replace("\\n", " ")}"); });
         }
     }
 }
