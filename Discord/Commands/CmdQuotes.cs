@@ -62,7 +62,7 @@ namespace SolarisBot.Discord.Commands
         }
 
         [SlashCommand("random", "Displays a random quote")]
-        public async Task Random(bool guildOnly = true)
+        public async Task Random()
         {
             if (Context.Guild == null)
             {
@@ -70,9 +70,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var query = guildOnly ? "guildid = " + Context.Guild.Id
-                : "1 = 1";
-
+            var query = "guildid = " + Context.Guild.Id;
             var quote = DbQuote.Get(query + " ORDER BY RANDOM() LIMIT 1");
             if (quote.Count == 0)
             {
@@ -103,7 +101,7 @@ namespace SolarisBot.Discord.Commands
         }
 
         [SlashCommand("search", "Search for a quote")]
-        public async Task Search(IUser? author = null, IUser? creator = null, ulong? guild = null, string? content = null, uint offset = 0, DisplayMode dMode = DisplayMode.Random)
+        public async Task Search(IUser? author = null, IUser? creator = null, string? content = null, uint offset = 0, DisplayMode dMode = DisplayMode.Random)
         {
             if (Context.Guild == null)
             {
@@ -111,15 +109,13 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var queryParts = new List<string>();
+            var queryParts = new List<string>() { "guildid = " + Context.Guild.Id };
             var sqlParts = new List<SqliteParameter>();
 
             if (author != null)
                 queryParts.Add("authorid = " + author.Id);
             if (creator != null)
                 queryParts.Add("creatorid = " + creator.Id);
-            if (guild != null)
-                queryParts.Add("guildid = " + guild);
             if (content != null)
             {
                 content = $"%{content.ToLower()}%";

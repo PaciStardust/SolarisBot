@@ -27,17 +27,19 @@ namespace SolarisBot.Discord
             _client.Log += Log;
             _client.Ready += ReadyAsync;
             _client.MessageReceived += MessageReceivedAsync;
+            _client.UserVoiceStateUpdated += UserVoiceStateUpdated;
 
             await _client.LoginAsync(TokenType.Bot, Config.Discord.Token);
             await _client.StartAsync();
         }
 
-        private static async Task MessageReceivedAsync(SocketMessage arg)
-        {
-            await CheckForAutoRename(arg);
-        }
+        private static async Task UserVoiceStateUpdated(SocketUser user, SocketVoiceState stateOld, SocketVoiceState stateNew)
+            => await CheckForTempChannelActions(user, stateOld, stateNew);
 
-        internal static async Task ReadyAsync()
+        private static async Task MessageReceivedAsync(SocketMessage message)
+            => await CheckForAutoRename(message);
+
+        private static async Task ReadyAsync()
             => await UpdateCommandsGuild();
 
         /// <summary>
@@ -114,6 +116,91 @@ namespace SolarisBot.Discord
                 return;
             }
         } 
+
+        private static async Task CheckForTempChannelActions(SocketUser user, SocketVoiceState stateOld, SocketVoiceState stateNew) //Todo: logging
+        {
+            if (stateOld.VoiceChannel?.Id == stateNew.VoiceChannel?.Id) //todo: clear empty on restart
+                return;
+
+            if (user is not IGuildUser gUser)
+                return;
+
+            var guild = gUser.Guild;
+            var dbGuild = DbGuild.GetOne(guild.Id) ?? DbGuild.Default;
+            var channels = DbVcGen.GetOne(guild.Id);
+
+            //Checking if a temp channel was left
+            if (stateOld.VoiceChannel != null)
+            {
+                var channelMatch = channels.Where(x => x.VChannel == stateOld.VoiceChannel.Id);
+                if (channelMatch.Any())
+                {
+                    var userCount = stateOld.VoiceChannel.ConnectedUsers.Count;
+                    if (userCount == 0)
+                    {
+                        var oldVcGen = channelMatch.First();
+                        await stateOld.VoiceChannel.DeleteAsync(); //todo: error checking
+                        await (await guild.GetChannelAsync(oldVcGen.TChannel)).DeleteAsync();
+                        if (DbMain.Run($"DELETE FROM vcgen WHERE vchannel = {oldVcGen.VChannel}") < 1)
+                            Logger.Warning("VcGen could not be removed"); //todo: change warning
+                    }
+                }
+            }
+
+            //Was temp channel creator joined and are slots open?
+            if (stateNew.VoiceChannel != null && dbGuild.VcGenChannel != null && stateNew.VoiceChannel.Id == dbGuild.VcGenChannel && channels.Count < dbGuild.VcGenMax) //Checks if channel creator vc was entered
+            {
+                IVoiceChannel? newVoice = null;
+                ITextChannel? newText = null;
+                var failedCreation = false;
+
+                try
+                {
+                    var channelName = $"Temp Channel " + (channels.Count + 1);
+                    //Creating channels
+                    newVoice = await guild.CreateVoiceChannelAsync(channelName);
+                    newText = await guild.CreateTextChannelAsync(channelName);
+                    //Applying perms
+                    var newPerms = stateNew.VoiceChannel.PermissionOverwrites;
+                    await newVoice.ModifyAsync(x => x.PermissionOverwrites = new(newPerms));
+                    await newText.ModifyAsync(x => x.PermissionOverwrites = new(newPerms));
+                    //Moving user
+                    await gUser.ModifyAsync(x => x.Channel = new(newVoice));
+
+                    var dbEntry = new DbVcGen(guild.Id, newVoice.Id, newText.Id, gUser.Id);
+                    if (!dbEntry.Create())
+                    {
+                        //todo: log reason
+                        failedCreation = true;
+                    }
+
+                    await newText.SendMessageAsync("test message"); //todo: actual info, move?
+                }
+                catch (Exception e)
+                {
+                    //todo: log reason
+                    failedCreation = true;
+                }
+
+                //Attempting to delete channels if they exist after error
+                if (failedCreation)
+                {
+                    try
+                    {
+                        if (newVoice != null)
+                            await newVoice.DeleteAsync();
+                        if (newText != null)
+                            await newText.DeleteAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                        //todo: write error into a channel
+                    }
+                }
+            }
+            return;
+        }
         #endregion
     }
 }

@@ -48,13 +48,13 @@ namespace SolarisBot.Database
         /// <param name="query">The query to be performed</param>
         /// <param name="silent">Log error as debug if available</param>
         /// <param name="parameters">Sqlite parameters</param>
-        /// <returns>Number of changes, -1 on error</returns>
+        /// <returns>Number of changes, -2 on error</returns>
         internal static int Run(string query, bool silent = true, params SqliteParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
                 Logger.Debug("Empty query received, skipping");
-                return -1;
+                return -2;
             }
 
             var command = new SqliteCommand(query, _connection);
@@ -72,7 +72,7 @@ namespace SolarisBot.Database
             {
                 Logger.Error($"Encountered a {e.GetType().FullName} perfoming RUN Query \"{command.CommandText}\" ({parameterString}): {e.Message}", silent);
                 FailedRun++;
-                return -1;
+                return -2;
             }
         }
 
@@ -148,7 +148,7 @@ namespace SolarisBot.Database
         {
             if (!SetOne("uniques", "value", value, "id", id))
             {
-                if (Run($"INSERT INTO uniques (id, value) VALUES ({id}, {value})", true) == -1)
+                if (Run($"INSERT INTO uniques (id, value) VALUES ({id}, {value})", true) == -2)
                     return false;
             }
 
@@ -182,7 +182,9 @@ namespace SolarisBot.Database
             /*0*/   new(() => Run("CREATE TABLE guilds (id INT PRIMARY KEY NOT NULL CHECK(id >= 0), renaming BOOL NOT NULL DEFAULT 0, magicrole INT CHECK(magicrole >= 0), magicrename BOOL NOT NULL DEFAULT 0, magictimeout INT NOT NULL DEFAULT 1800 CHECK(magictimeout >= 0), magiclast INT NOT NULL DEFAULT 0 CHECK(magiclast >= 0))", false)), //Creation of guilds
             /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0")), //Adding vouchrole and vouchuser to guilds
             /*2*/   new(() => Run("CREATE TABLE quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL DEFAULT '', authorid INT NOT NULL DEFAULT 0 CHECK(authorid > 0), authorname TEXT NOT NULL DEFAULT 'Unknown', time INT NOT NULL DEFAULT 0 CHECK(time > 0), creatorid INT NOT NULL DEFAULT 0 CHECK(creatorid >= 0), messageid INT NOT NULL DEFAULT 0 CHECK(messageid >= 0), guildid INT NOT NULL DEFAULT 0 CHECK(guildid >= 0))")), //Creation of quotes
-            /*3*/   new(() => Run("ALTER TABLE guilds ADD imagegen BOOL NOT NULL DEFAULT 0")) //Adding vouchrole and vouchuser to guilds
+            /*3*/   new(() => Run("ALTER TABLE guilds ADD imagegen BOOL NOT NULL DEFAULT 0")), //Adding imagegen to guilds
+            /*4*/   new(() => Run("CREATE TABLE vcgen (id INT NOT NULL DEFAULT 0 CHECK(id >= 0), vchannel INT NOT NULL UNIQUE DEFAULT 0 CHECK(vchannel >= 0), tchannel INT NOT NULL UNIQUE DEFAULT 0 CHECK(tchannel >= 0), owner INT NOT NULL UNIQUE DEFAULT 0 CHECK(owner >= 0))")), //Creating vcgen
+            /*5*/   new(() => Run("ALTER TABLE guilds ADD vcgenchannel INT CHECK(vcgenchannel >= 0); ALTER TABLE guilds ADD vcgenmax INT NOT NULL DEFAULT 4 CHECK(vcgenmax >= 0)")), //Adding vcgenchannel and vcgenmax to guilds
         };
         /// <summary>
         /// Runs through entirety of upgradeFunctions to update database
@@ -191,7 +193,7 @@ namespace SolarisBot.Database
         private static bool UpgradeDatabase()
         {
             //Making sure uniques table exists
-            if (Run("CREATE TABLE IF NOT EXISTS uniques (id TEXT NOT NULL PRIMARY KEY, value TEXT)", false) == -1)
+            if (Run("CREATE TABLE IF NOT EXISTS uniques (id TEXT NOT NULL PRIMARY KEY, value TEXT)", false) == -2)
                 return false;
 
             var versionString = GetValue("version");
@@ -201,7 +203,7 @@ namespace SolarisBot.Database
                 versionNumber = vNum;
             else
             {
-                if (Run("INSERT INTO uniques (id, value) VALUES ('version', '-1')", false) == -1)
+                if (Run("INSERT INTO uniques (id, value) VALUES ('version', '-1')", false) == -2)
                     return false;
             }
 
@@ -210,7 +212,7 @@ namespace SolarisBot.Database
 
             for (int i = versionNumber + 1; i <= newVer; i++)
             {
-                if (_upgradeFunctions[i].Invoke() == -1)
+                if (_upgradeFunctions[i].Invoke() == -2)
                 {
                     Logger.Error("Failed to update database to version " + i);
                     return false;
@@ -218,12 +220,11 @@ namespace SolarisBot.Database
                 else
                     Logger.Info("Updated database to version " + i);
 
-                if (!SetValue("version", newVer.ToString()))
+                if (!SetValue("version", i.ToString()))
                 {
                     Logger.Error("Updated database but unable to save new version");
                     return false;
                 }
-                    
             }
 
             return true;
@@ -273,7 +274,7 @@ namespace SolarisBot.Database
         /// <returns>Summary string</returns>
         internal static string SummarizeSqlParameters(params SqliteParameter[] parameters)
             => parameters.Length > 0
-                ? string.Join(", ", parameters.Select(x => $"{x.ParameterName}={(x.Value.GetType() == typeof(string) ? $"'{x.Value}'" : x.Value)}"))
+                ? string.Join(", ", parameters.Select(x => $"{x.ParameterName}={(x.Value?.GetType() == typeof(string) ? $"'{x.Value}'" : x.Value)}"))
                 : "Parameterless";
 
         private static readonly string _letters = "aeiouybcdfghjklmnpqrstvwxz";

@@ -18,6 +18,7 @@ namespace SolarisBot.Database
         internal readonly ulong MessageId { get; init; } = 0;
         internal readonly ulong GuildId { get; init; } = 0;
 
+        public DbQuote() { } //To avoid defaults not setting
         internal DbQuote(ulong id)
         {
             Id = id;
@@ -110,7 +111,7 @@ namespace SolarisBot.Database
                 .Append(string.Join(", ", parameters.Select(x => $"@{x.ParameterName}")))
                 .Append(')');
 
-            if (DbMain.Run(query.ToString(), false, parameters.ToArray()) == -1)
+            if (DbMain.Run(query.ToString(), false, parameters.ToArray()) == -2)
                 return false;
 
             return true;

@@ -33,7 +33,7 @@ namespace SolarisBot.Discord.Commands
             Logger.Warning($"A RUN query has been called manually \"{query}\"");
             var result = DbMain.Run(query, false);
 
-            var embedText = $"{query}\n\n" + (result == -1 ? "Database encountered an error, please check logs for more details"
+            var embedText = $"{query}\n\n" + (result == -2 ? "Database encountered an error, please check logs for more details"
                 : $"{result} changes have been made");
 
             await RespondAsync(embed: Embeds.Info("Executed SQL-RUN", $"```{embedText}```", Embeds.ColorImportant));

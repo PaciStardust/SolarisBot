@@ -19,7 +19,10 @@ namespace SolarisBot.Database
         internal readonly ulong? VouchRole { get; init; } = null;
         internal readonly bool VouchUser { get; init; } = false;
         internal readonly bool ImageGen { get; init; } = false;
+        internal readonly ulong? VcGenChannel { get; init; } = null;
+        internal readonly ushort VcGenMax { get; init; } = 4;
 
+        public DbGuild() { } //To avoid defaults not setting
         internal DbGuild(ulong id)
         {
             Id = id;
@@ -58,7 +61,9 @@ namespace SolarisBot.Database
                         MagicLast = Convert.ToUInt64(selector.GetValue(5)),
                         VouchRole = selector.IsDBNull(6) ? null : Convert.ToUInt64(selector.GetValue(6)),
                         VouchUser = selector.GetBoolean(7),
-                        ImageGen = selector.GetBoolean(8)
+                        ImageGen = selector.GetBoolean(8),
+                        VcGenChannel = selector.IsDBNull(9) ? null : Convert.ToUInt64(selector.GetValue(9)),
+                        VcGenMax = Convert.ToUInt16(selector.GetValue(10))
                     });
                 }
                 catch (Exception ex)
@@ -109,12 +114,15 @@ namespace SolarisBot.Database
                 new("MAGICTIMEOUT", MagicTimeout),
                 new("MAGICRENAME", MagicRename),
                 new("VOUCHUSER", VouchUser),
-                new("IMAGEGEN", ImageGen)
+                new("IMAGEGEN", ImageGen),
+                new("VCGENMAX", VcGenMax)
             };
             if (MagicRole != null)
                 parameters.Add(new("MAGICROLE", MagicRole));
             if (VouchRole != null)
                 parameters.Add(new("VOUCHROLE", VouchRole));
+            if (VcGenChannel != null)
+                parameters.Add(new("VCGENCHANNEL", VcGenChannel));
 
             var paramNames = parameters.Select(x => x.ParameterName);
 
@@ -127,7 +135,7 @@ namespace SolarisBot.Database
                 .Append(string.Join(", ", parameters.Select(x => $"@{x.ParameterName}")))
                 .Append(')');
 
-            if (DbMain.Run(query.ToString(), false, parameters.ToArray()) == -1)
+            if (DbMain.Run(query.ToString(), false, parameters.ToArray()) == -2)
                 return false;
 
             return true;
