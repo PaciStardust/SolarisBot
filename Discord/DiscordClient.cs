@@ -85,6 +85,7 @@ namespace SolarisBot.Discord
             .AddSingleton<InteractionHandler>()
             .BuildServiceProvider();
 
+        //todo: move
         #region Extras
         private static readonly Regex _amVerification = new(@"\b(?:am|i'?m) +(.+)$", RegexOptions.IgnoreCase);
         private static async Task CheckForAutoRename(SocketMessage arg)
@@ -142,7 +143,7 @@ namespace SolarisBot.Discord
                         await stateOld.VoiceChannel.DeleteAsync(); //todo: error checking
                         await (await guild.GetChannelAsync(oldVcGen.TChannel)).DeleteAsync();
                         if (DbMain.Run($"DELETE FROM vcgen WHERE vchannel = {oldVcGen.VChannel}") < 1)
-                            Logger.Warning("VcGen could not be removed"); //todo: change warning
+                            Logger.Warning($"VcGen with id {oldVcGen.VChannel} could not be removed");
                     }
                 }
             }
@@ -167,7 +168,7 @@ namespace SolarisBot.Discord
                     //Moving user
                     await gUser.ModifyAsync(x => x.Channel = new(newVoice));
 
-                    var dbEntry = new DbVcGen(guild.Id, newVoice.Id, newText.Id, gUser.Id);
+                    var dbEntry = new DbVcGen(newVoice.Id, newText.Id, gUser.Id);
                     if (!dbEntry.Create())
                     {
                         //todo: log reason

@@ -183,7 +183,7 @@ namespace SolarisBot.Database
             /*1*/   new(() => Run("ALTER TABLE guilds ADD vouchrole INT CHECK(vouchrole >= 0); ALTER TABLE guilds ADD vouchuser BOOL NOT NULL DEFAULT 0")), //Adding vouchrole and vouchuser to guilds
             /*2*/   new(() => Run("CREATE TABLE quotes (id INTEGER PRIMARY KEY AUTOINCREMENT, quote TEXT NOT NULL DEFAULT '', authorid INT NOT NULL DEFAULT 0 CHECK(authorid > 0), authorname TEXT NOT NULL DEFAULT 'Unknown', time INT NOT NULL DEFAULT 0 CHECK(time > 0), creatorid INT NOT NULL DEFAULT 0 CHECK(creatorid >= 0), messageid INT NOT NULL DEFAULT 0 CHECK(messageid >= 0), guildid INT NOT NULL DEFAULT 0 CHECK(guildid >= 0))")), //Creation of quotes
             /*3*/   new(() => Run("ALTER TABLE guilds ADD imagegen BOOL NOT NULL DEFAULT 0")), //Adding imagegen to guilds
-            /*4*/   new(() => Run("CREATE TABLE vcgen (id INT NOT NULL DEFAULT 0 CHECK(id >= 0), vchannel INT NOT NULL UNIQUE DEFAULT 0 CHECK(vchannel >= 0), tchannel INT NOT NULL UNIQUE DEFAULT 0 CHECK(tchannel >= 0), owner INT NOT NULL UNIQUE DEFAULT 0 CHECK(owner >= 0))")), //Creating vcgen
+            /*4*/   new(() => Run("CREATE TABLE vcgen (vchannel INT NOT NULL UNIQUE DEFAULT 0 CHECK(vchannel >= 0), tchannel INT NOT NULL UNIQUE DEFAULT 0 CHECK(tchannel >= 0), owner INT NOT NULL UNIQUE DEFAULT 0 CHECK(owner >= 0))")), //Creating vcgen
             /*5*/   new(() => Run("ALTER TABLE guilds ADD vcgenchannel INT CHECK(vcgenchannel >= 0); ALTER TABLE guilds ADD vcgenmax INT NOT NULL DEFAULT 4 CHECK(vcgenmax >= 0)")), //Adding vcgenchannel and vcgenmax to guilds
         };
         /// <summary>

@@ -9,14 +9,12 @@ namespace SolarisBot.Database
 {
     internal readonly struct DbVcGen
     {
-        internal readonly ulong Id { get; init; } = 0;
         internal readonly ulong VChannel { get; init; } = 0;
         internal readonly ulong TChannel { get; init; } = 0;
         internal readonly ulong Owner { get; init; } = 0;
 
-        internal DbVcGen(ulong id, ulong vchan, ulong tchan, ulong owner)
+        internal DbVcGen(ulong vchan, ulong tchan, ulong owner)
         {
-            Id = id;
             VChannel = vchan;
             TChannel = tchan;
             Owner = owner;
@@ -47,16 +45,15 @@ namespace SolarisBot.Database
                 {
                     quotes.Add(new()
                     {
-                        Id = Convert.ToUInt64(selector.GetValue(0)),
-                        VChannel = Convert.ToUInt64(selector.GetValue(1)),
-                        TChannel = Convert.ToUInt64(selector.GetValue(2)),
-                        Owner = Convert.ToUInt64(selector.GetValue(3))
+                        VChannel = Convert.ToUInt64(selector.GetValue(0)),
+                        TChannel = Convert.ToUInt64(selector.GetValue(1)),
+                        Owner = Convert.ToUInt64(selector.GetValue(2))
                     });
                 }
                 catch (Exception ex)
                 {
                     Logger.Warning(ex.GetType().Name, ex.Message);
-                    if (DbMain.Run($"DELETE FROM vcgen WHERE id = {selector.GetValue(0)}") < 1)
+                    if (DbMain.Run($"DELETE FROM vcgen WHERE vchannel = {selector.GetValue(0)}") < 1)
                         Logger.Warning("Invalid vcgen in DB could not be removed");
                 }
             }
@@ -68,9 +65,9 @@ namespace SolarisBot.Database
         /// </summary>
         /// <param name="id">GuildId of the guild</param>
         /// <returns>Null if Guild is not id DB</returns>
-        internal static IReadOnlyList<DbVcGen> GetOne(ulong id)
+        internal static IReadOnlyList<DbVcGen> GetOne(ulong vcid)
         {
-            var result = Get($"id = {id}");
+            var result = Get($"vchannel = {vcid}");
             return result;
         }
         #endregion
@@ -85,7 +82,6 @@ namespace SolarisBot.Database
         {
             var parameters = new List<SqliteParameter>
             {
-                new("ID", Id),
                 new("VCHANNEL", VChannel),
                 new("TCHANNEL", TChannel),
                 new("OWNER", Owner)
