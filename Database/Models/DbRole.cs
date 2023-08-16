@@ -11,7 +11,7 @@ namespace SolarisBot.Database
     public class DbRole
     {
         public ulong RId { get; set; } = 0;
-        public ulong TId { get; set; } = 0;
+        public ulong RgId { get; set; } = 0;
         public string Name { get; set; } = string.Empty;
 
         public DbRole() { }

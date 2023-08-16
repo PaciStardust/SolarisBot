@@ -52,6 +52,7 @@ namespace SolarisBot
                         $"Data Source={Utils.PathDatabaseFile};Pooling=false")
                         .UseLazyLoadingProxies()
                     );
+
                     services.AddSingleton(botConfig);
                     services.AddSingleton(new DiscordSocketClient(new()
                     {
@@ -59,7 +60,9 @@ namespace SolarisBot
                         UseInteractionSnowflakeDate = false
                     }));
                     services.AddSingleton<InteractionService>();
+
                     services.AddHostedService<InteractionHandlerService>();
+                    services.AddHostedService<EventHandlerService>();
                     services.AddHostedService<DiscordClientService>();
                 })
                 .UseSerilog(logger)

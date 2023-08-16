@@ -31,7 +31,6 @@ namespace SolarisBot.Discord.Commands
                     return;
                 }
 
-                //todo: [FEATURE] Remove from list on delete
                 //todo: [FEATURE] Remove special on other removal?
 
                 var strings = guild.RoleGroups.OrderBy(x => x.Name)
@@ -145,7 +144,7 @@ namespace SolarisBot.Discord.Commands
                 {
                     Name = identifierNameClean,
                     RId = role.Id,
-                    TId = roleGroup.RgId
+                    RgId = roleGroup.RgId
                 };
 
                 await _dbContext.Roles.AddAsync(dbRole);
@@ -187,8 +186,6 @@ namespace SolarisBot.Discord.Commands
                     await RespondEmbedAsync("Role Unegistered", $"A role with the identifier \"{identifierNameClean}\" has been unregistered");
                 }
             }
-
-            //todo: [FEATURE] Ease of deletion w roles
         }
     }
 }
