@@ -11,7 +11,7 @@ namespace SolarisBot.Database
         public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options)
         {
             _logger = logger;
-            //TryMigrate();
+            TryMigrate();
         }
 
         public DbSet<DbGuild> Guilds { get; set; }
@@ -73,7 +73,7 @@ namespace SolarisBot.Database
         /// <summary>
         /// Attempts to migrate the database, throws on error
         /// </summary>
-        private void TryMigrate() //todo: [FIX] Migration causes issues
+        private void TryMigrate()
         {
             if (_hasMigrated) return;
 
@@ -104,14 +104,10 @@ namespace SolarisBot.Database
                 }
 
                 if (migrationVersion > version)
-                {
                     Database.ExecuteSqlRaw($"PRAGMA user_version = {migrationVersion}");
-                    transaction.Commit();
-                    _logger.LogInformation("Migrated database from version {oldVersion} to {newVersion}", version, migrationVersion);
-                }
-                else
-                    _logger.LogInformation("Database is up to date");
 
+                transaction.Commit();
+                _logger.LogInformation("Database migration complete: {oldVersion} => {newVersion}", version, migrationVersion);
                 _hasMigrated = true;
             }
             catch (Exception ex)
