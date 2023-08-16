@@ -27,7 +27,7 @@ namespace SolarisBot.Discord
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated += HandleInteraction;
-            _client.Ready += () => _intService.RegisterCommandsToGuildAsync(_config.MainGuild); //todo: global loading
+            _client.Ready += () => _intService.RegisterCommandsToGuildAsync(_config.MainGuild); //todo: [FEATURE] Implement global loading
             await _intService.AddModulesAsync(GetType().Assembly, _services);
         }
 
@@ -55,7 +55,7 @@ namespace SolarisBot.Discord
         {
             _logger.LogDebug("Executed command {interactionId} for user {userName}({userId})", context.Interaction.Id, context.User.Username, context.User.Id);
             if (result.IsSuccess) return;
-            var responseEmbed = DiscordUtils.ErrorEmbed("Interaction Error", result.ErrorReason);
+            var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason);
             await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
         }
     }

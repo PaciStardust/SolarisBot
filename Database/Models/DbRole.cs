@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(RId))]
-    internal sealed class DbRole
+    public class DbRole
     {
         public ulong RId { get; set; } = 0;
         public ulong TId { get; set; } = 0;

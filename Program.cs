@@ -6,7 +6,6 @@ using Discord.WebSocket;
 using Discord;
 using Discord.Interactions;
 using SolarisBot.Discord;
-using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +47,11 @@ namespace SolarisBot
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
                 {
-                    services.AddDbContext<DatabaseContext>(options => options.UseSqlite($"Data Source={Utils.PathDatabaseFile}"));
+                    services.AddDbContext<DatabaseContext>(options => options.UseSqlite
+                    (
+                        $"Data Source={Utils.PathDatabaseFile};Pooling=false")
+                        .UseLazyLoadingProxies()
+                    );
                     services.AddSingleton(botConfig);
                     services.AddSingleton(new DiscordSocketClient(new()
                     {
@@ -62,16 +65,16 @@ namespace SolarisBot
                 .UseSerilog(logger)
                 .Build();
 
-        private static BotConfig GetConfig() //todo: impl better solution
+        private static BotConfig GetConfig()
         {
             var botConfig = BotConfig.FromFile(Utils.PathConfigFile);
             if (botConfig != null)
                 return botConfig;
 
             botConfig = new();
-            Console.WriteLine("Token?");
+            Console.Write("Token > ");
             botConfig.Token = Console.ReadLine() ?? string.Empty;
-            Console.WriteLine("Main Guild?");
+            Console.Write("Main Guild > ");
             botConfig.MainGuild = ulong.Parse(Console.ReadLine() ?? string.Empty);
 
             var saved = botConfig.SaveAt(Utils.PathConfigFile);

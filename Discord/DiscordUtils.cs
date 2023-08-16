@@ -1,5 +1,4 @@
 ﻿using Discord;
-using Discord.Interactions;
 using Microsoft.Extensions.Logging;
 using Color = Discord.Color;
 
@@ -31,48 +30,67 @@ namespace SolarisBot.Discord
         }
         #endregion
 
+        #region EmbedsV2
         /// <summary>
-        /// Generates a response embed
+        /// Generates a default embed
         /// </summary>
-        /// <param name="title">Title of embed</param>
-        /// <param name="content">Content text of embed</param>
-        #region Embeds
-        internal static Embed ResponseEmbed(string title, string content)
-            => new EmbedBuilder()
-                {
-                    Title = title,
-                    Description = content,
-                    Color = Color.Blue
-                }.Build();
+        internal static Embed Embed(string title, string content, EmbedResponseType rt = EmbedResponseType.Default)
+        {
+            var color = rt switch
+            {
+                EmbedResponseType.Default => Color.Blue,
+                EmbedResponseType.Error => Color.Red,
+                _ => Color.Blue
+            };
+
+            var embed = new EmbedBuilder()
+            {
+                Title = title,
+                Description = content,
+                Color = color
+            }.Build();
+
+            return embed;
+        }
 
         /// <summary>
-        /// Generates an error embed
+        /// Generates an embed error
         /// </summary>
-        /// <param name="title">Title of embed</param>
-        /// <param name="content">Content text of embed</param>
-        internal static Embed ErrorEmbed(string title, string content)
-            => new EmbedBuilder()
-                {
-                    Title = title,
-                    Description = content,
-                    Color = Color.Red
-                }.Build();
+        internal static Embed EmbedError(string title, string content)
+            => Embed(title, content, EmbedResponseType.Error);
+
         /// <summary>
-        /// Generates an error embed
+        /// Generates an embed error based on an exception
         /// </summary>
-        /// <param name="exception">Exception to respond with</param>
-        internal static Embed ErrorEmbed(Exception exception)
-            => ErrorEmbed(exception.GetType().Name, exception.Message);
+        internal static Embed EmbedError(Exception exception)
+            => Embed(exception.GetType().Name, exception.Message);
+
         /// <summary>
-        /// Generates a generic "No results" error embed
+        /// Generates a generic embed error based on GET
         /// </summary>
-        internal static Embed NoResultsEmbed()
-            => ErrorEmbed("No Results", "Request yielded no results");
-        /// <summary>
-        /// Generates a generic "Database Error" embed
-        /// </summary>
-        internal static Embed DatabaseErrorEmbed()
-            => ErrorEmbed("Database Error", "The database encountered an error");
+        internal static Embed EmbedError(EmbedGenericErrorType get)
+        {
+            var data = get switch
+            {
+                EmbedGenericErrorType.NoResults => ("No Results", "Request yielded no results"),
+                EmbedGenericErrorType.DatabaseError => ("Database Error", "The database encountered an error"),
+                _ => ("Unknown", "Unknown")
+            };
+
+            return EmbedError(data.Item1, data.Item2);
+        }
         #endregion
+    }
+
+    internal enum EmbedResponseType
+    {
+        Default,
+        Error
+    }
+
+    internal enum EmbedGenericErrorType
+    {
+        NoResults,
+        DatabaseError
     }
 }

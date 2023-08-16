@@ -11,9 +11,7 @@ namespace SolarisBot.Database
         public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options)
         {
             _logger = logger;
-            ChangeTracker.LazyLoadingEnabled = false;
-            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-            TryMigrate();
+            //TryMigrate();
         }
 
         public DbSet<DbGuild> Guilds { get; set; }
@@ -75,7 +73,7 @@ namespace SolarisBot.Database
         /// <summary>
         /// Attempts to migrate the database, throws on error
         /// </summary>
-        private void TryMigrate()
+        private void TryMigrate() //todo: [FIX] Migration causes issues
         {
             if (_hasMigrated) return;
 

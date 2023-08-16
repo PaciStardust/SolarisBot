@@ -49,7 +49,7 @@ namespace SolarisBot
         #region Data
         public string Token { get; set; } = string.Empty;
         public ulong MainGuild { get; set; } = 0;
-        public string DefaultStatus { get; set; } = "SolarisBot by Paci"; //todo: implement
+        public string DefaultStatus { get; set; } = "SolarisBot by Paci"; //todo: [FEATURE] Implement status changes
         #endregion
     }
 }

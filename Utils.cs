@@ -35,7 +35,7 @@ namespace SolarisBot
             }
             catch
             {
-                //Todo: log error?
+                //todo: [LOGGING] log error?
                 //Logger.Error(ex);
                 return 0;
             }
