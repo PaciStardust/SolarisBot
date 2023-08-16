@@ -18,7 +18,7 @@ namespace SolarisBot.Database
         public DbSet<DbJokeTimeout> JokeTimeouts { get; set; }
         public DbSet<DbQuote> Quotes { get; set; }
         public DbSet<DbRole> Roles { get; set; }
-        public DbSet<DbRoleTag> RoleTags { get; set; }
+        public DbSet<DbRoleGroup> RoleGroups { get; set; }
 
         /// <summary>
         /// Attempts to save changes to the database
@@ -91,8 +91,8 @@ namespace SolarisBot.Database
                     var queries = new string[]{
                         "PRAGMA foreign_keys = ON",
                         "CREATE TABLE Guilds(GId INTEGER PRIMARY KEY, VouchRoleId INTEGER NOT NULL DEFAULT 0, VouchSpreadOn BOOL NOT NULL DEFAULT 0, CustomColorPermissionRoleId INTEGER NOT NULL DEFAULT 0, CustomColorOwnershipRoleId INTEGER NOT NULL DEFAULT 0, JokeRenameOn BOOL NOT NULL DEFAULT 0, JokeRenameTimeoutMin INTEGER NOT NULL DEFAULT 0, JokeRenameTimeoutMax INTEGER NOT NULL DEFAULT 0, MagicRoleId INTEGER NOT NULL DEFAULT 0, MagicRoleTimeout INTEGER NOT NULL DEFAULT 0, MagicRoleNextUse INTEGER NOT NULL DEFAULT 0, MagicRoleRenameOn BOOL NOT NULL DEFAULT 0)",
-                        "CREATE TABLE RoleTags(TId INTEGER PRIMARY KEY AUTOINCREMENT, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, Name TEXT NOT NULL DEFAULT \"\", AllowOnlyOne BOOL NOT NULL DEFAULT 0, UNIQUE(GId, Name))",
-                        "CREATE TABLE Roles(RId INTEGER PRIMARY KEY, TId INTEGER REFERENCES RoleTags(TId) ON DELETE CASCADE ON UPDATE CASCADE, Name TEXT NOT NULL DEFAULT \"\", UNIQUE(TId, Name))",
+                        "CREATE TABLE RoleGroups(RgId INTEGER PRIMARY KEY AUTOINCREMENT, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, Name TEXT NOT NULL DEFAULT \"\", AllowOnlyOne BOOL NOT NULL DEFAULT 0, UNIQUE(GId, Name))",
+                        "CREATE TABLE Roles(RId INTEGER PRIMARY KEY, RgId INTEGER REFERENCES RoleGroups(RgId) ON DELETE CASCADE ON UPDATE CASCADE, Name TEXT NOT NULL DEFAULT \"\", UNIQUE(TId, Name))",
                         "CREATE TABLE Quotes(QId INTEGER PRIMARY KEY, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, Text TEXT NOT NULL DEFAULT \"\", AuthorId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, CreatorId INTEGER NOT NULL DEFAULT 0)",
                         "CREATE TABLE JokeTimeouts(JtId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, NextUse INTEGER NOT NULL DEFAULT 0, UNIQUE(GId, UserId))"
                     };

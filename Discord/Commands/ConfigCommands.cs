@@ -20,12 +20,12 @@ namespace SolarisBot.Discord.Commands
                 _logger = logger;
             }
 
-            [SlashCommand("list", "List all roles and tags")]
+            [SlashCommand("list", "List all roles and groups")]
             public async Task ListRolesAsync()
             {
                 var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
 
-                if (guild == null || !guild.RoleTags.Any())
+                if (guild == null || !guild.RoleGroups.Any())
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
@@ -34,13 +34,13 @@ namespace SolarisBot.Discord.Commands
                 //todo: [FEATURE] Remove from list on delete
                 //todo: [FEATURE] Remove special on other removal?
 
-                var strings = guild.RoleTags.OrderBy(x => x.Name)
+                var strings = guild.RoleGroups.OrderBy(x => x.Name)
                     .Select(x =>
                     {
                         var title = $"{x.Name} ({(x.AllowOnlyOne ? "Single" : "Multi")})";
                         var rolesText = x.Roles.Any()
                             ? string.Join("\n", x.Roles.OrderBy(x => x.Name).Select(x => $"┗{x.Name}(<@&{x.RId}>)"))
-                            : "┗(No roles assigned to tag)";
+                            : "┗(No roles assigned to group)";
 
                         return $"{title}\n{rolesText}";
                     });
@@ -48,46 +48,46 @@ namespace SolarisBot.Discord.Commands
                 await RespondEmbedAsync("List of Assignable Roles", string.Join("\n\n", strings));
             }
 
-            private static readonly Regex _roleNameVerificator = new(@"\A[a-z ]{2,20}\Z");
+            private static readonly Regex _roleNameVerificator = new(@"\A[a-z 0-9]{2,20}\Z");
 
-            [SlashCommand("create-tag", "Create a role tag (Tag names can only be made of 2-20 letters and spaces)")]
-            public async Task CreateRoleTagAsync(string name, bool allowMultiple = true)
+            [SlashCommand("create-group", "Create a role group (Group names can only be made of 2-20 letters, numbers, and spaces)")]
+            public async Task CreateRoleGroupAsync(string name, bool allowMultiple = true)
             {
                 var nameClean = name.Trim().ToLower();
                 if (!_roleNameVerificator.IsMatch(nameClean))
                 {
-                    await RespondErrorEmbedAsync("Invalid Name", "Tag names must be made of letters and spaces and can only be 2-20 characters long");
+                    await RespondErrorEmbedAsync("Invalid Name", "Group names must be made of letters, numbers, and spaces and can only be 2-20 characters long");
                     return;
                 }
 
                 var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-                if (guild.RoleTags.FirstOrDefault(x => x.Name == nameClean) != null)
+                if (guild.RoleGroups.FirstOrDefault(x => x.Name == nameClean) != null)
                 {
-                    await RespondErrorEmbedAsync("Already Exists", $"A tag by the name of \"{nameClean}\" already exists");
+                    await RespondErrorEmbedAsync("Already Exists", $"A group by the name of \"{nameClean}\" already exists");
                     return;
                 }
 
-                var roleTag = new DbRoleTag()
+                var roleGroup = new DbRoleGroup()
                 {
                     AllowOnlyOne = allowMultiple,
                     GId = Context.Guild.Id,
                     Name = nameClean
                 };
 
-                await _dbContext.RoleTags.AddAsync(roleTag);
+                await _dbContext.RoleGroups.AddAsync(roleGroup);
 
                 if (await _dbContext.TrySaveChangesAsync() == -1)
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 else
                 {
-                    _logger.LogInformation("Created role tag {tagName} for guild {guildId}", roleTag.Name, roleTag.GId);
-                    await RespondEmbedAsync("Role Tag Created", $"A role tag with the name \"{nameClean}\" has been created");
+                    _logger.LogInformation("Created role group {groupName} for guild {guildId}", roleGroup.Name, roleGroup.GId);
+                    await RespondEmbedAsync("Role Group Created", $"A role group with the name \"{nameClean}\" has been created");
                 }
             }
 
-            [SlashCommand("delete-tag", "Delete a role tag")]
-            public async Task DeleteRoleTagAsync(string name)
+            [SlashCommand("delete-group", "Delete a role group")]
+            public async Task DeleteRoleGroupAsync(string name)
             {
                 var nameClean = name.Trim().ToLower();
                 if (!_roleNameVerificator.IsMatch(nameClean))
@@ -97,39 +97,39 @@ namespace SolarisBot.Discord.Commands
                 }
 
                 var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
-                var roleTag = guild?.RoleTags.FirstOrDefault(x => x.Name == nameClean);
-                if (roleTag == null)
+                var roleGroup = guild?.RoleGroups.FirstOrDefault(x => x.Name == nameClean);
+                if (roleGroup == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
                 }
 
-                _dbContext.RoleTags.Remove(roleTag);
+                _dbContext.RoleGroups.Remove(roleGroup);
 
                 if (await _dbContext.TrySaveChangesAsync() == -1)
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 else
                 {
-                    _logger.LogInformation("Deleted role tag {tagName} from guild {guildId}", roleTag.Name, roleTag.GId);
-                    await RespondEmbedAsync("Role Tag Deleted", $"A role tag with the name \"{nameClean}\" has been deleted");
+                    _logger.LogInformation("Deleted role group {groupName} from guild {guildId}", roleGroup.Name, roleGroup.GId);
+                    await RespondEmbedAsync("Role Group Deleted", $"A role group with the name \"{nameClean}\" has been deleted");
                 }
             }
 
-            [SlashCommand("register-role", "Register a role to a tag (Identifier names can only be made of 2-20 letters and spaces)")]
-            public async Task RegisterRoleAsync(IRole role, string identifier, string tag)
+            [SlashCommand("register-role", "Register a role to a group (Identifier names can only be made of 2-20 letters, numbers, and spaces)")]
+            public async Task RegisterRoleAsync(IRole role, string identifier, string group)
             {
                 var identifierNameClean = identifier.Trim().ToLower();
-                var tagNameClean = tag.Trim().ToLower();
+                var groupNameClean = group.Trim().ToLower();
 
-                if (!_roleNameVerificator.IsMatch(identifierNameClean) || !_roleNameVerificator.IsMatch(tagNameClean))
+                if (!_roleNameVerificator.IsMatch(identifierNameClean) || !_roleNameVerificator.IsMatch(groupNameClean))
                 {
-                    await RespondErrorEmbedAsync("Invalid Identifier", "Tag and identifier must be made of letters and spaces and can only be 2-20 characters long");
+                    await RespondErrorEmbedAsync("Invalid Identifier", "Group and identifier must be made of letters, numbers, and spaces and can only be 2-20 characters long");
                     return;
                 }
 
                 var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
-                var roleTag = guild?.RoleTags.FirstOrDefault(x => x.Name == tagNameClean);
-                if (roleTag == null)
+                var roleGroup = guild?.RoleGroups.FirstOrDefault(x => x.Name == groupNameClean);
+                if (roleGroup == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
@@ -145,7 +145,7 @@ namespace SolarisBot.Discord.Commands
                 {
                     Name = identifierNameClean,
                     RId = role.Id,
-                    TId = roleTag.TId
+                    TId = roleGroup.RgId
                 };
 
                 await _dbContext.Roles.AddAsync(dbRole);
@@ -154,7 +154,7 @@ namespace SolarisBot.Discord.Commands
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 else
                 {
-                    _logger.LogInformation("Role with identifier {roleName} registered to tag {tagName} in guild {guildId}", dbRole.Name, roleTag.Name, roleTag.GId);
+                    _logger.LogInformation("Role with identifier {roleName} registered to group {groupName} in guild {guildId}", dbRole.Name, roleGroup.Name, roleGroup.GId);
                     await RespondEmbedAsync("Role Registered", $"A role with the identifier \"{identifierNameClean}\" has been registered");
                 }
             }
@@ -166,7 +166,7 @@ namespace SolarisBot.Discord.Commands
 
                 if (!_roleNameVerificator.IsMatch(identifierNameClean))
                 {
-                    await RespondErrorEmbedAsync("Invalid Identifier", "Identifier must be made of letters and spaces and can only be 2-20 characters long");
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
                 }
 
@@ -183,13 +183,12 @@ namespace SolarisBot.Discord.Commands
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 else
                 {
-                    _logger.LogInformation("Role with identifier {roleName} unregistered from tag {tagName}", role.Name, role.Name);
+                    _logger.LogInformation("Role with identifier {roleName} unregistered from group {groupName}", role.Name, role.Name);
                     await RespondEmbedAsync("Role Unegistered", $"A role with the identifier \"{identifierNameClean}\" has been unregistered");
                 }
             }
 
             //todo: [FEATURE] Ease of deletion w roles
-            //todo: [FEATURE] Rename of tags to groups
         }
     }
 }

@@ -21,6 +21,7 @@ namespace SolarisBot.Discord
             }
             catch (Exception ex)
             {
+                //todo: [LOGGING] log error?
                 //_logger.LogError(ex, "Failed to respond to interaction");
             }
         }
