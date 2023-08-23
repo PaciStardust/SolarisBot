@@ -187,5 +187,7 @@ namespace SolarisBot.Discord.Commands
                 }
             }
         }
+        // todo: [FEATURE] Allow uppercase
+        // todo: [FEATURE] Group Descripton
     }
 }
