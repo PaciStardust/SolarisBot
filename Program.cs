@@ -5,9 +5,9 @@ using Serilog;
 using Discord.WebSocket;
 using Discord;
 using Discord.Interactions;
-using SolarisBot.Discord;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
+using SolarisBot.Discord.Services;
 
 namespace SolarisBot
 {
@@ -62,7 +62,6 @@ namespace SolarisBot
                     services.AddSingleton<InteractionService>();
 
                     services.AddHostedService<InteractionHandlerService>();
-                    services.AddHostedService<EventHandlerService>();
                     services.AddHostedService<DiscordClientService>();
                 })
                 .UseSerilog(logger)

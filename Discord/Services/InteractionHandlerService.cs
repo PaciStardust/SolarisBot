@@ -3,7 +3,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace SolarisBot.Discord
+namespace SolarisBot.Discord.Services
 {
     internal sealed class InteractionHandlerService : IHostedService
     {
@@ -27,8 +27,17 @@ namespace SolarisBot.Discord
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated += HandleInteraction;
-            _client.Ready += () => _intService.RegisterCommandsToGuildAsync(_config.MainGuild); //todo: [FEATURE] Implement global loading
             await _intService.AddModulesAsync(GetType().Assembly, _services);
+
+            if (_config.GlobalLoad)
+            {
+                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild); //this will clear them locally
+                _client.Ready += () => _intService.RegisterCommandsGloballyAsync();
+            }
+            else
+            {
+                _client.Ready += () => _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

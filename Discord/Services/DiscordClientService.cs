@@ -1,38 +1,63 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 
-namespace SolarisBot.Discord
+namespace SolarisBot.Discord.Services
 {
-    internal sealed class EventHandlerService : IHostedService
+    internal sealed class DiscordClientService : IHostedService
     {
+        private readonly BotConfig _config;
+        private readonly ILogger<DiscordClientService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly ILogger<EventHandlerService> _logger;
         private readonly IServiceProvider _services;
 
-        public EventHandlerService(DiscordSocketClient client, ILogger<EventHandlerService> logger, IServiceProvider services)
+        public DiscordClientService(BotConfig config, ILogger<DiscordClientService> logger, DiscordSocketClient client, IServiceProvider services)
         {
             _client = client;
+            _config = config;
             _logger = logger;
             _services = services;
+
+            _client.Log += logMessage => logMessage.Log(_logger);
+
+            RegisterSubsciptions();
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cToken)
         {
+            await _client.LoginAsync(TokenType.Bot, _config.Token);
+            await _client.StartAsync();
+        }
+
+        public async Task StopAsync(CancellationToken cToken)
+        {
+            await _client.LogoutAsync();
+            await _client.StopAsync();
+        }
+
+        #region Subscriptions
+        private void RegisterSubsciptions()
+        {
+            _client.Ready += OnReadyAsync;
             _client.RoleDeleted += OnRoleDeletedAsync;
-            return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        private async Task OnReadyAsync() //todo: [TESTING] Does status get applied?
         {
-            return Task.CompletedTask;
+            try
+            {
+                await _client.SetGameAsync(_config.DefaultStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to ready up client extras");
+                //throw;
+            }
         }
 
-        /// <summary>
-        /// Deletes roles from Roles Table if deleted in discord
-        /// </summary>
         private async Task OnRoleDeletedAsync(SocketRole role)
         {
             _logger.LogDebug("Role {roleName}({roleId}) has been deleted from discord, checking for match in DB", role.Name, role.Id);
@@ -49,5 +74,6 @@ namespace SolarisBot.Discord
             else
                 _logger.LogInformation("Deleted role {roleName}({roleId}) has found match in DB as {identifier} and has been removed", role.Name, role.Id, dbRole.Name);
         }
+        #endregion
     }
 }

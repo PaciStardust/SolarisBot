@@ -1,9 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SolarisBot.Database
 {
@@ -13,6 +8,7 @@ namespace SolarisBot.Database
         public ulong RId { get; set; } = 0;
         public ulong RgId { get; set; } = 0;
         public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
 
         public DbRole() { }
     }

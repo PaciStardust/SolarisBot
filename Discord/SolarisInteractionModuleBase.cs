@@ -9,6 +9,11 @@ namespace SolarisBot.Discord
     /// </summary>
     public abstract class SolarisInteractionModuleBase : InteractionModuleBase
     {
+        /// <summary>
+        /// Needs to be overriden for internal error logging
+        /// </summary>
+        protected virtual ILogger? GetLogger() => null;
+
         #region Embeds
         /// <summary>
         /// Respond with an embed
@@ -21,8 +26,7 @@ namespace SolarisBot.Discord
             }
             catch (Exception ex)
             {
-                //todo: [LOGGING] log error?
-                //_logger.LogError(ex, "Failed to respond to interaction");
+                GetLogger()?.LogError(ex, "Failed to respond to interaction");
             }
         }
 

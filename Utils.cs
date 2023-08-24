@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace SolarisBot
 {
@@ -19,24 +20,23 @@ namespace SolarisBot
         /// Gets current Unix as ULong
         /// </summary>
         /// <returns>Current Uunix Timestamp (seconds)</returns>
-        internal static ulong GetCurrentUnix()
-            => LongToUlong(DateTimeOffset.Now.ToUnixTimeSeconds());
+        internal static ulong GetCurrentUnix(ILogger? logger = null)
+            => LongToUlong(DateTimeOffset.Now.ToUnixTimeSeconds(), logger);
 
         /// <summary>
         /// Converts a long value to a ulong value
         /// </summary>
         /// <param name="value">Long to convert</param>
         /// <returns>ulong value or 0, if parsing fails</returns>
-        internal static ulong LongToUlong(this long value)
+        internal static ulong LongToUlong(this long value, ILogger? logger = null)
         {
             try
             {
                 return Convert.ToUInt64(value);
             }
-            catch
+            catch (Exception ex)
             {
-                //todo: [LOGGING] log error?
-                //Logger.Error(ex);
+                logger?.LogError(ex, "Failed to convert {long} to ulong", value);
                 return 0;
             }
         }
