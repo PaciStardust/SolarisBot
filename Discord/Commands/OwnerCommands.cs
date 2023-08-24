@@ -1,11 +1,12 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Discord.Commands
 {
-    [Group("owner", "[OWNER ONLY] Configure Solaris"), RequireContext(ContextType.Guild), RequireOwner] //todo: [TESTING] Test if visible to others
+    [Group("owner", "[OWNER ONLY] Configure Solaris"), RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
     public sealed class OwnerCommands : SolarisInteractionModuleBase
     {
         private readonly IServiceProvider _services;
@@ -17,7 +18,7 @@ namespace SolarisBot.Discord.Commands
         }
         protected override ILogger? GetLogger() => _logger;
 
-        [SlashCommand("set-status", "Set the status of the bot")] //todo: [TESTING] Does command work?
+        [SlashCommand("set-status", "Set the status of the bot")]
         public async Task SetStatusAsync(string status)
         {
             var config = _services.GetRequiredService<BotConfig>();
@@ -34,7 +35,7 @@ namespace SolarisBot.Discord.Commands
             {
                 await client.SetGameAsync(status);
                 _logger.LogInformation("Discord client status has been set to {discordStatus}", status);
-                await RespondEmbedAsync("Status Set", $"Status set to \"{status}\")");
+                await RespondEmbedAsync("Status Set", $"Status set to \"{status}\"");
             }
             catch (Exception ex)
             {

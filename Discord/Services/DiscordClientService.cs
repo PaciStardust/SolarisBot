@@ -45,7 +45,7 @@ namespace SolarisBot.Discord.Services
             _client.RoleDeleted += OnRoleDeletedAsync;
         }
 
-        private async Task OnReadyAsync() //todo: [TESTING] Does status get applied?
+        private async Task OnReadyAsync()
         {
             try
             {

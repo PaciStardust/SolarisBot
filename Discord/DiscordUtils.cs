@@ -74,6 +74,7 @@ namespace SolarisBot.Discord
             {
                 EmbedGenericErrorType.NoResults => ("No Results", "Request yielded no results"),
                 EmbedGenericErrorType.DatabaseError => ("Database Error", "The database encountered an error"),
+                EmbedGenericErrorType.NotGuild => ("Not Guild", "Not executed in a guild"),
                 _ => ("Unknown", "Unknown")
             };
 
@@ -91,6 +92,7 @@ namespace SolarisBot.Discord
     internal enum EmbedGenericErrorType
     {
         NoResults,
-        DatabaseError
+        DatabaseError,
+        NotGuild
     }
 }
