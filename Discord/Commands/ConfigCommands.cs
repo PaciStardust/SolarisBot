@@ -34,6 +34,7 @@ namespace SolarisBot.Discord.Commands
                 }
 
                 //todo: [FEATURE] Remove special on other removal?
+                //todo: [FEATURE] Role requirement for tag?
 
                 var strings = guild.RoleGroups.OrderBy(x => x.Name)
                     .Select(x =>
