@@ -25,9 +25,9 @@ namespace SolarisBot.Discord.Commands
             [SlashCommand("list", "List all roles and groups")]
             public async Task ListRolesAsync()
             {
-                var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+                var roleGroups = _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id);
 
-                if (guild == null || !guild.RoleGroups.Any())
+                if (!roleGroups.Any())
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
@@ -36,7 +36,7 @@ namespace SolarisBot.Discord.Commands
                 //todo: [FEATURE] Remove special on other removal?
                 //todo: [FEATURE] Role requirement for tag?
 
-                var strings = guild.RoleGroups.OrderBy(x => x.Name)
+                var strings = roleGroups.ToArray().OrderBy(x => x.Name)
                     .Select(x =>
                     {
                         var title = $"{x.Name} ({(x.AllowOnlyOne ? "Single" : "Multi")})";
@@ -50,7 +50,7 @@ namespace SolarisBot.Discord.Commands
                 await RespondEmbedAsync("List of Assignable Roles", string.Join("\n\n", strings));
             }
 
-            [SlashCommand("create-group", "Create a role group (Group names can only be made of 2-20 letters, numbers, and spaces)")] //todo: override with same name
+            [SlashCommand("create-group", "Create a role group (Group names can only be made of 2-20 letters, numbers, and spaces)")] //todo: override with same name, reimpl description
             public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string name, bool allowMultiple = false)
             {
                 var nameClean = name.Trim();
@@ -97,22 +97,21 @@ namespace SolarisBot.Discord.Commands
                     return;
                 }
 
-                var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
                 var lowerName = nameClean.ToLower();
-                var roleGroup = guild?.RoleGroups.FirstOrDefault(x => x.Name.ToLower() == lowerName);
-                if (roleGroup == null)
+                var match = _dbContext.RoleGroups.FirstOrDefault(x => x.GId == Context.Guild.Id && x.Name.ToLower() == lowerName);
+                if (match == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
                 }
 
-                _dbContext.RoleGroups.Remove(roleGroup);
+                _dbContext.RoleGroups.Remove(match);
 
                 if (await _dbContext.TrySaveChangesAsync() == -1)
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 else
                 {
-                    _logger.LogInformation("Deleted role group {groupName} from guild {guildId}", roleGroup.Name, roleGroup.GId);
+                    _logger.LogInformation("Deleted role group {groupName} from guild {guildId}", match.Name, match.GId);
                     await RespondEmbedAsync("Role Group Deleted", $"A role group with the name \"{nameClean}\" has been deleted");
                 }
             }
@@ -136,15 +135,14 @@ namespace SolarisBot.Discord.Commands
                     return;
                 }
 
-                var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
-                var roleGroup = guild?.RoleGroups.FirstOrDefault(x => x.Name.ToLower() == groupNameCleanLower);
+                var roleGroup = _dbContext.RoleGroups.FirstOrDefault(x => x.GId == Context.Guild.Id && x.Name.ToLower() == groupNameCleanLower);
                 if (roleGroup == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
                 }
 
-                var lowerIdentifierName = identifierNameClean.ToLower();
+                var lowerIdentifierName = identifierNameClean.ToLower(); 
                 if (roleGroup.Roles.FirstOrDefault(x => x.Name.ToLower() == lowerIdentifierName) != null)
                 {
                     await RespondErrorEmbedAsync("Already Registered", "A Role by that identifier is already registered");
@@ -202,7 +200,7 @@ namespace SolarisBot.Discord.Commands
             [SlashCommand("role-dropdown", "ye")]
             public async Task RoleDropdownTestAsync()
             {
-                var guild = _dbContext.Guilds.FirstOrDefault(x => x.GId == Context.Guild.Id);
+                var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
 
                 if (guild == null)
                 {
