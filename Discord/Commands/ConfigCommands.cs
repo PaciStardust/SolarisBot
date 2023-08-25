@@ -39,7 +39,7 @@ namespace SolarisBot.Discord.Commands
                 var strings = (await roleGroups.ToArrayAsync()).OrderBy(x => x.Name)
                     .Select(x =>
                     {
-                        var title = $"{x.Name} ({(x.AllowOnlyOne ? "Single" : "Multi")}{(x.RequiredRoleId == 0 ? string.Empty : $", <&{x.RequiredRoleId}> Only")})";
+                        var title = $"{x.Name} ({(x.AllowOnlyOne ? "One of" : "Multi")}{(x.RequiredRoleId == 0 ? string.Empty : $", <@&{x.RequiredRoleId}> Only")})";
                         var rolesText = x.Roles.Any()
                             ? string.Join("\n", x.Roles.OrderBy(x => x.Name).Select(x => $"┗ {x.Name}(<@&{x.RId}>)"))
                             : "┗ (No roles assigned to group)";
@@ -86,7 +86,7 @@ namespace SolarisBot.Discord.Commands
                 else
                 {
                     _logger.LogInformation("Created role group {groupName} for guild {guildId}", roleGroup.Name, roleGroup.GId);
-                    await RespondEmbedAsync("Role Group Created", $"A role group with the name \"{nameClean}\" has been created");
+                    await RespondEmbedAsync("Role Group Created", $"A role group with the name \"{nameClean}\" has been created"); //todo: better summary
                 }
             }
 
@@ -167,7 +167,7 @@ namespace SolarisBot.Discord.Commands
                 else
                 {
                     _logger.LogInformation("Role with identifier {roleName} registered to group {groupName} in guild {guildId}", dbRole.Name, roleGroup.Name, roleGroup.GId);
-                    await RespondEmbedAsync("Role Registered", $"A role with the identifier \"{identifierNameClean}\" has been registered");
+                    await RespondEmbedAsync("Role Registered", $"A role with the identifier \"{identifierNameClean}\" has been registered"); //todo: better summary
                 }
             }
 
@@ -212,17 +212,17 @@ namespace SolarisBot.Discord.Commands
                 }
 
                 var groupFields = new List<EmbedFieldBuilder>();
-                foreach (var roleGroup in roleGroups)
+                foreach (var roleGroup in roleGroups.OrderBy(x => x.Name))
                 {
                     var roles = roleGroup.Roles;
                     if (!roles.Any()) continue;
 
-                    var roleList = string.Join(", ", roles.Select(x => $"{x.Name}(<&{x.RId}>)"));
+                    var roleList = string.Join(", ", roles.OrderBy(x => x.Name).Select(x => $"{x.Name}(<@&{x.RId}>)"));
                     var fieldBuilder = new EmbedFieldBuilder()
                     {
                         IsInline = true,
-                        Name = $"{roleGroup.Name} ({(roleGroup.AllowOnlyOne ? "Single" : "Multi")}{(roleGroup.RequiredRoleId == 0 ? string.Empty : $", <&{roleGroup.RequiredRoleId}> Only")})",
-                        Value = $"{(string.IsNullOrWhiteSpace(roleGroup.Description) ? string.Empty : roleGroup.Description + "\n")}Roles: {roleList}"
+                        Name = $"{roleGroup.Name} ({(roleGroup.AllowOnlyOne ? "One of" : "Multi")})",
+                        Value = $"{(roleGroup.RequiredRoleId == 0 ? string.Empty : $"<@&{roleGroup.RequiredRoleId}> Only\n")}{(string.IsNullOrWhiteSpace(roleGroup.Description) ? string.Empty : roleGroup.Description + "\n")}Roles: {roleList}"
                     };
                     groupFields.Add(fieldBuilder);
                 }
@@ -252,7 +252,7 @@ namespace SolarisBot.Discord.Commands
                     return;
                 }
 
-                var cleanGroupName = groupname.Trim();
+                var cleanGroupName = groupname.Trim().ToLower();
                 if (!IsIdentifierValid(cleanGroupName))
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
@@ -302,8 +302,8 @@ namespace SolarisBot.Discord.Commands
                 }
             }
 
-            [ComponentInteraction("testroleselector.*", true)]
-            public async Task TestSelectRoleResponseAsync(string gid, string[] selections)
+            [ComponentInteraction("testroleselector.*", true)] //todo: cleanup
+            public async Task TestSelectRoleResponseAsync(string rgid, string[] selections)
             {
                 if (Context.User is not SocketGuildUser gUser)
                 {
@@ -311,14 +311,14 @@ namespace SolarisBot.Discord.Commands
                     return;
                 }
 
-                if (selections.Length == 0 || !ulong.TryParse(gid, out var parsedGid))
+                if (selections.Length == 0 || !ulong.TryParse(rgid, out var parsedGid))
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
                     return;
                 }
 
-                var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == parsedGid);
-                if (roleGroup == null || roleGroup.AllowOnlyOne && selections.Length > 1)
+                var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RgId == parsedGid);
+                if (roleGroup == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
@@ -329,19 +329,36 @@ namespace SolarisBot.Discord.Commands
                 var rolesToAdd = new List<DbRole>();
                 var rolesToRemove = new List<DbRole>();
                 var rolesInvalid = new List<string>();
-                foreach (var selection in selections)
-                {
-                    var dbRole = dbRoles.FirstOrDefault(x => x.Name == selection);
-                    if (dbRole == null)
-                    {
-                        rolesInvalid.Add(selection);
-                        continue;
-                    }
 
-                    if (userRoleIds.Contains(dbRole.RId))
-                        rolesToRemove.Add(dbRole);
+                if (roleGroup.AllowOnlyOne)
+                {
+                    var dbRole = dbRoles.FirstOrDefault(x => x.Name == selections[0]);
+                    if (dbRole != null)
+                    {
+                        var alreadyPossesedRoles = dbRoles.Where(x => userRoleIds.Contains(x.RId));
+                        rolesToRemove.AddRange(alreadyPossesedRoles);
+                        if(!rolesToRemove.Contains(dbRole))
+                            rolesToAdd.Add(dbRole);
+                    }
                     else
-                        rolesToAdd.Add(dbRole);
+                        rolesInvalid.Add(selections[0]);
+                }
+                else
+                {
+                    foreach (var selection in selections)
+                    {
+                        var dbRole = dbRoles.FirstOrDefault(x => x.Name == selection);
+                        if (dbRole == null)
+                        {
+                            rolesInvalid.Add(selection);
+                            continue;
+                        }
+
+                        if (userRoleIds.Contains(dbRole.RId))
+                            rolesToRemove.Add(dbRole);
+                        else
+                            rolesToAdd.Add(dbRole);
+                    }
                 }
 
                 try
@@ -351,7 +368,7 @@ namespace SolarisBot.Discord.Commands
                     if (rolesToAdd.Any())
                     {
                         await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RId));
-                        var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Name}(<&{x.RId}>)"));
+                        var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Name}(<@&{x.RId}>)"));
                         groupFields.Add(new EmbedFieldBuilder()
                         {
                             IsInline = true,
@@ -363,7 +380,7 @@ namespace SolarisBot.Discord.Commands
                     if (rolesToRemove.Any())
                     {
                         await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RId));
-                        var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Name}(<&{x.RId}>)"));
+                        var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Name}(<@&{x.RId}>)"));
                         groupFields.Add(new EmbedFieldBuilder()
                         {
                             IsInline = true,
