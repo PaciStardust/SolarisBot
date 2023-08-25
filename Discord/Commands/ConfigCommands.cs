@@ -51,7 +51,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             [SlashCommand("create-group", "Create a role group (Group names can only be made of 2-20 letters, numbers, and spaces)")] //todo: override with same name, reimpl description
-            public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string name, [MinLength(2), MaxLength(200)] string description = "", bool allowMultiple = false)
+            public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string name, [MinLength(2), MaxLength(200)] string description = "", bool allowMultiple = false, IRole? requiredRole = null)
             {
                 var nameClean = name.Trim();
                 var descriptionClean = description.Trim();
@@ -75,7 +75,8 @@ namespace SolarisBot.Discord.Commands
                     AllowOnlyOne = allowMultiple,
                     GId = Context.Guild.Id,
                     Name = nameClean,
-                    Description = descriptionClean
+                    Description = descriptionClean,
+                    RequiredRoleId = requiredRole?.Id ?? 0
                 };
 
                 await _dbContext.RoleGroups.AddAsync(roleGroup);
@@ -197,6 +198,12 @@ namespace SolarisBot.Discord.Commands
                     _logger.LogInformation("Role with identifier {roleName} unregistered from group {groupName}", role.Name, role.Name);
                     await RespondEmbedAsync("Role Unegistered", $"A role with the identifier \"{identifierNameClean}\" has been unregistered");
                 }
+            }
+
+            [SlashCommand("test-view-roles", "View all role groups")]
+            public async Task TestViewRolesAsync()
+            {
+                //todo: yee
             }
 
             #region REQUIRES REWORK

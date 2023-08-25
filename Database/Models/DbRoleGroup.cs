@@ -11,6 +11,7 @@ namespace SolarisBot.Database
         public string Name { get; set; } = string.Empty;
         public bool AllowOnlyOne { get; set; } = false;
         public string Description { get; set; } = string.Empty;
+        public ulong RequiredRoleId { get; set; } = 0;
 
         [ForeignKey(nameof(DbRole.RgId))]
         public virtual ICollection<DbRole> Roles { get; set; } = new HashSet<DbRole>();
