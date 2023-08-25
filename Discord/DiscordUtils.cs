@@ -74,7 +74,8 @@ namespace SolarisBot.Discord
             {
                 EmbedGenericErrorType.NoResults => ("No Results", "Request yielded no results"),
                 EmbedGenericErrorType.DatabaseError => ("Database Error", "The database encountered an error"),
-                EmbedGenericErrorType.NotGuild => ("Not Guild", "Not executed in a guild"),
+                EmbedGenericErrorType.Forbidden => ("Forbidden", "You are forbidden from accessing this"),
+                EmbedGenericErrorType.InvalidInput => ("Invalid Input", "Provided values are invalid"),
                 _ => ("Unknown", "Unknown")
             };
 
@@ -93,6 +94,7 @@ namespace SolarisBot.Discord
     {
         NoResults,
         DatabaseError,
-        NotGuild
+        Forbidden,
+        InvalidInput
     }
 }

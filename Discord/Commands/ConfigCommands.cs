@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using System.Text.RegularExpressions;
@@ -34,12 +35,11 @@ namespace SolarisBot.Discord.Commands
                 }
 
                 //todo: [FEATURE] Remove special on other removal?
-                //todo: [FEATURE] Role requirement for tag?
 
-                var strings = roleGroups.ToArray().OrderBy(x => x.Name)
+                var strings = (await roleGroups.ToArrayAsync()).OrderBy(x => x.Name)
                     .Select(x =>
                     {
-                        var title = $"{x.Name} ({(x.AllowOnlyOne ? "Single" : "Multi")})";
+                        var title = $"{x.Name} ({(x.AllowOnlyOne ? "Single" : "Multi")}{(x.RequiredRoleId == 0 ? string.Empty : $", <&{x.RequiredRoleId}> Only")})";
                         var rolesText = x.Roles.Any()
                             ? string.Join("\n", x.Roles.OrderBy(x => x.Name).Select(x => $"┗ {x.Name}(<@&{x.RId}>)"))
                             : "┗ (No roles assigned to group)";
@@ -50,14 +50,14 @@ namespace SolarisBot.Discord.Commands
                 await RespondEmbedAsync("List of Assignable Roles", string.Join("\n\n", strings));
             }
 
-            [SlashCommand("create-group", "Create a role group (Group names can only be made of 2-20 letters, numbers, and spaces)")] //todo: override with same name, reimpl description
+            [SlashCommand("create-group", "Create a role group (Group names can only be made of 2-20 letters, numbers, and spaces)")] //todo: override with same name
             public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string name, [MinLength(2), MaxLength(200)] string description = "", bool allowMultiple = false, IRole? requiredRole = null)
             {
                 var nameClean = name.Trim();
                 var descriptionClean = description.Trim();
                 if (!IsIdentifierValid(nameClean) || descriptionClean.Length > 200)
                 {
-                    await RespondErrorEmbedAsync("Invalid Name", "Group names must be made of letters, numbers, and spaces");
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
                     return;
                 }
 
@@ -96,12 +96,12 @@ namespace SolarisBot.Discord.Commands
                 var nameClean = name.Trim();
                 if (!IsIdentifierValid(nameClean))
                 {
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
                     return;
                 }
 
                 var lowerName = nameClean.ToLower();
-                var match = _dbContext.RoleGroups.FirstOrDefault(x => x.GId == Context.Guild.Id && x.Name.ToLower() == lowerName);
+                var match = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Name.ToLower() == lowerName);
                 if (match == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
@@ -128,17 +128,17 @@ namespace SolarisBot.Discord.Commands
 
                 if (!IsIdentifierValid(identifierNameClean) || !IsIdentifierValid(groupNameCleanLower) || descriptionClean.Length > 200)
                 {
-                    await RespondErrorEmbedAsync("Invalid Identifier", "Group and identifier must be made of letters, numbers, and spaces");
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
                     return;
                 }
 
-                if (_dbContext.Roles.FirstOrDefault(x => x.RId == role.Id) != null)
+                if (await _dbContext.Roles.FirstOrDefaultAsync(x => x.RId == role.Id) != null)
                 {
                     await RespondErrorEmbedAsync("Already Registered", "Role is already registered");
                     return;
                 }
 
-                var roleGroup = _dbContext.RoleGroups.FirstOrDefault(x => x.GId == Context.Guild.Id && x.Name.ToLower() == groupNameCleanLower);
+                var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Name.ToLower() == groupNameCleanLower);
                 if (roleGroup == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
@@ -178,11 +178,11 @@ namespace SolarisBot.Discord.Commands
 
                 if (!IsIdentifierValid(identifierNameClean))
                 {
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
                     return;
                 }
 
-                var role = _dbContext.Roles.FirstOrDefault(x => x.Name.ToLower() == identifierNameClean);
+                var role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Name.ToLower() == identifierNameClean);
                 if (role == null)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
@@ -195,125 +195,216 @@ namespace SolarisBot.Discord.Commands
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 else
                 {
-                    _logger.LogInformation("Role with identifier {roleName} unregistered from group {groupName}", role.Name, role.Name);
+                    _logger.LogInformation("Role with identifier {roleName} unregistered from groups", role.Name);
                     await RespondEmbedAsync("Role Unegistered", $"A role with the identifier \"{identifierNameClean}\" has been unregistered");
                 }
             }
 
             [SlashCommand("test-view-roles", "View all role groups")]
-            public async Task TestViewRolesAsync()
+            public async Task TestViewRolesAsync() //todo: TEST
             {
-                //todo: yee
-            }
+                var roleGroups = _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id);
 
-            #region REQUIRES REWORK
-            [SlashCommand("role-dropdown", "ye")]
-            public async Task RoleDropdownTestAsync()
-            {
-                var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
-
-                if (guild == null)
+                if (!roleGroups.Any())
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
                 }
 
-                int matches = 0;
+                var groupFields = new List<EmbedFieldBuilder>();
+                foreach (var roleGroup in roleGroups)
+                {
+                    var roles = roleGroup.Roles;
+                    if (!roles.Any()) continue;
+
+                    var roleList = string.Join(", ", roles.Select(x => $"{x.Name}(<&{x.RId}>)"));
+                    var fieldBuilder = new EmbedFieldBuilder()
+                    {
+                        IsInline = true,
+                        Name = $"{roleGroup.Name} ({(roleGroup.AllowOnlyOne ? "Single" : "Multi")}{(roleGroup.RequiredRoleId == 0 ? string.Empty : $", <&{roleGroup.RequiredRoleId}> Only")})",
+                        Value = $"{(string.IsNullOrWhiteSpace(roleGroup.Description) ? string.Empty : roleGroup.Description + "\n")}Roles: {roleList}"
+                    };
+                    groupFields.Add(fieldBuilder);
+                }
+
+                if (!groupFields.Any())
+                {
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                    return;
+                }
+
+                var embedBuilder = new EmbedBuilder()
+                {
+                    Fields = groupFields,
+                    Color = Color.Blue,
+                    Title = "Self-Assignable Roles"
+                };
+
+                await RespondEmbedAsync(embedBuilder.Build());
+            }
+
+            [SlashCommand("test-select-roles", "Select roles")]
+            public async Task TestSelectRolesAsync([MinLength(2), MaxLength(20)] string groupname)
+            { 
+                if (Context.User is not SocketGuildUser gUser)
+                {
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
+                    return;
+                }
+
+                var cleanGroupName = groupname.Trim();
+                if (!IsIdentifierValid(cleanGroupName))
+                {
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
+                    return;
+                }
+
+                var group = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Name.ToLower() == cleanGroupName);
+                var roles = group?.Roles;
+                if (roles == null || !roles.Any())
+                {
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                    return;
+                }
+
+                if (group!.RequiredRoleId != 0 && !gUser.Roles.Select(x => x.Id).Contains(group.RequiredRoleId))
+                {
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
+                    return;
+                }
+
                 var menuBuilder = new SelectMenuBuilder()
                 {
-                    CustomId = "roledropdowntest",
+                    CustomId = $"testroleselector.{group.RgId}",
                     Placeholder = "Select Roles...",
-                    MaxValues = 1,
+                    MaxValues = group.AllowOnlyOne ? 1 : roles.Count,
                     Type = ComponentType.SelectMenu
                 };
 
-                foreach (var roleGroup in guild.RoleGroups.OrderBy(x => x.Name))
+                foreach (var role in roles)
                 {
-                    foreach (var role in roleGroup.Roles.OrderBy(x => x.Name))
-                    {
-                        matches++;
-                        var desc = role.Description;
-                        if (string.IsNullOrWhiteSpace(desc))
-                            desc = role.Name;
-                        menuBuilder.AddOption($"{role.Name} ({roleGroup.Name})", role.RId.ToString(), desc);
-                    }
+                    var desc = role.Description;
+                    if (string.IsNullOrWhiteSpace(desc))
+                        desc = role.Name;
+                    menuBuilder.AddOption(role.Name, role.Name, desc);
                 }
 
-                if (matches == 0)
-                {
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
-                    return;
-                }
-
+                var compBuilder = new ComponentBuilder()
+                    .WithSelectMenu(menuBuilder);
                 try
                 {
-                    await RespondAsync(components: new ComponentBuilder().WithSelectMenu(menuBuilder).Build());
+                    await RespondAsync(components: compBuilder.Build());
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to respond to interaction");
+                    await RespondErrorEmbedAsync(ex);
                 }
             }
 
-            [ComponentInteraction("roledropdowntest", true)]
-            public async Task RoleDropdownTestResponseAsync(string[] selections) //todo: more precise logging
+            [ComponentInteraction("testroleselector.*", true)]
+            public async Task TestSelectRoleResponseAsync(string gid, string[] selections)
             {
                 if (Context.User is not SocketGuildUser gUser)
                 {
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NotGuild);
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                     return;
                 }
 
-                var selected = selections.FirstOrDefault();
-                if (!ulong.TryParse(selected, out var roleId))
+                if (selections.Length == 0 || !ulong.TryParse(gid, out var parsedGid))
+                {
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
+                    return;
+                }
+
+                var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == parsedGid);
+                if (roleGroup == null || roleGroup.AllowOnlyOne && selections.Length > 1)
                 {
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                     return;
                 }
 
-                var role = _dbContext.Roles.FirstOrDefault(x => x.RId == roleId);
-                if (role == null || role.RoleGroup.GId != Context.Guild.Id)
-                {
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
-                    return;
-                }
-
+                var dbRoles = roleGroup.Roles;
                 var userRoleIds = gUser.Roles.Select(x => x.Id);
+                var rolesToAdd = new List<DbRole>();
+                var rolesToRemove = new List<DbRole>();
+                var rolesInvalid = new List<string>();
+                foreach (var selection in selections)
+                {
+                    var dbRole = dbRoles.FirstOrDefault(x => x.Name == selection);
+                    if (dbRole == null)
+                    {
+                        rolesInvalid.Add(selection);
+                        continue;
+                    }
+
+                    if (userRoleIds.Contains(dbRole.RId))
+                        rolesToRemove.Add(dbRole);
+                    else
+                        rolesToAdd.Add(dbRole);
+                }
+
                 try
                 {
-                    //Remove role if owned
-                    if (userRoleIds.Contains(roleId))
+                    var groupFields = new List<EmbedFieldBuilder>();
+
+                    if (rolesToAdd.Any())
                     {
-                        await gUser.RemoveRoleAsync(roleId);
-                        await RespondEmbedAsync("Role Removed", $"Successfully removed role \"{role.Name}\"");
-                        _logger.LogInformation("Removed role {removedRole} from user {userName}({userId})", roleId, gUser.Username, gUser.Id);
+                        await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RId));
+                        var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Name}(<&{x.RId}>)"));
+                        groupFields.Add(new EmbedFieldBuilder()
+                        {
+                            IsInline = true,
+                            Name = "Roles Added",
+                            Value = rolesToAddText
+                        });
+                        _logger.LogInformation("Added roles {addedRoles} to user {userName}({userId})", rolesToAddText, gUser.Username, gUser.Id);
+                    }
+                    if (rolesToRemove.Any())
+                    {
+                        await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RId));
+                        var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Name}(<&{x.RId}>)"));
+                        groupFields.Add(new EmbedFieldBuilder()
+                        {
+                            IsInline = true,
+                            Name = "Roles Removed",
+                            Value = rolesToRemoveText
+                        });
+                        _logger.LogInformation("Removed roles {removedRoles} from user {userName}({userId})", rolesToRemoveText, gUser.Username, gUser.Id);
+                    }
+                    if (rolesInvalid.Any())
+                    {
+                        var rolesInvalidText = string.Join(", ", rolesInvalid);
+                        groupFields.Add(new EmbedFieldBuilder()
+                        {
+                            IsInline = true,
+                            Name = "Invalid Roles",
+                            Value = rolesInvalidText
+                        });
+                        _logger.LogWarning("Failed to find roles {invalidRoles} in group {roleGroup}({roleGroupId}), could not apply to user {userName}({userId})", rolesInvalidText, roleGroup.Name, roleGroup.RgId, gUser.Username, gUser.Id);
+                    }
+
+                    if (!groupFields.Any())
+                    {
+                        await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                         return;
                     }
 
-                    //Remove all other roles from group
-                    if (role.RoleGroup.AllowOnlyOne)
+                    var embedBuilder = new EmbedBuilder()
                     {
-                        var roleGroupIds = role.RoleGroup.Roles.Select(x => x.RId);
-                        var rolesToRemove = userRoleIds.Intersect(roleGroupIds);
-                        if (rolesToRemove.Any())
-                        {
-                            await gUser.RemoveRolesAsync(rolesToRemove);
-                            _logger.LogInformation("Removed roles {removedRoles} from user {userName}({userId})", rolesToRemove, gUser.Username, gUser.Id);
-                        }
-                    }
+                        Fields = groupFields,
+                        Color = Color.Blue,
+                        Title = "Roles Updated"
+                    };
 
-                    await gUser.AddRoleAsync(role.RId);
-                    await RespondEmbedAsync("Role Added", $"Successfully added role \"{role.Name}\"");
-                    _logger.LogInformation("Added role {addedRole} to user {userName}({userId})", roleId, gUser.Username, gUser.Id);
-                    return;
+                    await RespondEmbedAsync(embedBuilder.Build());
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed responding to interaction");
-                    await RespondEmbedAsync(DiscordUtils.EmbedError(ex));
+                    await RespondErrorEmbedAsync(ex);
                 }
             }
-            #endregion
 
             #region Utility
             private static readonly Regex _roleNameVerificator = new(@"\A[A-Za-z \d]{2,20}\Z");
