@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 using Color = Discord.Color;
 
 namespace SolarisBot.Discord
@@ -81,6 +82,12 @@ namespace SolarisBot.Discord
 
             return EmbedError(data.Item1, data.Item2);
         }
+        #endregion
+
+        #region Naming
+        private static readonly Regex _nameVerificator = new(@"\A[A-Za-z \d]{2,20}\Z");
+        internal static bool IsIdentifierValid(string identifier)
+            => _nameVerificator.IsMatch(identifier);
         #endregion
     }
 

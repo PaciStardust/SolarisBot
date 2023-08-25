@@ -7,14 +7,14 @@ namespace SolarisBot.Database
     public class DbGuild
     {
         public ulong GId { get; set; } = 0;
-        public ulong VouchRoleId { get; set; } = 0;
-        public bool VouchSpreadOn { get; set; } = false;
-        public ulong CustomColorPermissionRoleId { get; set; } = 0;
+        public ulong VouchRoleId { get; set; } = 0; //todo: implement vouching
+        public bool VouchSpreadOn { get; set; } = false; //todo: "Required role for vouching"
+        public ulong CustomColorPermissionRoleId { get; set; } = 0; //todo: custom colors
         public ulong CustomColorOwnershipRoleId { get; set; } = 0;
         public bool JokeRenameOn { get; set; } = false;
         public ulong JokeRenameTimeoutMin { get; set; } = 0;
         public ulong JokeRenameTimeoutMax { get; set; } = 0;
-        public ulong MagicRoleId { get; set; } = 0;
+        public ulong MagicRoleId { get; set; } = 0; //todo: magic role
         public ulong MagicRoleTimeout { get; set; } = 0;
         public ulong MagicRoleNextUse { get; set; } = 0;
         public bool MagicRoleRenameOn { get; set; } = false;

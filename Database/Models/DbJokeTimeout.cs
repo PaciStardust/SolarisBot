@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(JtId))]
-    public class DbJokeTimeout
+    public class DbJokeTimeout //todo: implement joke timeout
     {
         public ulong JtId { get; set; } = 0;
         public ulong UserId { get; set; } = 0;
