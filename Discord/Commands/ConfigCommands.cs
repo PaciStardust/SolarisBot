@@ -51,10 +51,11 @@ namespace SolarisBot.Discord.Commands
             }
 
             [SlashCommand("create-group", "Create a role group (Group names can only be made of 2-20 letters, numbers, and spaces)")] //todo: override with same name, reimpl description
-            public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string name, bool allowMultiple = false)
+            public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string name, [MinLength(2), MaxLength(200)] string description = "", bool allowMultiple = false)
             {
                 var nameClean = name.Trim();
-                if (!IsIdentifierValid(nameClean))
+                var descriptionClean = description.Trim();
+                if (!IsIdentifierValid(nameClean) || descriptionClean.Length > 200)
                 {
                     await RespondErrorEmbedAsync("Invalid Name", "Group names must be made of letters, numbers, and spaces");
                     return;
@@ -73,7 +74,8 @@ namespace SolarisBot.Discord.Commands
                 {
                     AllowOnlyOne = allowMultiple,
                     GId = Context.Guild.Id,
-                    Name = nameClean
+                    Name = nameClean,
+                    Description = descriptionClean
                 };
 
                 await _dbContext.RoleGroups.AddAsync(roleGroup);
@@ -117,7 +119,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             [SlashCommand("register-role", "Register a role to a group (Identifier names can only be made of 2-20 letters, numbers, and spaces)")] //todo: override with same name
-            public async Task RegisterRoleAsync(IRole role, [MinLength(2), MaxLength(20)] string identifier, string group, [MinLength(2), MaxLength(200)] string description = "")
+            public async Task RegisterRoleAsync(IRole role, [MinLength(2), MaxLength(20)] string identifier, string group,  string description = "")
             {
                 var descriptionClean = description.Trim();
                 var identifierNameClean = identifier.Trim();
@@ -154,7 +156,7 @@ namespace SolarisBot.Discord.Commands
                     Name = identifierNameClean,
                     RId = role.Id,
                     RgId = roleGroup.RgId,
-                    Description = description
+                    Description = descriptionClean
                 };
 
                 await _dbContext.Roles.AddAsync(dbRole);
@@ -197,6 +199,7 @@ namespace SolarisBot.Discord.Commands
                 }
             }
 
+            #region REQUIRES REWORK
             [SlashCommand("role-dropdown", "ye")]
             public async Task RoleDropdownTestAsync()
             {
@@ -303,10 +306,13 @@ namespace SolarisBot.Discord.Commands
                     await RespondEmbedAsync(DiscordUtils.EmbedError(ex));
                 }
             }
+            #endregion
 
+            #region Utility
             private static readonly Regex _roleNameVerificator = new(@"\A[A-Za-z \d]{2,20}\Z");
             private static bool IsIdentifierValid(string identifier)
                 => _roleNameVerificator.IsMatch(identifier);
+            #endregion
         }
     }
 }
