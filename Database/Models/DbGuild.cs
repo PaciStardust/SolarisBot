@@ -7,7 +7,7 @@ namespace SolarisBot.Database
     public class DbGuild
     {
         public ulong GId { get; set; } = 0;
-        public ulong VouchRoleId { get; set; } = 0; //todo: implement vouching
+        public ulong VouchRoleId { get; set; } = 0;
         public ulong VouchPermissionRoleId { get; set; } = 0;
         public ulong CustomColorPermissionRoleId { get; set; } = 0; //todo: custom colors
         public ulong CustomColorOwnershipRoleId { get; set; } = 0;

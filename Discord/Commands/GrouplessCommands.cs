@@ -23,7 +23,7 @@ namespace SolarisBot.Discord.Commands
         }
         protected override ILogger? GetLogger() => _logger;
 
-        [SlashCommand("vouch", "Vouch for a user")] //todo: Test
+        [SlashCommand("vouch", "Vouch for a user")]
         public async Task VouchUserAsync(IUser user)
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
@@ -45,7 +45,7 @@ namespace SolarisBot.Discord.Commands
             try
             {
                 await gTargetUser.AddRoleAsync(dbGuild.VouchRoleId);
-                _logger.LogInformation("User {targetUserName}({targetUserId}) has vouched({vouchRoleId}) for in {guildId} by {userName}({userId})", gTargetUser.Username, gTargetUser.Id, dbGuild.VouchRoleId, Context.Guild.Id, gUser.Username, gUser.Id);
+                _logger.LogInformation("User {targetUserName}({targetUserId}) has been vouched({vouchRoleId}) for in {guildId} by {userName}({userId})", gTargetUser.Username, gTargetUser.Id, dbGuild.VouchRoleId, Context.Guild.Id, gUser.Username, gUser.Id);
                 await RespondEmbedAsync("Vouch Successful", $"Vouched for {gTargetUser.Mention}, welcome to the server!");
             }
             catch (Exception ex)
