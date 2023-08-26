@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using Bogus;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
@@ -52,6 +53,53 @@ namespace SolarisBot.Discord.Commands
             {
                 _logger.LogError(ex, "User {targetUserName}({targetUserId}) has failed to be vouched({vouchRoleId}) for in {guildId} by {userName}({userId})", gTargetUser.Username, gTargetUser.Id, dbGuild.VouchRoleId, Context.Guild.Id, gUser.Username, gUser.Id);
                 await RespondErrorEmbedAsync(ex, isEphemeral: true);
+            }
+        }
+
+        [SlashCommand("magic", "Use magic")]
+        public async Task UseMagicAsync()
+        {
+            var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+
+            if (dbGuild == null || dbGuild.MagicRoleId == 0)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
+                return;
+            }
+
+            var currentTime = Utils.GetCurrentUnix(_logger);
+            if (currentTime < dbGuild.MagicRoleNextUse)
+            {
+                await RespondErrorEmbedAsync("Mana Exhausted", $"There is currently not enough mana to use magic, please wait <t:{dbGuild.MagicRoleNextUse - currentTime}:R>");
+                return;
+            }
+
+            try
+            {
+                var faker = new Faker();
+                var role = Context.Guild.GetRole(dbGuild.MagicRoleId);
+                await role.ModifyAsync(x =>
+                {
+                    x.Name = dbGuild.MagicRoleRenameOn ? faker.Name.FullName() : x.Name;
+                    x.Color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
+                });
+
+                dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
+                _dbContext.Guilds.Update(dbGuild);
+
+                if (await _dbContext.TrySaveChangesAsync() == -1)
+                {
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                    return;
+                }
+
+                _logger.LogInformation("Magic({magicRoleId}) has been used in guild {guildId}, next use updated to {nextUse}", dbGuild.MagicRoleId, Context.Guild.Id, dbGuild.MagicRoleNextUse);
+                await RespondEmbedAsync("Magic Used", $"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now"); //todo: custom color?
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to use magic({magicRoleId} in guild {guildId}", dbGuild.MagicRoleId, Context.Guild.Id);
+                await RespondErrorEmbedAsync(ex);
             }
         }
     }

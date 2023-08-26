@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using System.Security;
 using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Commands
@@ -214,7 +215,28 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
+            _logger.LogInformation("Vouching set to permission={vouchPermission}, vouch={vouch} in guild {guildId}", guild.VouchPermissionRoleId, guild.VouchRoleId, Context.Guild.Id);
             await RespondEmbedAsync("Vouching Configured", $"Vouching is currently **{(permission != null && vouch != null ? "enabled" : "disabled")}**\n\nPermission: {permission?.Mention ?? "None"}\nVouch: {vouch?.Mention ?? "None"}");
+        }
+
+        [SlashCommand("magic", "Set up magic role (Not setting role disables it)")]
+        public async Task ConfigureMagicAsync(IRole? role = null, ulong timeoutsecs = 3600, bool renaming = false)
+        {
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+
+            guild.MagicRoleId = role?.Id ?? 0;
+            guild.MagicRoleNextUse = 0;
+            guild.MagicRoleTimeout = timeoutsecs >= 0 ? timeoutsecs : 0;
+            guild.MagicRoleRenameOn = renaming;
+
+            if (await _dbContext.SaveChangesAsync() == -1)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
+            }
+
+            _logger.LogInformation("Magic set to role={magicRole}, timeout={magicTimeout}, rename={magicRename} in guild {guildId}", guild.MagicRoleId, guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Id);
+            await RespondEmbedAsync("Magic Configured", $"Magic is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: {role?.Mention ?? "None"}\nTimeout: {guild.MagicRoleTimeout}\nRenaming: {guild.MagicRoleRenameOn}");
         }
         #endregion
     }

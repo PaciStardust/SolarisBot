@@ -14,7 +14,7 @@ namespace SolarisBot.Database
         public bool JokeRenameOn { get; set; } = false;
         public ulong JokeRenameTimeoutMin { get; set; } = 0;
         public ulong JokeRenameTimeoutMax { get; set; } = 0;
-        public ulong MagicRoleId { get; set; } = 0; //todo: magic role
+        public ulong MagicRoleId { get; set; } = 0;
         public ulong MagicRoleTimeout { get; set; } = 0;
         public ulong MagicRoleNextUse { get; set; } = 0;
         public bool MagicRoleRenameOn { get; set; } = false;
