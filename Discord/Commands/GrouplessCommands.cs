@@ -70,7 +70,7 @@ namespace SolarisBot.Discord.Commands
             var currentTime = Utils.GetCurrentUnix(_logger);
             if (currentTime < dbGuild.MagicRoleNextUse)
             {
-                await RespondErrorEmbedAsync("Mana Exhausted", $"There is currently not enough mana to use magic, please wait <t:{dbGuild.MagicRoleNextUse - currentTime}:R>");
+                await RespondErrorEmbedAsync("Mana Exhausted", $"There is currently not enough mana to use magic, please wait until <t:{dbGuild.MagicRoleNextUse}:R>", isEphemeral: true);
                 return;
             }
 
@@ -80,7 +80,7 @@ namespace SolarisBot.Discord.Commands
                 var role = Context.Guild.GetRole(dbGuild.MagicRoleId);
                 await role.ModifyAsync(x =>
                 {
-                    x.Name = dbGuild.MagicRoleRenameOn ? faker.Name.FullName() : x.Name;
+                    x.Name = dbGuild.MagicRoleRenameOn ? GenerateMagicName(faker) : x.Name;
                     x.Color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
                 });
 
@@ -101,6 +101,20 @@ namespace SolarisBot.Discord.Commands
                 _logger.LogError(ex, "Failed to use magic({magicRoleId} in guild {guildId}", dbGuild.MagicRoleId, Context.Guild.Id);
                 await RespondErrorEmbedAsync(ex);
             }
+        }
+
+        private static string GenerateMagicName(Faker faker)
+        {
+            var num = faker.Random.Byte(0, 3);
+            if (num == 0)
+            {
+                var adjective = faker.Hacker.Adjective();
+                return $"{adjective[0].ToString().ToUpper()}{adjective[1..]} {faker.Name.FirstName()}";
+            }
+            else if (num == 1)
+                return $"{faker.Commerce.ProductAdjective()} {faker.Name.FirstName()}";
+            else
+                return faker.Commerce.ProductName();
         }
     }
 }

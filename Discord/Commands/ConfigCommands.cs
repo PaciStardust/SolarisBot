@@ -220,7 +220,7 @@ namespace SolarisBot.Discord.Commands
         }
 
         [SlashCommand("magic", "Set up magic role (Not setting role disables it)")]
-        public async Task ConfigureMagicAsync(IRole? role = null, ulong timeoutsecs = 3600, bool renaming = false)
+        public async Task ConfigureMagicAsync(IRole? role = null, ulong timeoutsecs = 1800, bool renaming = false)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
