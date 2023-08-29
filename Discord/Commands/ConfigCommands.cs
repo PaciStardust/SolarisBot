@@ -114,9 +114,9 @@ namespace SolarisBot.Discord.Commands
         {
             var descriptionClean = description.Trim();
             var identifierNameClean = identifier.Trim();
-            var groupNameClean = group.Trim();
+            var groupNameCleanLower = group.Trim().ToLower();
 
-            if (!DiscordUtils.IsIdentifierValid(identifierNameClean) || !DiscordUtils.IsIdentifierValid(groupNameClean) || descriptionClean.Length > 200)
+            if (!DiscordUtils.IsIdentifierValid(identifierNameClean) || !DiscordUtils.IsIdentifierValid(groupNameCleanLower) || descriptionClean.Length > 200)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
                 return;
@@ -128,7 +128,6 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var groupNameCleanLower = groupNameClean.ToLower();
             var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Identifier.ToLower() == groupNameCleanLower);
             if (roleGroup == null)
             {
