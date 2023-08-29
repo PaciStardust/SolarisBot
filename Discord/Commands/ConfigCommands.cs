@@ -78,7 +78,7 @@ namespace SolarisBot.Discord.Commands
                 RequiredRoleId = requiredRole?.Id ?? 0
             };
 
-            await _dbContext.RoleGroups.AddAsync(roleGroup);
+            _dbContext.RoleGroups.Add(roleGroup);
 
             if (await _dbContext.TrySaveChangesAsync() == -1)
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
@@ -159,7 +159,7 @@ namespace SolarisBot.Discord.Commands
                 Description = descriptionClean
             };
 
-            await _dbContext.Roles.AddAsync(dbRole);
+            _dbContext.Roles.Add(dbRole);
 
             if (await _dbContext.TrySaveChangesAsync() == -1)
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);

@@ -63,7 +63,7 @@ namespace SolarisBot.Database
             if (guild == null)
             {
                 guild = new() { GId = id };
-                await Guilds.AddAsync(guild);
+                Guilds.Add(guild);
             }
             return guild;
         }
