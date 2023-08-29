@@ -33,9 +33,9 @@ namespace SolarisBot.Discord
         /// <summary>
         /// Respond with an embed
         /// </summary>
-        internal async Task RespondEmbedAsync(string title, string content, EmbedResponseType responseType = EmbedResponseType.Default, bool isEphemeral = false)
+        internal async Task RespondEmbedAsync(string title, string content, Color? colorOverride = null, bool isEphemeral = false)
         {
-            var embed = DiscordUtils.Embed(title, content, responseType);
+            var embed = DiscordUtils.Embed(title, content, colorOverride);
             await RespondEmbedAsync(embed, isEphemeral: isEphemeral);
         }
 

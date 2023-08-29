@@ -52,12 +52,8 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var embedBuilder = new EmbedBuilder()
-            {
-                Fields = groupFields,
-                Color = Color.Blue,
-                Title = "Self-Assignable Roles"
-            };
+            var embedBuilder = DiscordUtils.EmbedBuilder("Self-Assignable Roles")
+                .WithFields(groupFields);
 
             await RespondEmbedAsync(embedBuilder.Build(), isEphemeral: true);
         }
@@ -226,12 +222,8 @@ namespace SolarisBot.Discord.Commands
                     return;
                 }
 
-                var embedBuilder = new EmbedBuilder()
-                {
-                    Fields = groupFields,
-                    Color = Color.Blue,
-                    Title = "Roles Updated"
-                };
+                var embedBuilder = DiscordUtils.EmbedBuilder("Roles Updated")
+                    .WithFields(groupFields);
 
                 await RespondEmbedAsync(embedBuilder.Build(), isEphemeral: true);
             }

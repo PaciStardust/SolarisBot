@@ -78,10 +78,11 @@ namespace SolarisBot.Discord.Commands
             {
                 var faker = new Faker();
                 var role = Context.Guild.GetRole(dbGuild.MagicRoleId);
+                var color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
                 await role.ModifyAsync(x =>
                 {
                     x.Name = dbGuild.MagicRoleRenameOn ? GenerateMagicName(faker) : x.Name;
-                    x.Color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
+                    x.Color = color;
                 });
 
                 dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
@@ -94,7 +95,7 @@ namespace SolarisBot.Discord.Commands
                 }
 
                 _logger.LogInformation("Magic({magicRoleId}) has been used in guild {guildId}, next use updated to {nextUse}", dbGuild.MagicRoleId, Context.Guild.Id, dbGuild.MagicRoleNextUse);
-                await RespondEmbedAsync("Magic Used", $"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now"); //todo: custom color?
+                await RespondEmbedAsync("Magic Used", $"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now", color);
             }
             catch (Exception ex)
             {

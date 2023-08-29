@@ -33,32 +33,28 @@ namespace SolarisBot.Discord
 
         #region EmbedsV2
         /// <summary>
-        /// Generates a default embed
+        /// Generates a default embedbuilder
         /// </summary>
-        internal static Embed Embed(string title, string content, EmbedResponseType rt = EmbedResponseType.Default)
-        {
-            var color = rt switch
-            {
-                EmbedResponseType.Default => Color.Blue,
-                EmbedResponseType.Error => Color.Red,
-                _ => Color.Blue
-            };
-
-            var embed = new EmbedBuilder()
+        internal static EmbedBuilder EmbedBuilder(string title, Color? colorOverride = null)
+            => new()
             {
                 Title = title,
-                Description = content,
-                Color = color
-            }.Build();
+                Color = colorOverride ?? Color.Blue
+            };
 
-            return embed;
-        }
+        /// <summary>
+        /// Generates a default embed
+        /// </summary>
+        internal static Embed Embed(string title, string content, Color? colorOverride = null)
+            => EmbedBuilder(title, colorOverride)
+                .WithDescription(content)
+                .Build();
 
         /// <summary>
         /// Generates an embed error
         /// </summary>
         internal static Embed EmbedError(string title, string content)
-            => Embed(title, content, EmbedResponseType.Error);
+            => Embed(title, content, Color.Red);
 
         /// <summary>
         /// Generates an embed error based on an exception
@@ -89,12 +85,6 @@ namespace SolarisBot.Discord
         internal static bool IsIdentifierValid(string identifier)
             => _nameVerificator.IsMatch(identifier);
         #endregion
-    }
-
-    internal enum EmbedResponseType
-    {
-        Default,
-        Error
     }
 
     internal enum EmbedGenericErrorType
