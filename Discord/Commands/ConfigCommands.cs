@@ -1,10 +1,8 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
-using System.Security;
 using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Commands
@@ -49,8 +47,8 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("List of Assignable Roles", string.Join("\n\n", strings));
         }
 
-        [SlashCommand("roles-create-group", "Create a role group (Group identifiers can only be made of letters, numbers, and spaces)")] //todo: override with same name
-        public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string identifier, [MinLength(2), MaxLength(200)] string description = "", bool allowMultiple = false, IRole? requiredRole = null)
+        [SlashCommand("roles-create-group", "Create a role group (Group identifiers can only be made of letters, numbers, and spaces)")]
+        public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string identifier, [MinLength(2), MaxLength(200)] string description = "", bool oneof = true, IRole? requiredRole = null)
         {
             var identifierClean = identifier.Trim();
             var descriptionClean = description.Trim();
@@ -63,29 +61,22 @@ namespace SolarisBot.Discord.Commands
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             var lowerName = identifierClean.ToLower();
-            if (guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == lowerName) != null)
-            {
-                await RespondErrorEmbedAsync("Already Exists", $"A group by the identifier of \"{identifierClean}\" already exists");
-                return;
-            }
+            var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == lowerName)
+                ?? new() { GId = Context.Guild.Id, Identifier = identifierClean };
 
-            var roleGroup = new DbRoleGroup()
-            {
-                AllowOnlyOne = allowMultiple,
-                GId = Context.Guild.Id,
-                Identifier = identifierClean,
-                Description = descriptionClean,
-                RequiredRoleId = requiredRole?.Id ?? 0
-            };
+            var logVerb = roleGroup.RgId == 0 ? "Created" : "Updated";
+            roleGroup.AllowOnlyOne = oneof;
+            roleGroup.Description = descriptionClean;
+            roleGroup.RequiredRoleId = requiredRole?.Id ?? 0;
 
-            _dbContext.RoleGroups.Add(roleGroup);
+            _dbContext.RoleGroups.Update(roleGroup);
 
             if (await _dbContext.TrySaveChangesAsync() == -1)
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
             else
             {
-                _logger.LogInformation("Created role group {groupIdentifier} for guild {guildId}", roleGroup.Identifier, roleGroup.GId);
-                await RespondEmbedAsync("Role Group Created", $"Identifier: {roleGroup.Identifier}\nOne Of: {(roleGroup.AllowOnlyOne ? "Yes" : "No")}\n{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "*None*" : roleGroup.Description)}");
+                _logger.LogInformation("{verb} role group {groupIdentifier} for guild {guildId}", logVerb, roleGroup.Identifier, roleGroup.GId);
+                await RespondEmbedAsync($"Role Group {logVerb}", $"Identifier: {roleGroup.Identifier}\nOne Of: {(roleGroup.AllowOnlyOne ? "Yes" : "No")}\nDescription: {(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}\nRequired: {(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}");
             }
         }
 
@@ -118,14 +109,14 @@ namespace SolarisBot.Discord.Commands
             }
         }
 
-        [SlashCommand("roles-register-role", "Register a role to a group (Identifiers can only be made of letters, numbers, and spaces)")] //todo: override with same name
+        [SlashCommand("roles-register-role", "Register a role to a group (Identifiers can only be made of letters, numbers, and spaces)")]
         public async Task RegisterRoleAsync(IRole role, [MinLength(2), MaxLength(20)] string identifier, string group, string description = "")
         {
             var descriptionClean = description.Trim();
             var identifierNameClean = identifier.Trim();
-            var groupNameCleanLower = group.Trim().ToLower();
+            var groupNameClean = group.Trim();
 
-            if (!DiscordUtils.IsIdentifierValid(identifierNameClean) || !DiscordUtils.IsIdentifierValid(groupNameCleanLower) || descriptionClean.Length > 200)
+            if (!DiscordUtils.IsIdentifierValid(identifierNameClean) || !DiscordUtils.IsIdentifierValid(groupNameClean) || descriptionClean.Length > 200)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
                 return;
@@ -137,6 +128,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
+            var groupNameCleanLower = groupNameClean.ToLower();
             var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Identifier.ToLower() == groupNameCleanLower);
             if (roleGroup == null)
             {
@@ -166,7 +158,7 @@ namespace SolarisBot.Discord.Commands
             else
             {
                 _logger.LogInformation("Role with identifier {roleIdentifier} registered to group {groupName} in guild {guildId}", dbRole.Identifier, roleGroup.Identifier, roleGroup.GId);
-                await RespondEmbedAsync("Role Registered", $"Group: {dbRole.RoleGroup}, Identifier: {dbRole.Identifier}, Description: {(string.IsNullOrWhiteSpace(dbRole.Description) ? "*None*" : dbRole.Description)}");
+                await RespondEmbedAsync("Role Registered", $"Group: {roleGroup.Identifier}\nIdentifier: {dbRole.Identifier}\nDescription: {(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}");
             }
         }
 
