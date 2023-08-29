@@ -8,7 +8,7 @@ namespace SolarisBot.Database
     {
         public ulong RgId { get; set; } = 0;
         public ulong GId { get; set; } = 0;
-        public string Name { get; set; } = string.Empty;
+        public string Identifier { get; set; } = string.Empty;
         public bool AllowOnlyOne { get; set; } = false;
         public string Description { get; set; } = string.Empty;
         public ulong RequiredRoleId { get; set; } = 0;

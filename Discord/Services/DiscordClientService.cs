@@ -70,9 +70,9 @@ namespace SolarisBot.Discord.Services
             var res = await dbContext.SaveChangesAsync();
 
             if (res == -1)
-                _logger.LogError("Deleted role {roleName}({roleId}) has found match in DB as {identifier} and attempt to remove has failed", role.Name, role.Id, dbRole.Name);
+                _logger.LogError("Deleted role {roleName}({roleId}) has found match in DB as {identifier} and attempt to remove has failed", role.Name, role.Id, dbRole.Identifier);
             else
-                _logger.LogInformation("Deleted role {roleName}({roleId}) has found match in DB as {identifier} and has been removed", role.Name, role.Id, dbRole.Name);
+                _logger.LogInformation("Deleted role {roleName}({roleId}) has found match in DB as {identifier} and has been removed", role.Name, role.Id, dbRole.Identifier);
         }
         #endregion
     }
