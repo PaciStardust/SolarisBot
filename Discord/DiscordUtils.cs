@@ -102,6 +102,9 @@ namespace SolarisBot.Discord
         private static readonly Regex _nameVerificator = new(@"\A[A-Za-z \d]{2,20}\Z");
         internal static bool IsIdentifierValid(string identifier)
             => _nameVerificator.IsMatch(identifier);
+
+        internal static string GetCustomColorRoleName(IUser user)
+            => $"Solaris Custom Color {user.Id}";
         #endregion
     }
 

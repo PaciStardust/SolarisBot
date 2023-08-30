@@ -20,9 +20,6 @@ namespace SolarisBot.Discord.Commands
         }
         protected override ILogger? GetLogger() => _logger;
 
-        private static string GetCustomRoleName(IUser user)
-            => "Solars Custom Color " + user.Id;
-
         #region Create
         [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)")]
         public async Task SetRoleColorByRgb(byte red, byte green, byte blue)
@@ -50,7 +47,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var roleName = GetCustomRoleName(gUser);
+            var roleName = DiscordUtils.GetCustomColorRoleName(gUser);
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
 
             var requiredRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
@@ -108,7 +105,7 @@ namespace SolarisBot.Discord.Commands
         #region Delete
         public async Task DeleteCustomColorRoleAsync() //todo: test
         {
-            var roleName = GetCustomRoleName(Context.User);
+            var roleName = DiscordUtils.GetCustomColorRoleName(Context.User);
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
 
             if (role == null)

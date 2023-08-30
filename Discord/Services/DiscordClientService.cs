@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using System.Runtime.CompilerServices;
 
 namespace SolarisBot.Discord.Services
 {
@@ -90,8 +91,23 @@ namespace SolarisBot.Discord.Services
             if (dbGuild == null || removedRole == null || dbGuild.CustomColorPermissionRoleId == 0 || removedRole.Id != dbGuild.CustomColorPermissionRoleId)
                 return;
 
-            //todo: finish this
-        } //todo: deleteAllCustoms command / when role removed
+            var customRoles = newUser.Roles.Where(x => x.Name.StartsWith(DiscordUtils.SolarisCustomColorPrefix) && x.Name.EndsWith(newUser.Id.ToString()));
+            if (!customRoles.Any())
+                return;
+
+            var roleList = string.Join(", ", customRoles.Select(x => x.GetLogInfo()));
+            try
+            {
+                _logger.LogInformation("Deleting custom color roles {roles} from guild {guild}, permission role has been removed from owner {user}", roleList, newUser.Guild.GetLogInfo(), newUser.GetLogInfo());
+                foreach(var role in customRoles)
+                    await role.DeleteAsync();
+                _logger.LogInformation("Deleted custom color roles {roles} from guild {guild}, permission role has been removed from owner {user}", roleList, newUser.Guild.GetLogInfo(), newUser.GetLogInfo());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete custom color roles {roles} from guild {guild}, permission role has been removed from owner {user}", roleList, newUser.Guild.GetLogInfo(), newUser.GetLogInfo());
+            }
+        } //todo: deleteAllCustoms command / when role removed, also delete on user leave
         #endregion
     }
 }
