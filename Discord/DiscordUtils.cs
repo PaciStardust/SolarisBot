@@ -29,6 +29,24 @@ namespace SolarisBot.Discord
             logger.Log(logLevel, logMessage.Exception, "Discord - {message}", logMessage.Message);
             return Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Returns GlobalName and Id of a User for logging
+        /// </summary>
+        internal static string GetLogInfo(this IUser user)
+            => $"{user.GlobalName}({user.Id})";
+
+        /// <summary>
+        /// Returns Name and Id of a Guild for logging
+        /// </summary>
+        internal static string GetLogInfo(this IGuild guild)
+            => $"{guild.Name}({guild.Id})";
+
+        /// <summary>
+        /// Returns Name and Id of a Role for logging
+        /// </summary>
+        internal static string GetLogInfo(this IRole role)
+            => $"{role.Name}({role.Id})";
         #endregion
 
         #region EmbedsV2

@@ -17,5 +17,8 @@ namespace SolarisBot.Database
         public virtual ICollection<DbRole> Roles { get; set; } = new HashSet<DbRole>();
 
         public DbRoleGroup() { } //To avoid defaults not setting
+
+        public override string ToString()
+            => $"{Identifier}(Guild {GId})";
     }
 }

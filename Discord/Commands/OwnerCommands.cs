@@ -21,10 +21,11 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("set-status", "Set the status of the bot")]
         public async Task SetStatusAsync(string status)
         {
+            _logger.LogInformation("Setting discord client status to {discordStatus}", status);
             var config = _services.GetRequiredService<BotConfig>();
             config.DefaultStatus = status;
 
-            if(!config.SaveAt(Utils.PathConfigFile))
+            if (!config.SaveAt(Utils.PathConfigFile))
             {
                 await RespondErrorEmbedAsync("Set Status Failed", "Unable to save new status in config file");
                 return;
@@ -34,7 +35,7 @@ namespace SolarisBot.Discord.Commands
             try
             {
                 await client.SetGameAsync(status);
-                _logger.LogInformation("Discord client status has been set to {discordStatus}", status);
+                _logger.LogInformation("Set discord client status to {discordStatus}", status);
                 await RespondEmbedAsync("Status Set", $"Status set to \"{status}\"");
             }
             catch (Exception ex)

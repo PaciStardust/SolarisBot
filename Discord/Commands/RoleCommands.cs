@@ -182,27 +182,29 @@ namespace SolarisBot.Discord.Commands
 
                 if (rolesToAdd.Any())
                 {
-                    await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RId));
                     var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RId}>)"));
+                    _logger.LogInformation("Adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RId));
                     groupFields.Add(new EmbedFieldBuilder()
                     {
                         IsInline = true,
                         Name = "Roles Added",
                         Value = rolesToAddText
                     });
-                    _logger.LogInformation("Added roles {addedRoles} to user {userName}({userId})", rolesToAddText, gUser.Username, gUser.Id);
+                    _logger.LogInformation("Added roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.GetLogInfo(), Context.Guild.GetLogInfo());
                 }
                 if (rolesToRemove.Any())
                 {
-                    await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RId));
                     var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RId}>)"));
+                    _logger.LogInformation("Removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RId));
                     groupFields.Add(new EmbedFieldBuilder()
                     {
                         IsInline = true,
                         Name = "Roles Removed",
                         Value = rolesToRemoveText
                     });
-                    _logger.LogInformation("Removed roles {removedRoles} from user {userName}({userId})", rolesToRemoveText, gUser.Username, gUser.Id);
+                    _logger.LogInformation("Removed roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.GetLogInfo(), Context.Guild.GetLogInfo());
                 }
                 if (rolesInvalid.Any())
                 {
@@ -213,7 +215,7 @@ namespace SolarisBot.Discord.Commands
                         Name = "Invalid Roles",
                         Value = rolesInvalidText
                     });
-                    _logger.LogWarning("Failed to find roles {invalidRoles} in group {roleGroup}({roleGroupId}), could not apply to user {userName}({userId})", rolesInvalidText, roleGroup.Identifier, roleGroup.RgId, gUser.Username, gUser.Id);
+                    _logger.LogWarning("Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", rolesInvalidText, roleGroup, gUser.GetLogInfo());
                 }
 
                 if (!groupFields.Any())

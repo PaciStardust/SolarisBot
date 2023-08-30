@@ -56,7 +56,7 @@ namespace SolarisBot
                     services.AddSingleton(botConfig);
                     services.AddSingleton(new DiscordSocketClient(new()
                     {
-                        GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent,
+                        GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent | GatewayIntents.GuildMembers,
                         UseInteractionSnowflakeDate = false
                     }));
                     services.AddSingleton<InteractionService>();

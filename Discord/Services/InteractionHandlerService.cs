@@ -52,20 +52,16 @@ namespace SolarisBot.Discord.Services
         private async Task HandleInteraction(SocketInteraction interaction)
         {
             var context = new SocketInteractionContext(_client, interaction);
+            _logger.LogDebug("Executing command {interactionId} for user {user}", context.Interaction.Id, context.User.GetLogInfo());
             var result = await _intService.ExecuteCommandAsync(context, _services);
 
-            await HandleInteractionErrors(result, context);
-        }
-
-        /// <summary>
-        /// Handles errors caused by interactions
-        /// </summary>
-        private async Task HandleInteractionErrors(IResult result, SocketInteractionContext context)
-        {
-            _logger.LogDebug("Executed command {interactionId} for user {userName}({userId})", context.Interaction.Id, context.User.Username, context.User.Id);
-            if (result.IsSuccess) return;
-            var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason);
-            await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+            if (!result.IsSuccess)
+            {
+                _logger.LogDebug("Failed to execute command {interactionId} for user {user} ({resultError})", context.Interaction.Id, context.User.GetLogInfo(), result.Error);
+                var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason);
+                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+            }
+            _logger.LogDebug("Executed command {interactionId} for user {user}", context.Interaction.Id, context.User.GetLogInfo());
         }
     }
 }

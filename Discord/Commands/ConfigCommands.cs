@@ -64,20 +64,21 @@ namespace SolarisBot.Discord.Commands
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == lowerName)
                 ?? new() { GId = Context.Guild.Id, Identifier = identifierClean };
 
-            var logVerb = roleGroup.RgId == 0 ? "Created" : "Updated";
+            var logVerb = roleGroup.RgId == 0 ? "Creat" : "Updat";
             roleGroup.AllowOnlyOne = oneof;
             roleGroup.Description = descriptionClean;
             roleGroup.RequiredRoleId = requiredRole?.Id ?? 0;
 
             _dbContext.RoleGroups.Update(roleGroup);
 
+            _logger.LogInformation("{verb}ing role group {roleGroup} for guild {guild}", logVerb, roleGroup, Context.Guild.GetLogInfo());
             if (await _dbContext.TrySaveChangesAsync() == -1)
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
-            else
             {
-                _logger.LogInformation("{verb} role group {groupIdentifier} for guild {guildId}", logVerb, roleGroup.Identifier, roleGroup.GId);
-                await RespondEmbedAsync($"Role Group {logVerb}", $"Identifier: {roleGroup.Identifier}\nOne Of: {(roleGroup.AllowOnlyOne ? "Yes" : "No")}\nDescription: {(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}\nRequired: {(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}");
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
             }
+            _logger.LogInformation("{verb}ed role group {roleGroup} for guild {guild}", logVerb, roleGroup, Context.Guild.GetLogInfo());
+            await RespondEmbedAsync($"Role Group {logVerb}ed", $"Identifier: {roleGroup.Identifier}\nOne Of: {(roleGroup.AllowOnlyOne ? "Yes" : "No")}\nDescription: {(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}\nRequired: {(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}");
         }
 
         [SlashCommand("roles-delete-group", "Delete a role group")]
@@ -100,13 +101,14 @@ namespace SolarisBot.Discord.Commands
 
             _dbContext.RoleGroups.Remove(match);
 
+            _logger.LogInformation("Deleting role group {roleGroup} from guild {guild}", match, Context.Guild.GetLogInfo());
             if (await _dbContext.TrySaveChangesAsync() == -1)
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
-            else
             {
-                _logger.LogInformation("Deleted role group {groupIdentifier} from guild {guildId}", match.Identifier, match.GId);
-                await RespondEmbedAsync("Role Group Deleted", $"A role group with the identifier \"{identifierClean}\" has been deleted");
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
             }
+            _logger.LogInformation("Deleted role group {roleGroup} from guild {guild}", match, Context.Guild.GetLogInfo());
+            await RespondEmbedAsync("Role Group Deleted", $"The role group with the identifier \"{identifierClean}\" has been deleted");
         }
 
         [SlashCommand("roles-register-role", "Register a role to a group (Identifiers can only be made of letters, numbers, and spaces)")]
@@ -138,7 +140,7 @@ namespace SolarisBot.Discord.Commands
             var lowerIdentifierName = identifierNameClean.ToLower();
             if (roleGroup.Roles.FirstOrDefault(x => x.Identifier.ToLower() == lowerIdentifierName) != null)
             {
-                await RespondErrorEmbedAsync("Already Registered", "A Role by that identifier is already registered");
+                await RespondErrorEmbedAsync("Already Registered", "A Role with that identifier is already registered");
                 return;
             }
 
@@ -152,13 +154,14 @@ namespace SolarisBot.Discord.Commands
 
             _dbContext.Roles.Add(dbRole);
 
+            _logger.LogInformation("Registering role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, Context.Guild.GetLogInfo());
             if (await _dbContext.TrySaveChangesAsync() == -1)
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
-            else
             {
-                _logger.LogInformation("Role with identifier {roleIdentifier} registered to group {groupName} in guild {guildId}", dbRole.Identifier, roleGroup.Identifier, roleGroup.GId);
-                await RespondEmbedAsync("Role Registered", $"Group: {roleGroup.Identifier}\nIdentifier: {dbRole.Identifier}\nDescription: {(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}");
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
             }
+            _logger.LogInformation("Registered role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, Context.Guild.GetLogInfo());
+            await RespondEmbedAsync("Role Registered", $"Group: {roleGroup.Identifier}\nIdentifier: {dbRole.Identifier}\nDescription: {(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}");
         }
 
         [SlashCommand("roles-unregister-role", "Unregister a role")]
@@ -181,13 +184,14 @@ namespace SolarisBot.Discord.Commands
 
             _dbContext.Roles.Remove(role);
 
+            _logger.LogInformation("Unregistering role {role} from groups", role);
             if (await _dbContext.TrySaveChangesAsync() == -1)
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
-            else
             {
-                _logger.LogInformation("Role with identifier {roleIdentifier} unregistered from groups", role.Identifier);
-                await RespondEmbedAsync("Role Unegistered", $"A role with the identifier \"{identifierClean}\" has been unregistered");
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
             }
+            _logger.LogInformation("Unregistered role {role} from groups", role);
+            await RespondEmbedAsync("Role Unegistered", $"A role with the identifier \"{identifierClean}\" has been unregistered");
         }
         #endregion
 
@@ -200,13 +204,13 @@ namespace SolarisBot.Discord.Commands
             guild.VouchPermissionRoleId = permission?.Id ?? 0;
             guild.VouchRoleId = vouch?.Id ?? 0;
 
+            _logger.LogInformation("Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.GetLogInfo() ?? "0", vouch?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
             if (await _dbContext.SaveChangesAsync() == -1)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-
-            _logger.LogInformation("Vouching set to permission={vouchPermission}, vouch={vouch} in guild {guildId}", guild.VouchPermissionRoleId, guild.VouchRoleId, Context.Guild.Id);
+            _logger.LogInformation("Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.GetLogInfo() ?? "0", vouch?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
             await RespondEmbedAsync("Vouching Configured", $"Vouching is currently **{(permission != null && vouch != null ? "enabled" : "disabled")}**\n\nPermission: {permission?.Mention ?? "None"}\nVouch: {vouch?.Mention ?? "None"}");
         }
 
@@ -220,14 +224,31 @@ namespace SolarisBot.Discord.Commands
             guild.MagicRoleTimeout = timeoutsecs >= 0 ? timeoutsecs : 0;
             guild.MagicRoleRenameOn = renaming;
 
+            _logger.LogInformation("Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", role?.GetLogInfo() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.GetLogInfo());
             if (await _dbContext.SaveChangesAsync() == -1)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-
-            _logger.LogInformation("Magic set to role={magicRole}, timeout={magicTimeout}, rename={magicRename} in guild {guildId}", guild.MagicRoleId, guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Id);
+            _logger.LogInformation("Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", role?.GetLogInfo() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.GetLogInfo());
             await RespondEmbedAsync("Magic Configured", $"Magic is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: {role?.Mention ?? "None"}\nTimeout: {guild.MagicRoleTimeout}\nRenaming: {guild.MagicRoleRenameOn}");
+        }
+
+        [SlashCommand("custom-color", "Set up custom color (Not setting disabled it)")] //todo: test
+        public async Task ConfigureCustomColorAsync(IRole? role = null)
+        {
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+
+            guild.CustomColorPermissionRoleId = role?.Id ?? 0;
+
+            _logger.LogInformation("Setting custom colors to role={role} in guild {guild}", role?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
+            if (await _dbContext.SaveChangesAsync() == -1)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
+            }
+            _logger.LogInformation("Set custom colors to role={role} in guild {guild}", role?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
+            await RespondEmbedAsync("Custom Colors Configured", $"Custom colors are currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: {role?.Mention ?? "None"}+");
         }
         #endregion
     }

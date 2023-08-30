@@ -9,8 +9,7 @@ namespace SolarisBot.Database
         public ulong GId { get; set; } = 0;
         public ulong VouchRoleId { get; set; } = 0;
         public ulong VouchPermissionRoleId { get; set; } = 0;
-        public ulong CustomColorPermissionRoleId { get; set; } = 0; //todo: custom colors
-        public ulong CustomColorOwnershipRoleId { get; set; } = 0;
+        public ulong CustomColorPermissionRoleId { get; set; } = 0;
         public bool JokeRenameOn { get; set; } = false;
         public ulong JokeRenameTimeoutMin { get; set; } = 0;
         public ulong JokeRenameTimeoutMax { get; set; } = 0;

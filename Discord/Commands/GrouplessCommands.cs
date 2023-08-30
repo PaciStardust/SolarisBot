@@ -4,11 +4,6 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SolarisBot.Discord.Commands
 {
@@ -45,13 +40,14 @@ namespace SolarisBot.Discord.Commands
 
             try
             {
+                _logger.LogInformation("Giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", gTargetUser.GetLogInfo(), dbGuild.VouchRoleId, Context.Guild.GetLogInfo(), gUser.GetLogInfo());
                 await gTargetUser.AddRoleAsync(dbGuild.VouchRoleId);
-                _logger.LogInformation("User {targetUserName}({targetUserId}) has been vouched({vouchRoleId}) for in {guildId} by {userName}({userId})", gTargetUser.Username, gTargetUser.Id, dbGuild.VouchRoleId, Context.Guild.Id, gUser.Username, gUser.Id);
+                _logger.LogInformation("Gave vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", gTargetUser.GetLogInfo(), dbGuild.VouchRoleId, Context.Guild.GetLogInfo(), gUser.GetLogInfo());
                 await RespondEmbedAsync("Vouch Successful", $"Vouched for {gTargetUser.Mention}, welcome to the server!");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "User {targetUserName}({targetUserId}) has failed to be vouched({vouchRoleId}) for in {guildId} by {userName}({userId})", gTargetUser.Username, gTargetUser.Id, dbGuild.VouchRoleId, Context.Guild.Id, gUser.Username, gUser.Id);
+                _logger.LogError(ex, "Failed to give vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", gTargetUser.GetLogInfo(), dbGuild.VouchRoleId, Context.Guild.GetLogInfo(), gUser.GetLogInfo());
                 await RespondErrorEmbedAsync(ex, isEphemeral: true);
             }
         }
@@ -76,6 +72,7 @@ namespace SolarisBot.Discord.Commands
 
             try
             {
+                _logger.LogInformation("Using Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", dbGuild.MagicRoleId, Context.Guild.GetLogInfo(), dbGuild.MagicRoleNextUse);
                 var faker = new Faker();
                 var role = Context.Guild.GetRole(dbGuild.MagicRoleId);
                 var color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
@@ -93,13 +90,12 @@ namespace SolarisBot.Discord.Commands
                     await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                     return;
                 }
-
-                _logger.LogInformation("Magic({magicRoleId}) has been used in guild {guildId}, next use updated to {nextUse}", dbGuild.MagicRoleId, Context.Guild.Id, dbGuild.MagicRoleNextUse);
+                _logger.LogInformation("Used Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", dbGuild.MagicRoleId, Context.Guild.GetLogInfo(), dbGuild.MagicRoleNextUse);
                 await RespondEmbedAsync("Magic Used", $"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now", color);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to use magic({magicRoleId} in guild {guildId}", dbGuild.MagicRoleId, Context.Guild.Id);
+                _logger.LogError(ex, "Failed to use magic({magicRoleId} in guild {guild}", dbGuild.MagicRoleId, Context.Guild.GetLogInfo());
                 await RespondErrorEmbedAsync(ex);
             }
         }

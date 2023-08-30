@@ -13,5 +13,8 @@ namespace SolarisBot.Database
         public virtual DbRoleGroup RoleGroup { get; set; } = null!;
 
         public DbRole() { }
+
+        public override string ToString()
+            => $"{Identifier}(Group {RgId})";
     }
 }

@@ -43,6 +43,7 @@ namespace SolarisBot.Discord.Services
         {
             _client.Ready += OnReadyAsync;
             _client.RoleDeleted += OnRoleDeletedAsync;
+            _client.GuildMemberUpdated += OnGuildMemberUpdated;
         }
 
         private async Task OnReadyAsync()
@@ -60,20 +61,37 @@ namespace SolarisBot.Discord.Services
 
         private async Task OnRoleDeletedAsync(SocketRole role)
         {
-            _logger.LogDebug("Role {roleName}({roleId}) has been deleted from discord, checking for match in DB", role.Name, role.Id);
+            _logger.LogDebug("Role {role} has been deleted from discord, checking for match in DB", role.GetLogInfo());
             var dbContext = _services.GetRequiredService<DatabaseContext>();
             var dbRole = dbContext.Roles.FirstOrDefault(x => x.RId == role.Id);
             if (dbRole == null)
+            {
+                _logger.LogDebug("No matching role to delete found for discord role {role}", role.GetLogInfo());
+                return;
+            }
+
+            _logger.LogInformation("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
+            dbContext.Roles.Remove(dbRole);
+
+            if (await dbContext.SaveChangesAsync() == -1)
+                _logger.LogError("Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
+            else
+                _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
+        }
+
+        private async Task OnGuildMemberUpdated(Cacheable<SocketGuildUser, ulong> oldData, SocketGuildUser newUser) //todo: does this trigger if a role gets deleted, if not handle it in deleted
+        {
+            var oldUser = oldData.Value;
+            if (oldUser.Roles.Count <= newUser.Roles.Count)
                 return;
 
-            dbContext.Roles.Remove(dbRole);
-            var res = await dbContext.SaveChangesAsync();
+            var removedRole = oldUser.Roles.FirstOrDefault(x => !newUser.Roles.Contains(x));
+            var dbGuild = await _services.GetRequiredService<DatabaseContext>().GetGuildByIdAsync(newUser.Guild.Id);
+            if (dbGuild == null || removedRole == null || dbGuild.CustomColorPermissionRoleId == 0 || removedRole.Id != dbGuild.CustomColorPermissionRoleId)
+                return;
 
-            if (res == -1)
-                _logger.LogError("Deleted role {roleName}({roleId}) has found match in DB as {identifier} and attempt to remove has failed", role.Name, role.Id, dbRole.Identifier);
-            else
-                _logger.LogInformation("Deleted role {roleName}({roleId}) has found match in DB as {identifier} and has been removed", role.Name, role.Id, dbRole.Identifier);
-        }
+            //todo: finish this
+        } //todo: deleteAllCustoms command / when role removed
         #endregion
     }
 }
