@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
-using System.Runtime.CompilerServices;
 
 namespace SolarisBot.Discord.Services
 {
@@ -91,7 +90,7 @@ namespace SolarisBot.Discord.Services
             if (dbGuild == null || removedRole == null || dbGuild.CustomColorPermissionRoleId == 0 || removedRole.Id != dbGuild.CustomColorPermissionRoleId)
                 return;
 
-            var customRoles = newUser.Roles.Where(x => x.Name.StartsWith(DiscordUtils.SolarisCustomColorPrefix) && x.Name.EndsWith(newUser.Id.ToString()));
+            var customRoles = newUser.Roles.Where(x => x.Name.StartsWith("") && x.Name.EndsWith(newUser.Id.ToString())); //todo: fix
             if (!customRoles.Any())
                 return;
 

@@ -55,7 +55,7 @@ namespace SolarisBot.Discord.Commands
             {
                 if (role != null) //We do not point out removal of role
                 {
-                    try
+                    try //todo: this sucks
                     {
                         _logger.LogInformation("Deleting leftover custom color role {roleName} from guild {guild}", roleName, Context.Guild.GetLogInfo());
                         await role.DeleteAsync();
