@@ -24,7 +24,8 @@ namespace SolarisBot.Discord.UserCredibility
         {
             new("Firstname Lastname", -10, @"\A[a-z]{2,}(?:[-_ ]+[a-z]{2,})+\Z"),
             new("Randomly Generated", -100, @"\A[a-z]{2,}\d*(?:[-_ ]+[a-z\d]+)*[-_ ]+\d+\Z"),
-            new("Name with many Numbers", -50, @"\A[a-z]{2,}(?:\d{2,3}|\d{5,})\Z")
+            new("Name with many Numbers", -50, @"\A.+(?:\d{3}|\d{5,})\Z"),
+            new("Legacy Convert", -10, @"\A.+\d{4}\Z")
         };
 
         /// <summary>
@@ -44,16 +45,16 @@ namespace SolarisBot.Discord.UserCredibility
         /// <summary>
         /// Keywords for Description only
         /// </summary>
-        private static readonly List<KeywordCredibilityRule> _descriptionKeywords = new()
+        private static readonly List<KeywordCredibilityRule> _descriptionKeywords = new()//todo: with boundary, hacked, alt, new account
         {
-            new("Commission", -50, "comm(?:issions?)"), //This one is a huge flag, no need for bonus logic
+            new("Commission", -50, "comm(?:issions?)"),
             new("DM Me", -50, "(?:(?:dm|msg|message)[- ]*me|direct[- ]*(?:messages?|mgs))"),
             new("Fiverr Link", -35, "fiverr"),
             new("VRoid", -15, "vroid"),
             new("Rigging", -15, "rigging"),
             new("Custom", -50, "custom"),
-            new("Giveaway Link", -70, "(?:raffle|giveaway|free)"),
-            new("Skins", -25, "skins?"),
+            new("Giveaway Link", -75, "(?:raffle|giveaway|free)"),
+            new("Skin", -25, "skins?"),
             new("Discord Link", -35, @"(?:discord|dsc)\.gg")
         };
 
@@ -63,7 +64,7 @@ namespace SolarisBot.Discord.UserCredibility
         private static readonly List<KeywordCredibilityRule> _extraBonusDescriptionKeywords = new()
         {
             new("3D Artistry Bonus", -10, "3d[- ]*(?:art(?:ist|sz)?|model(?:s|er|ing)?)"),
-            new("V-Tuber Artistry Bonus", -10, "v[- ]*tuber[- ]*art(?:ist)?"),
+            new("V-Tuber Artistry Bonus", -10, "v[- ]*tuber[- ]*(?:design(?:s|er)|art(?:ist)?)"),
             new("Model Artistry Bonus", -10, "(?:av(?:atar|i)|model)[- ]*art(?:ist)?"),
             new("Graphics Artistry Bonus", -10, "(?:gfx|graphics?|texture)[- ]*(?:design(?:s|er)|artist)"),
         };
