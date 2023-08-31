@@ -45,7 +45,7 @@ namespace SolarisBot.Discord.UserCredibility
         /// <summary>
         /// Keywords for Description only
         /// </summary>
-        private static readonly List<KeywordCredibilityRule> _descriptionKeywords = new()//todo: with boundary, hacked, alt, new account
+        private static readonly List<KeywordCredibilityRule> _descriptionKeywords = new()//todo: with boundary, hacked, alt, new account -> 50
         {
             new("Commission", -50, "comm(?:issions?)"),
             new("DM Me", -50, "(?:(?:dm|msg|message)[- ]*me|direct[- ]*(?:messages?|mgs))"),
@@ -54,8 +54,8 @@ namespace SolarisBot.Discord.UserCredibility
             new("Rigging", -15, "rigging"),
             new("Custom", -50, "custom"),
             new("Giveaway Link", -75, "(?:raffle|giveaway|free)"),
-            new("Skin", -25, "skins?"),
-            new("Discord Link", -35, @"(?:discord|dsc)\.gg")
+            new("Skin", -30, "skins?"),
+            new("Discord Link", -20, @"(?:discord|dsc)\.gg")
         };
 
         /// <summary>
