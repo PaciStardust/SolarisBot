@@ -55,7 +55,9 @@ namespace SolarisBot.Discord.UserCredibility
             new("Custom", -50, "custom"),
             new("Giveaway Link", -75, "(?:raffle|giveaway|free)"),
             new("Skin", -30, "skins?"),
-            new("Discord Link", -20, @"(?:discord|dsc)\.gg")
+            new("Discord Link", -20, @"(?:discord|dsc)\.gg"),
+            new("Hacked", -50, "hacked"),
+            new("Alt Account", -50, "(?:alt(?:ernative)?[- ]*(?:acc(?:ount)?)?|new[- ]*acc(?:ount)?)")
         };
 
         /// <summary>
@@ -66,7 +68,7 @@ namespace SolarisBot.Discord.UserCredibility
             new("3D Artistry Bonus", -10, "3d[- ]*(?:art(?:ist|sz)?|model(?:s|er|ing)?)"),
             new("V-Tuber Artistry Bonus", -10, "v[- ]*tuber[- ]*(?:design(?:s|er)|art(?:ist)?)"),
             new("Model Artistry Bonus", -10, "(?:av(?:atar|i)|model)[- ]*art(?:ist)?"),
-            new("Graphics Artistry Bonus", -10, "(?:gfx|graphics?|texture)[- ]*(?:design(?:s|er)|artist)"),
+            new("Graphics Artistry Bonus", -10, "(?:gfx|graphics?|texture)[- ]*(?:design(?:s|er)?|artist)"),
         };
     }
 }
