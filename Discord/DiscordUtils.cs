@@ -7,6 +7,9 @@ namespace SolarisBot.Discord
 {
     internal static class DiscordUtils
     {
+        //todo: reminders
+        //todo: change log levels
+
         #region Extention Methods
         /// <summary>
         /// Converts a discord log message and logs it using ILogger
@@ -102,9 +105,13 @@ namespace SolarisBot.Discord
         private static readonly Regex _nameVerificator = new(@"\A[A-Za-z \d]{2,20}\Z");
         internal static bool IsIdentifierValid(string identifier)
             => _nameVerificator.IsMatch(identifier);
+        #endregion
+
+        #region Roles
+        internal const string CustomColorRolePrefix = "Solaris Custom Color";
 
         internal static string GetCustomColorRoleName(IUser user)
-            => $"Solaris Custom Color {user.Id}";
+            => $"{CustomColorRolePrefix} {user.Id}";
         #endregion
     }
 

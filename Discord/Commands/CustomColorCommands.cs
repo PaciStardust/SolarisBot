@@ -33,17 +33,17 @@ namespace SolarisBot.Discord.Commands
             var upperHex = hex.ToUpper();
             if (!_hexCodeValidator.IsMatch(upperHex) || !uint.TryParse(upperHex, System.Globalization.NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var colorNumber))
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput, isEphemeral:true);
                 return;
             }
             await SetRoleColorAsync(new(colorNumber));
         }
 
-        private async Task SetRoleColorAsync(Color color) //todo: test
+        private async Task SetRoleColorAsync(Color color)
         {
             if (Context.User is not SocketGuildUser gUser)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
                 return;
             }
 
@@ -51,23 +51,9 @@ namespace SolarisBot.Discord.Commands
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
 
             var requiredRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
-            if (requiredRole == null || requiredRole == 0 || gUser.Roles.FirstOrDefault(x => x.Id == requiredRole) == null)
+            if (role == null && (requiredRole == null || requiredRole == 0 || gUser.Roles.FirstOrDefault(x => x.Id == requiredRole) == null))
             {
-                if (role != null) //We do not point out removal of role
-                {
-                    try //todo: this sucks
-                    {
-                        _logger.LogInformation("Deleting leftover custom color role {roleName} from guild {guild}", roleName, Context.Guild.GetLogInfo());
-                        await role.DeleteAsync();
-                        _logger.LogInformation("Deleted leftover custom color role {roleName} from guild {guild}", roleName, Context.Guild.GetLogInfo());
-                    }
-                    catch (Exception ex)
-                    {
-                        await RespondErrorEmbedAsync(ex);
-                        return;
-                    }
-                }
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
                 return;
             }
 
@@ -98,12 +84,13 @@ namespace SolarisBot.Discord.Commands
                 await RespondErrorEmbedAsync(ex);
                 return;
             }
-            await RespondEmbedAsync("Custom Color Set", $"Custom color role has been set to {role.Mention}", color);
+            await RespondEmbedAsync("Custom Color Set", $"Custom color role has been set to {role.Mention}", color, isEphemeral: true);
         }
         #endregion
 
         #region Delete
-        public async Task DeleteCustomColorRoleAsync() //todo: test
+        [SlashCommand("delete", "Delete your custom color role")]
+        public async Task DeleteCustomColorRoleAsync()
         {
             var roleName = DiscordUtils.GetCustomColorRoleName(Context.User);
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
@@ -124,7 +111,37 @@ namespace SolarisBot.Discord.Commands
             {
                 _logger.LogError(ex, "Failed to delete custom color role {role} from {guild}", role.GetLogInfo(), Context.Guild.GetLogInfo());
                 await RespondErrorEmbedAsync(ex);
+                return;
             }
+            await RespondEmbedAsync("Role Deleted", "Deleted your custom color role", isEphemeral:true);
+        }
+
+        [SlashCommand("delete-all", "[REQUIRES MANAGE ROLES] Delete all custom color roles"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        public async Task DeleteAllCustomColorRolesAsync()
+        {
+            var roles = Context.Guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
+            var roleCount = roles.Count();
+
+            if (roleCount == 0)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                return;
+            }
+
+            try
+            {
+                _logger.LogInformation("Deleting {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.GetLogInfo());
+                foreach (var role in roles)
+                    await role.DeleteAsync();
+                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.GetLogInfo());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.GetLogInfo());
+                await RespondErrorEmbedAsync(ex);
+                return;
+            }
+            await RespondEmbedAsync("Deleted Custom Colors", $"Succssfully deleted all **{roleCount}** custom color roles");
         }
         #endregion
     }

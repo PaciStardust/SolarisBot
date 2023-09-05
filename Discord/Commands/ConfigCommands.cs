@@ -31,8 +31,6 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            //todo: [FEATURE] Remove special on other removal?
-
             var strings = (await roleGroups.ToArrayAsync()).OrderBy(x => x.Identifier)
                 .Select(x =>
                 {
@@ -234,21 +232,21 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Magic Configured", $"Magic is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: {role?.Mention ?? "None"}\nTimeout: {guild.MagicRoleTimeout}\nRenaming: {guild.MagicRoleRenameOn}");
         }
 
-        [SlashCommand("custom-color", "Set up custom color (Not setting disabled it)")] //todo: test
-        public async Task ConfigureCustomColorAsync(IRole? role = null)
+        [SlashCommand("custom-color", "Set up custom color creation (Not setting disabled it)")]
+        public async Task ConfigureCustomColorAsync(IRole? creationrole = null)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.CustomColorPermissionRoleId = role?.Id ?? 0;
+            guild.CustomColorPermissionRoleId = creationrole?.Id ?? 0;
 
-            _logger.LogInformation("Setting custom colors to role={role} in guild {guild}", role?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
+            _logger.LogInformation("Setting custom colors to role={role} in guild {guild}", creationrole?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
             if (await _dbContext.SaveChangesAsync() == -1)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-            _logger.LogInformation("Set custom colors to role={role} in guild {guild}", role?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
-            await RespondEmbedAsync("Custom Colors Configured", $"Custom colors are currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: {role?.Mention ?? "None"}+");
+            _logger.LogInformation("Set custom colors to role={role} in guild {guild}", creationrole?.GetLogInfo() ?? "0", Context.Guild.GetLogInfo());
+            await RespondEmbedAsync("Custom Colors Configured", $"Custom color creation is currently **{(creationrole != null ? "enabled" : "disabled")}**\n\nCreation Role: {creationrole?.Mention ?? "None"}");
         }
         #endregion
     }

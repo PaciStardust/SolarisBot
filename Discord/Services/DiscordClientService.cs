@@ -20,14 +20,13 @@ namespace SolarisBot.Discord.Services
             _config = config;
             _logger = logger;
             _services = services;
-
-            _client.Log += logMessage => logMessage.Log(_logger);
-
-            RegisterSubsciptions();
         }
 
         public async Task StartAsync(CancellationToken cToken)
         {
+            _client.Log += logMessage => logMessage.Log(_logger);
+            _client.Ready += OnReadyAsync;
+
             await _client.LoginAsync(TokenType.Bot, _config.Token);
             await _client.StartAsync();
         }
@@ -36,14 +35,6 @@ namespace SolarisBot.Discord.Services
         {
             await _client.LogoutAsync();
             await _client.StopAsync();
-        }
-
-        #region Subscriptions
-        private void RegisterSubsciptions()
-        {
-            _client.Ready += OnReadyAsync;
-            _client.RoleDeleted += OnRoleDeletedAsync;
-            _client.GuildMemberUpdated += OnGuildMemberUpdated;
         }
 
         private async Task OnReadyAsync()
@@ -58,55 +49,5 @@ namespace SolarisBot.Discord.Services
                 //throw;
             }
         }
-
-        private async Task OnRoleDeletedAsync(SocketRole role)
-        {
-            _logger.LogDebug("Role {role} has been deleted from discord, checking for match in DB", role.GetLogInfo());
-            var dbContext = _services.GetRequiredService<DatabaseContext>();
-            var dbRole = dbContext.Roles.FirstOrDefault(x => x.RId == role.Id);
-            if (dbRole == null)
-            {
-                _logger.LogDebug("No matching role to delete found for discord role {role}", role.GetLogInfo());
-                return;
-            }
-
-            _logger.LogInformation("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
-            dbContext.Roles.Remove(dbRole);
-
-            if (await dbContext.SaveChangesAsync() == -1)
-                _logger.LogError("Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
-            else
-                _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
-        }
-
-        private async Task OnGuildMemberUpdated(Cacheable<SocketGuildUser, ulong> oldData, SocketGuildUser newUser) //todo: does this trigger if a role gets deleted, if not handle it in deleted
-        {
-            var oldUser = oldData.Value;
-            if (oldUser.Roles.Count <= newUser.Roles.Count)
-                return;
-
-            var removedRole = oldUser.Roles.FirstOrDefault(x => !newUser.Roles.Contains(x));
-            var dbGuild = await _services.GetRequiredService<DatabaseContext>().GetGuildByIdAsync(newUser.Guild.Id);
-            if (dbGuild == null || removedRole == null || dbGuild.CustomColorPermissionRoleId == 0 || removedRole.Id != dbGuild.CustomColorPermissionRoleId)
-                return;
-
-            var customRoles = newUser.Roles.Where(x => x.Name.StartsWith("") && x.Name.EndsWith(newUser.Id.ToString())); //todo: fix
-            if (!customRoles.Any())
-                return;
-
-            var roleList = string.Join(", ", customRoles.Select(x => x.GetLogInfo()));
-            try
-            {
-                _logger.LogInformation("Deleting custom color roles {roles} from guild {guild}, permission role has been removed from owner {user}", roleList, newUser.Guild.GetLogInfo(), newUser.GetLogInfo());
-                foreach(var role in customRoles)
-                    await role.DeleteAsync();
-                _logger.LogInformation("Deleted custom color roles {roles} from guild {guild}, permission role has been removed from owner {user}", roleList, newUser.Guild.GetLogInfo(), newUser.GetLogInfo());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to delete custom color roles {roles} from guild {guild}, permission role has been removed from owner {user}", roleList, newUser.Guild.GetLogInfo(), newUser.GetLogInfo());
-            }
-        } //todo: deleteAllCustoms command / when role removed, also delete on user leave
-        #endregion
     }
 }
