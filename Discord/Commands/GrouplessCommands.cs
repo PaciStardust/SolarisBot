@@ -73,7 +73,7 @@ namespace SolarisBot.Discord.Commands
             try
             {
                 _logger.LogInformation("Using Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", dbGuild.MagicRoleId, Context.Guild.GetLogInfo(), dbGuild.MagicRoleNextUse);
-                var faker = new Faker();
+                var faker = Utils.Faker;
                 var role = Context.Guild.GetRole(dbGuild.MagicRoleId);
                 var color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
                 await role.ModifyAsync(x =>

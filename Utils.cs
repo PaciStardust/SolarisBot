@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Bogus;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 
 namespace SolarisBot
@@ -40,5 +41,10 @@ namespace SolarisBot
                 return 0;
             }
         }
+
+        /// <summary>
+        /// Faker to generate random values
+        /// </summary>
+        internal static Faker Faker { get; private set; } = new Faker();
     }
 }
