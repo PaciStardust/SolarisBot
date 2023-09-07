@@ -21,6 +21,23 @@ namespace SolarisBot.Discord.Commands
         protected override ILogger? GetLogger() => _logger;
 
         #region Create
+        [SlashCommand("config", "[MANAGE ROLES ONLY] Set up custom color creation (Not setting disabled it)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        public async Task ConfigureCustomColorAsync(IRole? creationrole = null)
+        {
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+
+            guild.CustomColorPermissionRoleId = creationrole?.Id ?? 0;
+
+            _logger.LogDebug("Setting custom colors to role={role} in guild {guild}", creationrole?.Log() ?? "0", Context.Guild.Log());
+            if (await _dbContext.SaveChangesAsync() == -1)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
+            }
+            _logger.LogInformation("Set custom colors to role={role} in guild {guild}", creationrole?.Log() ?? "0", Context.Guild.Log());
+            await RespondEmbedAsync("Custom Colors Configured", $"Custom color creation is currently **{(creationrole != null ? "enabled" : "disabled")}**\n\nCreation Role: **{creationrole?.Mention ?? "None"}**");
+        }
+
         [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)")]
         public async Task SetRoleColorByRgb(byte red, byte green, byte blue)
             => await SetRoleColorAsync(new(red, green, blue));
@@ -61,22 +78,22 @@ namespace SolarisBot.Discord.Commands
             {
                 if (role == null)
                 {
-                    _logger.LogInformation("Creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    _logger.LogDebug("Creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), Context.Guild.Log());
                     role = await Context.Guild.CreateRoleAsync(roleName, color: color, isMentionable: false);
-                    _logger.LogInformation("Created custom color role {roleName} for user {user} in guild {guild}", role.GetLogInfo(), gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    _logger.LogInformation("Created custom color role {role} for user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
                 }
                 else
                 {
-                    _logger.LogInformation("Modifying custom color role {role} for user {user} in guild {guild}", role.GetLogInfo(), gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    _logger.LogDebug("Modifying custom color role {role} for user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
                     await role.ModifyAsync(x => x.Color = color);
-                    _logger.LogInformation("Modified custom color role {role} for user {user} in guild {guild}", role.GetLogInfo(), gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    _logger.LogInformation("Modified custom color role {role} for user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
                 }
 
                 if (!gUser.Roles.Contains(role))
                 {
-                    _logger.LogInformation("Adding custom color role {role} to user {user} in guild {guild}", role.GetLogInfo(), gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    _logger.LogDebug("Adding custom color role {role} to user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
                     await gUser.AddRoleAsync(role);
-                    _logger.LogInformation("Added custom color role {role} to user {user} in guild {guild}", role.GetLogInfo(), gUser.GetLogInfo(), Context.Guild.GetLogInfo());
+                    _logger.LogInformation("Added custom color role {role} to user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
                 }
             }
             catch (Exception ex)
@@ -97,20 +114,20 @@ namespace SolarisBot.Discord.Commands
 
             if (role == null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
             }
 
             try
             {
-                _logger.LogInformation("Deleting custom color role {role} from {guild}", role.GetLogInfo(), Context.Guild.GetLogInfo());
+                _logger.LogDebug("Deleting custom color role {role} from {guild}", role.Log(), Context.Guild.Log());
                 await role.DeleteAsync();
-                _logger.LogInformation("Deleted custom color role {role} from {guild}", role.GetLogInfo(), Context.Guild.GetLogInfo());
+                _logger.LogInformation("Deleted custom color role {role} from {guild}", role.Log(), Context.Guild.Log());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete custom color role {role} from {guild}", role.GetLogInfo(), Context.Guild.GetLogInfo());
-                await RespondErrorEmbedAsync(ex);
+                _logger.LogError(ex, "Failed to delete custom color role {role} from {guild}", role.Log(), Context.Guild.Log());
+                await RespondErrorEmbedAsync(ex, isEphemeral: true);
                 return;
             }
             await RespondEmbedAsync("Role Deleted", "Deleted your custom color role", isEphemeral:true);
@@ -130,14 +147,14 @@ namespace SolarisBot.Discord.Commands
 
             try
             {
-                _logger.LogInformation("Deleting {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.GetLogInfo());
+                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.Log());
                 foreach (var role in roles)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.GetLogInfo());
+                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.Log());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.GetLogInfo());
+                _logger.LogError(ex, "Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.Log());
                 await RespondErrorEmbedAsync(ex);
                 return;
             }

@@ -64,6 +64,7 @@ namespace SolarisBot
                     services.AddHostedService<InteractionHandlerService>();
                     services.AddHostedService<RoleDisposalService>();
                     services.AddHostedService<JokeRenamingService>();
+                    services.AddHostedService<ReminderService>();
                     services.AddHostedService<DiscordClientService>();
                 })
                 .UseSerilog(logger)

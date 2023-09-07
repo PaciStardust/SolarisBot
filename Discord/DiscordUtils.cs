@@ -7,9 +7,6 @@ namespace SolarisBot.Discord
 {
     internal static class DiscordUtils
     {
-        //todo: reminders
-        //todo: change log levels
-
         #region Extention Methods
         /// <summary>
         /// Converts a discord log message and logs it using ILogger
@@ -36,20 +33,26 @@ namespace SolarisBot.Discord
         /// <summary>
         /// Returns GlobalName and Id of a User for logging
         /// </summary>
-        internal static string GetLogInfo(this IUser user)
+        internal static string Log(this IUser user)
             => $"{user.GlobalName}({user.Id})";
 
         /// <summary>
         /// Returns Name and Id of a Guild for logging
         /// </summary>
-        internal static string GetLogInfo(this IGuild guild)
+        internal static string Log(this IGuild guild)
             => $"{guild.Name}({guild.Id})";
 
         /// <summary>
         /// Returns Name and Id of a Role for logging
         /// </summary>
-        internal static string GetLogInfo(this IRole role)
+        internal static string Log(this IRole role)
             => $"{role.Name}({role.Id})";
+
+        /// <summary>
+        /// Returns Name and Id of a Channel for logging
+        /// </summary>
+        internal static string Log(this IChannel channel)
+            => $"{channel.Name}({channel.Id})";
         #endregion
 
         #region EmbedsV2
@@ -92,7 +95,7 @@ namespace SolarisBot.Discord
             {
                 EmbedGenericErrorType.NoResults => ("No Results", "Request yielded no results"),
                 EmbedGenericErrorType.DatabaseError => ("Database Error", "The database encountered an error"),
-                EmbedGenericErrorType.Forbidden => ("Forbidden", "You are forbidden from accessing this"),
+                EmbedGenericErrorType.Forbidden => ("Access Denied", "You do not have access to this feature"),
                 EmbedGenericErrorType.InvalidInput => ("Invalid Input", "Provided values are invalid"),
                 _ => ("Unknown", "Unknown")
             };
@@ -119,7 +122,7 @@ namespace SolarisBot.Discord
     {
         NoResults,
         DatabaseError,
-        Forbidden,
-        InvalidInput
+        InvalidInput,
+        Forbidden
     }
 }

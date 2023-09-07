@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("set-status", "Set the status of the bot")]
         public async Task SetStatusAsync(string status)
         {
-            _logger.LogInformation("Setting discord client status to {discordStatus}", status);
+            _logger.LogDebug("Setting discord client status to {discordStatus}", status);
             var config = _services.GetRequiredService<BotConfig>();
             config.DefaultStatus = status;
 

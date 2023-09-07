@@ -18,6 +18,7 @@ namespace SolarisBot.Database
         public ulong MagicRoleTimeout { get; set; } = 0;
         public ulong MagicRoleNextUse { get; set; } = 0;
         public bool MagicRoleRenameOn { get; set; } = false;
+        public bool RemindersOn { get; set; } = false;
 
         [ForeignKey(nameof(DbRoleGroup.GId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();

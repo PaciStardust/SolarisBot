@@ -37,21 +37,21 @@ namespace SolarisBot.Discord.Services
         #region OnRoleDeleted
         private async Task CheckForDbRoleDuplicateAsync(SocketRole role)
         {
-            _logger.LogDebug("Role {role} has been deleted from discord, checking for match in DB", role.GetLogInfo());
+            _logger.LogDebug("Role {role} has been deleted from discord, checking for match in DB", role.Log());
             var dbRole = _dbContext.Roles.FirstOrDefault(x => x.RId == role.Id);
             if (dbRole == null)
             {
-                _logger.LogDebug("No matching role to delete found for discord role {role}", role.GetLogInfo());
+                _logger.LogDebug("No matching role to delete found for discord role {role}", role.Log());
                 return;
             }
 
-            _logger.LogInformation("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
+            _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
             _dbContext.Roles.Remove(dbRole);
 
             if (await _dbContext.SaveChangesAsync() == -1)
-                _logger.LogError("Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
+                _logger.LogError("Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
             else
-                _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.GetLogInfo());
+                _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
         }
         #endregion
 
@@ -82,13 +82,13 @@ namespace SolarisBot.Discord.Services
         {
             try
             {
-                _logger.LogInformation("Deleting leftover custom color role {role} in guild {guild} from owner {user}", role.GetLogInfo(), guild.GetLogInfo(), user.GetLogInfo());
+                _logger.LogDebug("Deleting leftover custom color role {role} in guild {guild} from owner {user}", role.Log(), guild.Log(), user.Log());
                 await role.DeleteAsync();
-                _logger.LogInformation("Deleted leftover custom color role {role} in guild {guild} from owner {user}", role.GetLogInfo(), guild.GetLogInfo(), user.GetLogInfo());
+                _logger.LogInformation("Deleted leftover custom color role {role} in guild {guild} from owner {user}", role.Log(), guild.Log(), user.Log());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to deleted leftover custom color role {role} in guild {guild} from owner {user}", role.GetLogInfo(), guild.GetLogInfo(), user.GetLogInfo());
+                _logger.LogError(ex, "Failed to deleted leftover custom color role {role} in guild {guild} from owner {user}", role.Log(), guild.Log(), user.Log());
             }
         }
         #endregion

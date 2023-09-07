@@ -1,9 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 
 namespace SolarisBot.Discord.Services
 {

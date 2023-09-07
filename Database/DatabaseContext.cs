@@ -19,6 +19,7 @@ namespace SolarisBot.Database
         public DbSet<DbQuote> Quotes { get; set; }
         public DbSet<DbRole> Roles { get; set; }
         public DbSet<DbRoleGroup> RoleGroups { get; set; }
+        public DbSet<DbReminder> Reminders { get; set; }
 
         /// <summary>
         /// Attempts to save changes to the database
@@ -90,12 +91,12 @@ namespace SolarisBot.Database
                 {
                     var queries = new string[]{
                         "PRAGMA foreign_keys = ON",
-                        "CREATE TABLE Guilds(GId INTEGER PRIMARY KEY, VouchRoleId INTEGER NOT NULL DEFAULT 0, VouchPermissionRoleId INTEGER NOT NULL DEFAULT 0, CustomColorPermissionRoleId INTEGER NOT NULL DEFAULT 0, JokeRenameOn BOOL NOT NULL DEFAULT 0, JokeRenameTimeoutMin INTEGER NOT NULL DEFAULT 0, JokeRenameTimeoutMax INTEGER NOT NULL DEFAULT 0, MagicRoleId INTEGER NOT NULL DEFAULT 0, MagicRoleTimeout INTEGER NOT NULL DEFAULT 0, MagicRoleNextUse INTEGER NOT NULL DEFAULT 0, MagicRoleRenameOn BOOL NOT NULL DEFAULT 0, UNIQUE(VouchRoleId), UNIQUE(CustomColorPermissionRoleId), UNIQUE(CustomColorOwnershipRoleId), UNIQUE(MagicRoleId))",
+                        "CREATE TABLE Guilds(GId INTEGER PRIMARY KEY, VouchRoleId INTEGER NOT NULL DEFAULT 0, VouchPermissionRoleId INTEGER NOT NULL DEFAULT 0, CustomColorPermissionRoleId INTEGER NOT NULL DEFAULT 0, JokeRenameOn BOOL NOT NULL DEFAULT 0, JokeRenameTimeoutMin INTEGER NOT NULL DEFAULT 0, JokeRenameTimeoutMax INTEGER NOT NULL DEFAULT 0, MagicRoleId INTEGER NOT NULL DEFAULT 0, MagicRoleTimeout INTEGER NOT NULL DEFAULT 0, MagicRoleNextUse INTEGER NOT NULL DEFAULT 0, MagicRoleRenameOn BOOL NOT NULL DEFAULT 0, RemindersOn BOOL NOT NULL DEFAULT 0, UNIQUE(VouchRoleId), UNIQUE(CustomColorPermissionRoleId), UNIQUE(MagicRoleId))",
                         "CREATE TABLE RoleGroups(RgId INTEGER PRIMARY KEY AUTOINCREMENT, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", AllowOnlyOne BOOL NOT NULL DEFAULT 0, RequiredRoleId INTEGER NOT NULL DEFAULT 0, UNIQUE(GId, Identifier))",
                         "CREATE TABLE Roles(RId INTEGER PRIMARY KEY, RgId INTEGER REFERENCES RoleGroups(RgId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", UNIQUE(RgId, Identifier))",
                         "CREATE TABLE Quotes(QId INTEGER PRIMARY KEY, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, Text TEXT NOT NULL DEFAULT \"\", AuthorId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, CreatorId INTEGER NOT NULL DEFAULT 0)",
                         "CREATE TABLE JokeTimeouts(JtId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, NextUse INTEGER NOT NULL DEFAULT 0, UNIQUE(GId, UserId))",
-                        "CREATE TABLE Reminders(RId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, IsPrivate BOOL NOT NULL DEFAULT 0, ChannelId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, Text TEXT NOT NULL DEFAULT \"\", UNIQUE(GId, UserId, Text))"
+                        "CREATE TABLE Reminders(RId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GId INTEGER REFERENCES Guilds(GId) ON DELETE CASCADE ON UPDATE CASCADE, ChannelId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, Created INTEGER NOT NULL DEFAULT 0, Text TEXT NOT NULL DEFAULT \"\", UNIQUE(GId, UserId, Text))"
                     };
 
                     foreach (var query in queries)

@@ -2,12 +2,7 @@
 using Discord;
 using Microsoft.Extensions.Hosting;
 using SolarisBot.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Discord.Services
@@ -79,14 +74,14 @@ namespace SolarisBot.Discord.Services
             var logTimespan = TimeSpan.FromSeconds(cooldown);
             try
             {
-                _logger.LogDebug("Changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.GetLogInfo(), name, gUser.Guild.GetLogInfo(), logTimespan);
+                _logger.LogDebug("Changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
                 await gUser.ModifyAsync(x => x.Nickname = name);
-                _logger.LogDebug("Changed user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.GetLogInfo(), name, gUser.Guild.GetLogInfo(), logTimespan);
+                _logger.LogDebug("Changed user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
                 await userMessage.ReplyAsync($"Hello {gUser.Mention}, I am {_client.CurrentUser.Username}!");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.GetLogInfo(), name, gUser.Guild.GetLogInfo(), logTimespan);
+                _logger.LogError(ex, "Failed changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
             }
         }
     }
