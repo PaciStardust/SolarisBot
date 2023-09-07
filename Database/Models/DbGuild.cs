@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SolarisBot.Database.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
@@ -26,6 +27,9 @@ namespace SolarisBot.Database
 
         [ForeignKey(nameof(DbJokeTimeout.GId))]
         public virtual ICollection<DbJokeTimeout> JokeTimeouts { get; set; } = new HashSet<DbJokeTimeout>();
+
+        [ForeignKey(nameof(DbJokeTimeout.GId))]
+        public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
 
         public DbGuild() { } //To avoid defaults not setting
     }
