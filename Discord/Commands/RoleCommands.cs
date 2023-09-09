@@ -45,7 +45,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("List of Assignable Roles", string.Join("\n\n", strings));
         }
 
-        [SlashCommand("group-create", "[MANAGE ROLES ONLY] Create a role group (Group identifiers can only be made of letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("group-create", "[MANAGE ROLES ONLY] Create role group (Identifiers only letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
         public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string identifier, [MinLength(2), MaxLength(200)] string description = "", bool oneof = true, IRole? requiredRole = null)
         {
             var identifierClean = identifier.Trim();
@@ -109,7 +109,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Role Group Deleted", $"The role group with the identifier **\"{identifierClean}\"** has been deleted");
         }
 
-        [SlashCommand("role-register", "[MANAGE ROLES ONLY] Register a role to a group (Identifiers can only be made of letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("role-register", "[MANAGE ROLES ONLY] Register role group (Identifiers only letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
         public async Task RegisterRoleAsync(IRole role, [MinLength(2), MaxLength(20)] string identifier, string group, string description = "")
         {
             var descriptionClean = description.Trim();

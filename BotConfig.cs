@@ -51,7 +51,9 @@ namespace SolarisBot
         public ulong MainGuild { get; set; } = 0;
         public string DefaultStatus { get; set; } = "SolarisBot by Paci";
         public bool GlobalLoad { get; set; } = false;
-        public byte MaxRemindersPerUser { get; set; } = 8;
+        public byte MaxRemindersPerUser { get; set; } = 16;
+        public short MaxQuoteCharacters { get; set; } = 500;
+        public byte MaxQuotesPerUser { get; set; } = 32; //Per server
         #endregion
     }
 }

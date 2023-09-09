@@ -11,6 +11,8 @@ namespace SolarisBot.Database
         public ulong AuthorId { get; set; } = 0;
         public ulong Time { get; set; } = 0;
         public ulong CreatorId { get; set; } = 0;
+        public ulong ChannelId { get; set; } = 0;
+        public ulong MessageId { get; set; } = 0;
 
         public DbQuote() { }
     }

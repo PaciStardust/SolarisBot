@@ -5,7 +5,7 @@ using SolarisBot.Database;
 
 namespace SolarisBot.Discord.Commands
 {
-    [Group("reminder", "Manage Reminders"), RequireContext(ContextType.Guild)]
+    [Group("reminders", "Manage Reminders"), RequireContext(ContextType.Guild)]
     public sealed class ReminderCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<ReminderCommands> _logger;
@@ -80,7 +80,7 @@ namespace SolarisBot.Discord.Commands
             }
             _logger.LogInformation("Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
 
-            await RespondEmbedAsync("Reminder Created", $"{text}\n*(Reminding <t:{reminderTime}:f>)*");
+            await RespondEmbedAsync("Reminder Created", $"**{text}**\n*(Reminding <t:{reminderTime}:f>)*");
         }
 
         [SlashCommand("list", "List your reminders")]

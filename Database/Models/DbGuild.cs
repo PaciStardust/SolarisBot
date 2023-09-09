@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SolarisBot.Database.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
@@ -19,6 +18,7 @@ namespace SolarisBot.Database
         public ulong MagicRoleNextUse { get; set; } = 0;
         public bool MagicRoleRenameOn { get; set; } = false;
         public bool RemindersOn { get; set; } = false;
+        public bool QuotesOn { get; set; } = false;
 
         [ForeignKey(nameof(DbRoleGroup.GId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
