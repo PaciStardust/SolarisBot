@@ -95,5 +95,21 @@ namespace SolarisBot.Discord.Commands
                 await RespondErrorEmbedAsync(ex);
             }
         }
+
+        [SlashCommand("auto-role", "Set a join role")]
+        public async Task SetAutoRoleAsync(IRole? role)
+        {
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            guild.AutoRoleId = role?.Id ?? 0;
+
+            _logger.LogDebug("Setting auto-role to role {role} for guild {guild}", role?.Log() ?? "0", Context.Guild.Log());
+            if (await _dbContext.SaveChangesAsync() == -1)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
+            }
+            _logger.LogInformation("Set auto-role to role {role} for guild {guild}", role?.Log() ?? "0", Context.Guild.Log());
+            await RespondErrorEmbedAsync("Auto-Role Configured", $"Auto-Role is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+        }
     }
 }

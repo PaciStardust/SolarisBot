@@ -62,7 +62,7 @@ namespace SolarisBot
                     services.AddSingleton<InteractionService>();
 
                     services.AddHostedService<InteractionHandlerService>();
-                    services.AddHostedService<RoleDisposalService>();
+                    services.AddHostedService<RoleHandlingService>();
                     services.AddHostedService<JokeRenamingService>();
                     services.AddHostedService<ReminderService>();
                     services.AddHostedService<DiscordClientService>();
