@@ -15,5 +15,12 @@ namespace SolarisBot.Database
         public ulong MessageId { get; set; } = 0;
 
         public DbQuote() { }
+
+        public override string ToString()
+        {
+            var len = Text.Length;
+            var text = len > 30 ? Text[..27] + "..." : Text;
+            return $"{QId}: \"{text}\" - <@{AuthorId}>";
+        }
     }
 }

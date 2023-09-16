@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, random, setup, filtered search
+namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, random, setup, wipe commands
 {
     [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
     public sealed class QuoteCommands : SolarisInteractionModuleBase
@@ -93,7 +93,36 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
             await RespondEmbedAsync("Quote Deleted", $"Quote with ID **{id}** has been deleted");
         }
 
-        private async Task<DbQuote[]> GetQuotes(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool firstOnly = true, bool all = false)
+        [SlashCommand("search", "Search (and view) quotes")]
+        public async Task SearchAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool showfirst = true)
+        {
+            var quotes = await GetQuotes(author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
+            if (quotes.Length == 0)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                return;
+            }
+            else if (showfirst)
+            {
+                await RespondEmbedAsync(GetQuoteEmbed(quotes[0]));
+                return;
+            }
+            await RespondEmbedAsync("Quote Search Results", GenerateQuotesList(quotes), isEphemeral: true);
+        }
+
+        [SlashCommand("search-self", "Search through own quotes, not limited by guild")]
+        public async Task SearchSelfAsync(IUser? author, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0)
+        {
+            var quotes = await GetQuotes(author: author, id: id, content: content, offset: offset, all: true);
+            if (quotes.Length == 0)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                return;
+            }
+            await RespondEmbedAsync("Quote Search Results", GenerateQuotesList(quotes), isEphemeral: true);
+        }
+
+        private async Task<DbQuote[]> GetQuotes(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, int offset = 0, int limit = 0, bool all = false)
         {
             if (author == null && creator == null && id == null && content == null && offset != 0)
                 return Array.Empty<DbQuote>();
@@ -116,8 +145,14 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
                     dbQuery = dbQuery.Skip(offset);
             }
 
-            return await dbQuery.Take(firstOnly ? 1 : 10).ToArrayAsync();
+            if (limit > 0)
+                dbQuery = dbQuery.Take(limit);
+
+            return await dbQuery.ToArrayAsync();
         }
+
+        private static string GenerateQuotesList(DbQuote[] quotes)
+            => string.Join("\n\n", quotes.Select(x => x.ToString()));
 
         private static Embed GetQuoteEmbed(DbQuote dbQuote)
             => DiscordUtils.Embed($"Quote Nr.{dbQuote.QId}", $"\"{dbQuote.Text}\" - <@{dbQuote.AuthorId}>\n\n*Created by <@{dbQuote.CreatorId}> at <t:{dbQuote.Time}:f>\n[Link to message](https://discord.com/channels/{dbQuote.GId}/{dbQuote.ChannelId}/{dbQuote.MessageId})*");
