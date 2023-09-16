@@ -20,7 +20,7 @@ namespace SolarisBot
             var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
-            logger.Information("PopupBot by PaciStardust is starting");
+            logger.Information("SolarisBot by PaciStardust is starting");
 
             logger.Information("Loading BotConfig from {cfgPath}", Utils.PathConfigFile);
             var botConfig = GetConfig();

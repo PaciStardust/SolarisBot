@@ -2,14 +2,9 @@
 using Discord;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Discord.Commands //todo: deletion on server leave, staff deletion, logging
+namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, random, setup, filtered search
 {
     [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
     public sealed class QuoteCommands : SolarisInteractionModuleBase
@@ -80,7 +75,9 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, staff de
         [SlashCommand("delete", "Delete a quote by ID")]
         public async Task DeleteQuoteAsync(ulong id)
         {
-            var dbQuote = _dbContext.Quotes.Where(x => x.QId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id)).FirstOrDefault();
+            bool isAdmin = Context.User is IGuildUser user && user.GuildPermissions.ManageMessages;
+
+            var dbQuote = _dbContext.Quotes.Where(x => x.QId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GId))).FirstOrDefault();
             if (dbQuote == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -94,6 +91,32 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, staff de
                 return;
             }
             await RespondEmbedAsync("Quote Deleted", $"Quote with ID **{id}** has been deleted");
+        }
+
+        private async Task<DbQuote[]> GetQuotes(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool firstOnly = true, bool all = false)
+        {
+            if (author == null && creator == null && id == null && content == null && offset != 0)
+                return Array.Empty<DbQuote>();
+
+            IQueryable<DbQuote> dbQuery = _dbContext.Quotes;
+            if (!all)
+                dbQuery = dbQuery.Where(x => x.GId == Context.Guild.Id);
+
+            if (id != null)
+                dbQuery = dbQuery.Where(x => x.QId == id);
+            else
+            {
+                if (author != null)
+                    dbQuery = dbQuery.Where(x => x.AuthorId == author.Id);
+                if (creator != null)
+                    dbQuery = dbQuery.Where(x => x.CreatorId == creator.Id);
+                if (content != null)
+                    dbQuery = dbQuery.Where(x => x.Text.Contains(content, StringComparison.OrdinalIgnoreCase));
+                if (offset > 0)
+                    dbQuery = dbQuery.Skip(offset);
+            }
+
+            return await dbQuery.Take(firstOnly ? 1 : 10).ToArrayAsync();
         }
 
         private static Embed GetQuoteEmbed(DbQuote dbQuote)
