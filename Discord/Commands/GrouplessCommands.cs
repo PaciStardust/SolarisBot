@@ -19,7 +19,7 @@ namespace SolarisBot.Discord.Commands
         }
         protected override ILogger? GetLogger() => _logger;
 
-        [SlashCommand("vouch", "Vouch for a user")]
+        [SlashCommand("vouch", "Vouch for a user"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task VouchUserAsync(IUser user)
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
@@ -52,7 +52,7 @@ namespace SolarisBot.Discord.Commands
             }
         }
 
-        [SlashCommand("magic", "Use magic")]
+        [SlashCommand("magic", "Use magic"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task UseMagicAsync()
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);

@@ -233,7 +233,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync(embedBuilder.Build(), isEphemeral: true);
         }
 
-        [SlashCommand("select", "Select roles from a group")]
+        [SlashCommand("select", "Select roles from a group"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SelectRolesAsync([MinLength(2), MaxLength(20)] string groupname)
         {
             if (Context.User is not SocketGuildUser gUser)
@@ -292,7 +292,7 @@ namespace SolarisBot.Discord.Commands
             }
         }
 
-        [ComponentInteraction("roleselector.*", true)]
+        [ComponentInteraction("roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SelectRoleResponseAsync(string rgid, string[] selections)
         {
             if (Context.User is not SocketGuildUser gUser)

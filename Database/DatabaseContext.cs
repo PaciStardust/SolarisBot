@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Database
 {
-    internal sealed class DatabaseContext : DbContext //todo: bdays, command perms, temp channels
+    internal sealed class DatabaseContext : DbContext //todo: bdays, temp channels
     {
         private readonly ILogger<DatabaseContext> _logger;
         private static bool _hasMigrated = false;

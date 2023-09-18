@@ -38,13 +38,13 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Custom Colors Configured", $"Custom color creation is currently **{(creationrole != null ? "enabled" : "disabled")}**\n\nCreation Role: **{creationrole?.Mention ?? "None"}**");
         }
 
-        [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)")]
+        [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SetRoleColorByRgb(byte red, byte green, byte blue)
             => await SetRoleColorAsync(new(red, green, blue));
 
         private static readonly Regex _hexCodeValidator = new(@"[A-F0-9]{6}");
 
-        [SlashCommand("set-color-hex", "Set your custom role color via Hex (Requires permission role)")]
+        [SlashCommand("set-color-hex", "Set your custom role color via Hex (Requires permission role)"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SetRoleColorByHex([MinLength(6), MaxLength(6)] string hex)
         {
             var upperHex = hex.ToUpper();
@@ -106,7 +106,7 @@ namespace SolarisBot.Discord.Commands
         #endregion
 
         #region Delete
-        [SlashCommand("delete", "Delete your custom color role")]
+        [SlashCommand("delete", "Delete your custom color role"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task DeleteCustomColorRoleAsync()
         {
             var roleName = DiscordUtils.GetCustomColorRoleName(Context.User);
@@ -133,7 +133,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Role Deleted", "Deleted your custom color role", isEphemeral:true);
         }
 
-        [SlashCommand("delete-all", "[REQUIRES MANAGE ROLES] Delete all custom color roles"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("delete-all", "[REQUIRES MANAGE ROLES] Delete all custom color roles"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task DeleteAllCustomColorRolesAsync()
         {
             var roles = Context.Guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
