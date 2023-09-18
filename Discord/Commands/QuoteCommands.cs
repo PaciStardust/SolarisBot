@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, random, setup, wipe commands, onguilddelete
+namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, setup, wipe commands, onguilddelete
 {
     [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
     public sealed class QuoteCommands : SolarisInteractionModuleBase
@@ -96,7 +96,7 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
         [SlashCommand("search", "Search (and view) quotes")]
         public async Task SearchAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool showfirst = true)
         {
-            var quotes = await GetQuotes(author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
+            var quotes = await GetQuotesAsync(author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
             if (quotes.Length == 0)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -113,7 +113,7 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
         [SlashCommand("search-self", "Search through own quotes, not limited by guild")]
         public async Task SearchSelfAsync(IUser? author, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0)
         {
-            var quotes = await GetQuotes(author: author, id: id, content: content, offset: offset, all: true);
+            var quotes = await GetQuotesAsync(author: author, id: id, content: content, offset: offset, all: true);
             if (quotes.Length == 0)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -122,7 +122,23 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
             await RespondEmbedAsync("Quote Search Results", GenerateQuotesList(quotes), isEphemeral: true);
         }
 
-        private async Task<DbQuote[]> GetQuotes(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, int offset = 0, int limit = 0, bool all = false)
+        [SlashCommand("random", "Picks a random quote")]
+        public async Task RandomQuoteAsync()
+        {
+            var quotesQuery = _dbContext.Quotes.Where(x => x.GId == Context.Guild.Id);
+
+            var quoteNum = await quotesQuery.CountAsync();
+            if (quoteNum == 0)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                return;
+            }
+
+            var quote = await quotesQuery.Take(Utils.Faker.Random.Int(0, quoteNum+1)).FirstAsync(); //todo: does this work with index?
+            await RespondEmbedAsync(GetQuoteEmbed(quote));
+        }
+
+        private async Task<DbQuote[]> GetQuotesAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, int offset = 0, int limit = 0, bool all = false)
         {
             if (author == null && creator == null && id == null && content == null && offset != 0)
                 return Array.Empty<DbQuote>();
