@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, random, setup, wipe commands
+namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, random, setup, wipe commands, onguilddelete
 {
     [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
     public sealed class QuoteCommands : SolarisInteractionModuleBase
