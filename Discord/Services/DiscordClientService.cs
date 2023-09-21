@@ -10,14 +10,12 @@ namespace SolarisBot.Discord.Services
         private readonly BotConfig _config;
         private readonly ILogger<DiscordClientService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _services;
 
-        public DiscordClientService(BotConfig config, ILogger<DiscordClientService> logger, DiscordSocketClient client, IServiceProvider services)
+        public DiscordClientService(BotConfig config, ILogger<DiscordClientService> logger, DiscordSocketClient client)
         {
             _client = client;
             _config = config;
             _logger = logger;
-            _services = services;
         }
 
         public async Task StartAsync(CancellationToken cToken)

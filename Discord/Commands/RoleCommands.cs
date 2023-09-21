@@ -23,15 +23,15 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("view-all", "[MANAGE ROLES ONLY] View all roles and groups (Including empty ones)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
         public async Task ViewAllRolesAsync()
         {
-            var roleGroups = _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id);
+            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id).ToArrayAsync();
 
-            if (!roleGroups.Any())
+            if (roleGroups.Length == 0)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
-            var strings = (await roleGroups.ToArrayAsync()).OrderBy(x => x.Identifier)
+            var strings = roleGroups.OrderBy(x => x.Identifier)
                 .Select(x =>
                 {
                     var title = $"{x.Identifier} ({(x.AllowOnlyOne ? "One of" : "Multi")}{(x.RequiredRoleId == 0 ? string.Empty : $", <@&{x.RequiredRoleId}> Only")})";
@@ -197,9 +197,9 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("view", "View all roles and groups")]
         public async Task ViewRolesAsync()
         {
-            var roleGroups = _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id);
+            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id).ToArrayAsync();
 
-            if (!roleGroups.Any())
+            if (roleGroups.Length == 0)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
@@ -307,7 +307,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RgId == parsedGid);
+            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RgId == parsedGid && x.GId == gUser.Guild.Id);
             if (roleGroup == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);

@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging, setup, wipe commands, onguilddelete
+namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave, logging, setup, wipe commands, onguilddelete
 {
-    [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
+    [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)] //todo: [TEST] Does literally any of this work
     public sealed class QuoteCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuoteCommands> _logger;
@@ -38,14 +38,14 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
             }
 
             //Check for duplicates
-            if (guild.Quotes.Where(x => x.MessageId == message.Id || (x.AuthorId == message.Author.Id && x.Text == message.CleanContent && x.GId == Context.Guild.Id)).Any())
+            if (guild.Quotes.Any(x => x.MessageId == message.Id || (x.AuthorId == message.Author.Id && x.Text == message.CleanContent && x.GId == Context.Guild.Id)))
             {
                 await RespondErrorEmbedAsync("Duplicate Quote", "Message has already been quoted", isEphemeral: true);
                 return;
             }
 
             //Check if user has available slots
-            if (guild.Quotes.Where(x => x.CreatorId == Context.User.Id).Count() >= _botConfig.MaxQuotesPerUser)
+            if (guild.Quotes.Count(x => x.CreatorId == Context.User.Id) >= _botConfig.MaxQuotesPerUser)
             {
                 await RespondErrorEmbedAsync("Too Many Quotes", $"You already have **{_botConfig.MaxQuotesPerUser}** Quotes on this server, please delete some to create more", isEphemeral: true);
                 return;
@@ -68,7 +68,7 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError, isEphemeral: true);
                 return;
             }
-            await RespondEmbedAsync(GetQuoteEmbed(dbQuote)); //todo: does this contain id after Add?
+            await RespondEmbedAsync(GetQuoteEmbed(dbQuote)); //todo: [TEST] Does this contain id after Add?
             return;
         }
 
@@ -77,7 +77,7 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
         {
             bool isAdmin = Context.User is IGuildUser user && user.GuildPermissions.ManageMessages;
 
-            var dbQuote = _dbContext.Quotes.Where(x => x.QId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GId))).FirstOrDefault();
+            var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GId)));
             if (dbQuote == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -134,7 +134,7 @@ namespace SolarisBot.Discord.Commands //todo: deletion on server leave, logging,
                 return;
             }
 
-            var quote = await quotesQuery.Take(Utils.Faker.Random.Int(0, quoteNum+1)).FirstAsync(); //todo: does this work with index?
+            var quote = await quotesQuery.Take(Utils.Faker.Random.Int(0, quoteNum+1)).FirstAsync(); //todo: [TEST] Are these index bounds correct?
             await RespondEmbedAsync(GetQuoteEmbed(quote));
         }
 

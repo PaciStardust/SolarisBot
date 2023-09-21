@@ -1,5 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
@@ -12,12 +14,12 @@ namespace SolarisBot.Discord.Services
     {
         private readonly ILogger<RoleHandlingService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DatabaseContext _dbContext;
+        private readonly IServiceProvider _provider;
 
-        public RoleHandlingService(ILogger<RoleHandlingService> logger, DiscordSocketClient client, DatabaseContext dbContext)
+        public RoleHandlingService(ILogger<RoleHandlingService> logger, DiscordSocketClient client, IServiceProvider provider)
         {
             _client = client;
-            _dbContext = dbContext;
+            _provider = provider;
             _logger = logger;
         }
 
@@ -35,10 +37,11 @@ namespace SolarisBot.Discord.Services
             return Task.CompletedTask;
         }
 
-        private async Task ApplyAutoRoleAsync(SocketGuildUser user) //todo: test
+        private async Task ApplyAutoRoleAsync(SocketGuildUser user) //todo: [TEST] Does Auto-Role work?
         {
             _logger.LogDebug("User {user} has joined guild {guild}, checking for auto-role", user.Log(), user.Guild.Log());
-            var dbGuild = await _dbContext.GetGuildByIdAsync(user.Guild.Id);
+            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
             if (dbGuild == null || dbGuild.AutoRoleId == 0)
             {
                 _logger.LogDebug("No auto-role specified for guild {guild}", user.Guild.Log());
@@ -60,7 +63,8 @@ namespace SolarisBot.Discord.Services
         private async Task CheckForDbRoleDuplicateAsync(SocketRole role)
         {
             _logger.LogDebug("Role {role} has been deleted from guild {guild}, checking for match in DB", role.Log(), role.Guild.Log());
-            var dbRole = _dbContext.Roles.FirstOrDefault(x => x.RId == role.Id);
+            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            var dbRole = await dbCtx.Roles.FirstOrDefaultAsync(x => x.RId == role.Id);
             if (dbRole == null)
             {
                 _logger.LogDebug("No matching role to delete found for discord role {role}", role.Log());
@@ -68,9 +72,9 @@ namespace SolarisBot.Discord.Services
             }
 
             _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-            _dbContext.Roles.Remove(dbRole);
+            dbCtx.Roles.Remove(dbRole);
 
-            if (await _dbContext.SaveChangesAsync() == -1)
+            if (await dbCtx.SaveChangesAsync() == -1)
                 _logger.LogError("Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
             else
                 _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.Log());

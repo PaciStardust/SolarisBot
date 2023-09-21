@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using SolarisBot.Database;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SolarisBot.Discord.Services
 {
@@ -11,13 +12,13 @@ namespace SolarisBot.Discord.Services
     {
         private readonly ILogger<JokeRenamingService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DatabaseContext _dbContext;
+        private readonly IServiceProvider _provider;
 
-        public JokeRenamingService(ILogger<JokeRenamingService> logger, DiscordSocketClient client, DatabaseContext dbContext)
+        public JokeRenamingService(ILogger<JokeRenamingService> logger, DiscordSocketClient client, IServiceProvider provider)
         {
             _logger = logger;
             _client = client;
-            _dbContext = dbContext;
+            _provider = provider;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -46,7 +47,8 @@ namespace SolarisBot.Discord.Services
             if (name.Length > 32)
                 return;
 
-            var guild = await _dbContext.GetGuildByIdAsync(gUser.GuildId);
+            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
             if (guild == null || guild.JokeRenameOn == false)
                 return;
 
@@ -66,8 +68,8 @@ namespace SolarisBot.Discord.Services
                 : Utils.Faker.Random.ULong(guild.JokeRenameTimeoutMin, guild.JokeRenameTimeoutMax);
             timeOut.NextUse = currTime + cooldown;
 
-            _dbContext.JokeTimeouts.Update(timeOut);
-            var res = await _dbContext.SaveChangesAsync();
+            dbCtx.JokeTimeouts.Update(timeOut);
+            var res = await dbCtx.SaveChangesAsync();
             if (res == -1)
                 return;
 

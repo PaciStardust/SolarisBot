@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 
@@ -36,7 +37,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Reminders Configured", $"Reminders are currently **{(enabled ? "enabled" : "disabled")}**");
         }
 
-        [SlashCommand("create", "Create a reminder")]
+        [SlashCommand("create", "Create a reminder")] //todo: [TEST] Can reminder be created?
         public async Task CreateReminderAsync(string text, ulong days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
         {
             if (days == 0 && hours == 0 && minutes == 0)
@@ -52,7 +53,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var reminderCount = dbGuild.Reminders.Select(x => x.UserId == Context.User.Id).Count();
+            var reminderCount = await _dbContext.Reminders.CountAsync(x => x.UserId == Context.User.Id);
             if (reminderCount >= _botConfig.MaxRemindersPerUser)
             {
                 await RespondErrorEmbedAsync("Maximum Reminders", $"Reached maximum reminder count of **{_botConfig.MaxRemindersPerUser}**", isEphemeral: true);
@@ -83,12 +84,12 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Reminder Created", $"**{text}**\n*(Reminding <t:{reminderTime}:f>)*");
         }
 
-        [SlashCommand("list", "List your reminders")]
+        [SlashCommand("list", "List your reminders")] //todo: [TEST] Can reminders be listed?
         public async Task ListRemindersAsync()
         {
-            var reminders = _dbContext.Reminders.Where(x => x.UserId == Context.User.Id);
+            var reminders = await _dbContext.Reminders.Where(x => x.UserId == Context.User.Id).ToArrayAsync();
 
-            if (!reminders.Any())
+            if (reminders.Length == 0)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
@@ -98,10 +99,10 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Your Reminders", reminderText, isEphemeral: true);
         }
 
-        [SlashCommand("delete", "Delete a reminder")] 
+        [SlashCommand("delete", "Delete a reminder")] //todo: [TEST] Can reminders be deleted?
         public async Task DeleteReminder(ulong id)
         {
-            var reminder = _dbContext.Reminders.Where(x => x.RId == id && x.UserId == Context.User.Id).FirstOrDefault();
+            var reminder = await _dbContext.Reminders.FirstOrDefaultAsync(x => x.RId == id && x.UserId == Context.User.Id);
             if (reminder == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Database
 {
-    internal sealed class DatabaseContext : DbContext //todo: bdays, temp channels
+    internal sealed class DatabaseContext : DbContext //todo: [FEATURE] bdays, temp channels, gif-ify?
     {
         private readonly ILogger<DatabaseContext> _logger;
         private static bool _hasMigrated = false;

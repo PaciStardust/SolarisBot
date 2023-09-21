@@ -3,7 +3,7 @@
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(QId))]
-    public class DbQuote //todo: implement quotes
+    public class DbQuote
     {
         public ulong QId { get; set; } = 0;
         public ulong GId { get; set; } = 0;
