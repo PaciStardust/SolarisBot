@@ -9,7 +9,7 @@ using System.Timers;
 
 namespace SolarisBot.Discord.Services
 {
-    internal class ReminderService : IHostedService
+    internal sealed class ReminderService : IHostedService
     {
         private readonly ILogger<ReminderService> _logger;
         private readonly DiscordSocketClient _client;
@@ -28,8 +28,6 @@ namespace SolarisBot.Discord.Services
         #region Start / Stop
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _client.UserLeft += RemoveOnUserLeftAsync;
-            _client.ChannelDestroyed += RemoveOnChannelDestroyedAsync;
             await RemindUsersAsync();
             _timer.Start();
         }
@@ -38,38 +36,6 @@ namespace SolarisBot.Discord.Services
         {
             _timer.Stop();
             return Task.CompletedTask;
-        }
-        #endregion
-
-        #region Removal
-        private async Task RemoveOnUserLeftAsync(SocketGuild guild, SocketUser user) //todo: [TEST] Do reminders get deleted when user leaves?, move to a CleanupService
-        {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var quotes = await dbCtx.Quotes.Where(x => x.GId == guild.Id && x.CreatorId == user.Id).ToArrayAsync();
-            if (quotes.Length == 0)
-                return;
-            await RemoveQuotesAsync(quotes);
-        }
-
-        private async Task RemoveOnChannelDestroyedAsync(SocketChannel channel) //todo: [TEST] Do reminders get deleted on channel destruction?
-        {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var quotes = await dbCtx.Quotes.Where(x => x.ChannelId == channel.Id).ToArrayAsync();
-            if (quotes.Length == 0)
-                return;
-            await RemoveQuotesAsync(quotes);
-        }
-
-        private async Task<bool> RemoveQuotesAsync(DbQuote[] quotes)
-        {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            dbCtx.Quotes.RemoveRange(quotes);
-            if (await dbCtx.TrySaveChangesAsync() == -1)
-            {
-                //todo: [LOG] logging
-                return false;
-            }
-            return true;
         }
         #endregion
 
@@ -83,10 +49,14 @@ namespace SolarisBot.Discord.Services
                 return;
 
             var nowUnix = Utils.GetCurrentUnix(_logger);
+            _logger.LogDebug("Checking Database for reminders");
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var reminders = await dbCtx.Reminders.FromSqlRaw($"SELECT * FROM reminders WHERE time <= {nowUnix}").ToArrayAsync(); //UInt equality not supported
             if (reminders.Length == 0)
+            {
+                _logger.LogDebug("Checked database for reminders, none found");
                 return;
+            }
 
             _logger.LogDebug("Sending out {reminders} reminders", reminders.Length);
             foreach (var reminder in reminders)
@@ -111,11 +81,10 @@ namespace SolarisBot.Discord.Services
             _logger.LogInformation("Reminders finished, removing {reminders} reminders from DB", reminders.Length);
             dbCtx.Reminders.RemoveRange(reminders);
 
-            var res = await dbCtx.SaveChangesAsync();
-            if (res == -1)
-                return;
-
-            _logger.LogInformation("Removed {reminders} reminders from DB", reminders.Length);
+            if (await dbCtx.TrySaveChangesAsync() == -1)
+                _logger.LogWarning("Failed to remove {reminders} reminders from DB", reminders.Length);
+            else
+                _logger.LogInformation("Removed {reminders} reminders from DB", reminders.Length);
         }
         #endregion
     }

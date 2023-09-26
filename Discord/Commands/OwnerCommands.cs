@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Discord.Commands
 {
-    [Group("owner", "[OWNER ONLY] Configure Solaris"), RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
+    [Group("owner", "[OWNER ONLY] Configure Solaris"), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
     public sealed class OwnerCommands : SolarisInteractionModuleBase
     {
         private readonly IServiceProvider _services;
@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("set-status", "Set the status of the bot")]
         public async Task SetStatusAsync(string status)
         {
-            _logger.LogDebug("Setting discord client status to {discordStatus}", status);
+            _logger.LogDebug("{intTag} Setting discord client status to {discordStatus}", GetIntTag(), status);
             var config = _services.GetRequiredService<BotConfig>();
             config.DefaultStatus = status;
 
@@ -35,12 +35,12 @@ namespace SolarisBot.Discord.Commands
             try
             {
                 await client.SetGameAsync(status);
-                _logger.LogInformation("Set discord client status to {discordStatus}", status);
+                _logger.LogInformation("{intTag} Set discord client status to {discordStatus}", GetIntTag(), status);
                 await RespondEmbedAsync("Status Set", $"Status set to \"{status}\"");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to set discord client status to {discordStatus}", status);
+                _logger.LogError(ex, "{intTag} Failed to set discord client status to {discordStatus}", GetIntTag(), status);
                 await RespondErrorEmbedAsync(ex);
             }
         }

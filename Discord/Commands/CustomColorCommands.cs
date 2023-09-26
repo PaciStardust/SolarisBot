@@ -21,20 +21,21 @@ namespace SolarisBot.Discord.Commands
         protected override ILogger? GetLogger() => _logger;
 
         #region Create
-        [SlashCommand("config", "[MANAGE ROLES ONLY] Set up custom color creation (Not setting disabled it)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("config", "[MANAGE ROLES ONLY] Set up custom color creation (Not setting disabled it)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task ConfigureCustomColorAsync(IRole? creationrole = null)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.CustomColorPermissionRoleId = creationrole?.Id ?? 0;
 
-            _logger.LogDebug("Setting custom colors to role={role} in guild {guild}", creationrole?.Log() ?? "0", Context.Guild.Log());
-            if (await _dbContext.SaveChangesAsync() == -1)
+            _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
+            if (await _dbContext.TrySaveChangesAsync() == -1)
             {
+                _logger.LogWarning("{intTag} Failed to set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-            _logger.LogInformation("Set custom colors to role={role} in guild {guild}", creationrole?.Log() ?? "0", Context.Guild.Log());
+            _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
             await RespondEmbedAsync("Custom Colors Configured", $"Custom color creation is currently **{(creationrole != null ? "enabled" : "disabled")}**\n\nCreation Role: **{creationrole?.Mention ?? "None"}**");
         }
 
@@ -78,26 +79,27 @@ namespace SolarisBot.Discord.Commands
             {
                 if (role == null)
                 {
-                    _logger.LogDebug("Creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), Context.Guild.Log());
+                    _logger.LogDebug("{intTag} Creating custom color role {roleName} for user {user} in guild {guild}", GetIntTag(), roleName, gUser.Log(), Context.Guild.Log());
                     role = await Context.Guild.CreateRoleAsync(roleName, color: color, isMentionable: false);
-                    _logger.LogInformation("Created custom color role {role} for user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
+                    _logger.LogInformation("{intTag} Created custom color role {role} for user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
                 }
                 else
                 {
-                    _logger.LogDebug("Modifying custom color role {role} for user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
+                    _logger.LogDebug("{intTag} Modifying custom color role {role} for user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
                     await role.ModifyAsync(x => x.Color = color);
-                    _logger.LogInformation("Modified custom color role {role} for user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
+                    _logger.LogInformation("{intTag} Modified custom color role {role} for user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
                 }
 
                 if (!gUser.Roles.Contains(role))
                 {
-                    _logger.LogDebug("Adding custom color role {role} to user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
+                    _logger.LogDebug("{intTag} Adding custom color role {role} to user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
                     await gUser.AddRoleAsync(role);
-                    _logger.LogInformation("Added custom color role {role} to user {user} in guild {guild}", role.Log(), gUser.Log(), Context.Guild.Log());
+                    _logger.LogInformation("{intTag} Added custom color role {role} to user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "{intTag} Failed changing roles for user {user} in guild {guild}", GetIntTag(), gUser.Log(), Context.Guild.Log());
                 await RespondErrorEmbedAsync(ex);
                 return;
             }
@@ -120,14 +122,14 @@ namespace SolarisBot.Discord.Commands
 
             try
             {
-                _logger.LogDebug("Deleting custom color role {role} from {guild}", role.Log(), Context.Guild.Log());
+                _logger.LogDebug("{intTag} Deleting custom color role {role} from {guild}", GetIntTag(), role.Log(), Context.Guild.Log());
                 await role.DeleteAsync();
-                _logger.LogInformation("Deleted custom color role {role} from {guild}", role.Log(), Context.Guild.Log());
+                _logger.LogInformation("{intTag} Deleted custom color role {role} from {guild}", GetIntTag(), role.Log(), Context.Guild.Log());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete custom color role {role} from {guild}", role.Log(), Context.Guild.Log());
-                await RespondErrorEmbedAsync(ex, isEphemeral: true);
+                _logger.LogError(ex, "{intTag} Failed to delete custom color role {role} from {guild}", GetIntTag(), role.Log(), Context.Guild.Log());
+                await RespondErrorEmbedAsync(ex);
                 return;
             }
             await RespondEmbedAsync("Role Deleted", "Deleted your custom color role", isEphemeral:true);
@@ -141,20 +143,20 @@ namespace SolarisBot.Discord.Commands
 
             if (roleCount == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
             }
 
             try
             {
-                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.Log());
+                _logger.LogDebug("{intTag} Deleting {roleCount} custom color roles in guild {guild}", GetIntTag(), roleCount, Context.Guild.Log());
                 foreach (var role in roles)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.Log());
+                _logger.LogInformation("{intTag} Deleted {roleCount} custom color roles in guild {guild}", GetIntTag(), roleCount, Context.Guild.Log());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Deleted {roleCount} custom color roles in guild {guild}", roleCount, Context.Guild.Log());
+                _logger.LogError(ex, "{intTag} Deleted {roleCount} custom color roles in guild {guild}", GetIntTag(), roleCount, Context.Guild.Log());
                 await RespondErrorEmbedAsync(ex);
                 return;
             }

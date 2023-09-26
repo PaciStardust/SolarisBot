@@ -20,14 +20,14 @@ namespace SolarisBot.Discord.Commands
         protected override ILogger? GetLogger() => _logger;
 
         #region Admin
-        [SlashCommand("view-all", "[MANAGE ROLES ONLY] View all roles and groups (Including empty ones)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("view-all", "[MANAGE ROLES ONLY] View all roles and groups (Including empty ones)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task ViewAllRolesAsync()
         {
             var roleGroups = await _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id).ToArrayAsync();
 
             if (roleGroups.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
             }
 
@@ -45,14 +45,14 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("List of Assignable Roles", string.Join("\n\n", strings));
         }
 
-        [SlashCommand("group-create", "[MANAGE ROLES ONLY] Create role group (Identifiers only letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("group-create", "[MANAGE ROLES ONLY] Create role group (Identifiers only letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string identifier, [MinLength(2), MaxLength(200)] string description = "", bool oneof = true, IRole? requiredRole = null)
         {
             var identifierClean = identifier.Trim();
             var descriptionClean = description.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierClean) || descriptionClean.Length > 200)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput, isEphemeral: true);
                 return;
             }
 
@@ -69,23 +69,24 @@ namespace SolarisBot.Discord.Commands
 
             _dbContext.RoleGroups.Update(roleGroup);
 
-            _logger.LogDebug("{verb}ing role group {roleGroup} for guild {guild}", logVerb, roleGroup, Context.Guild.Log());
+            _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             if (await _dbContext.TrySaveChangesAsync() == -1)
             {
+                _logger.LogWarning("{intTag} Failed to {verb}e role group {roleGroup} for guild {guild}", GetIntTag(), logVerb.ToLower(), roleGroup, Context.Guild.Log());
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-            _logger.LogInformation("{verb}ed role group {roleGroup} for guild {guild}", logVerb, roleGroup, Context.Guild.Log());
-            await RespondEmbedAsync($"Role Group {logVerb}ed", $"Identifier: **{roleGroup.Identifier}**\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>**")}");
+            _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
+            await RespondEmbedAsync($"Role Group {logVerb}ed", $"Identifier: **{roleGroup.Identifier}**\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
 
-        [SlashCommand("group-delete", "[MANAGE ROLES ONLY] Delete a role group"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("group-delete", "[MANAGE ROLES ONLY] Delete a role group"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task DeleteRoleGroupAsync(string identifier)
         {
             var identifierClean = identifier.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierClean))
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput, isEphemeral: true);
                 return;
             }
 
@@ -93,23 +94,24 @@ namespace SolarisBot.Discord.Commands
             var match = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Identifier.ToLower() == lowerName);
             if (match == null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
             }
 
             _dbContext.RoleGroups.Remove(match);
 
-            _logger.LogDebug("Deleting role group {roleGroup} from guild {guild}", match, Context.Guild.Log());
+            _logger.LogDebug("{intTag} Deleting role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
             if (await _dbContext.TrySaveChangesAsync() == -1)
             {
+                _logger.LogWarning("{intTag} Failed to delete role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-            _logger.LogInformation("Deleted role group {roleGroup} from guild {guild}", match, Context.Guild.Log());
+            _logger.LogInformation("{intTag} Deleted role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
             await RespondEmbedAsync("Role Group Deleted", $"The role group with the identifier **\"{identifierClean}\"** has been deleted");
         }
 
-        [SlashCommand("role-register", "[MANAGE ROLES ONLY] Register role group (Identifiers only letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("role-register", "[MANAGE ROLES ONLY] Register role group (Identifiers only letters, numbers, and spaces)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task RegisterRoleAsync(IRole role, [MinLength(2), MaxLength(20)] string identifier, string group, string description = "")
         {
             var descriptionClean = description.Trim();
@@ -118,7 +120,7 @@ namespace SolarisBot.Discord.Commands
 
             if (!DiscordUtils.IsIdentifierValid(identifierNameClean) || !DiscordUtils.IsIdentifierValid(groupNameCleanLower) || descriptionClean.Length > 200)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput, isEphemeral: true);
                 return;
             }
 
@@ -131,7 +133,7 @@ namespace SolarisBot.Discord.Commands
             var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Identifier.ToLower() == groupNameCleanLower);
             if (roleGroup == null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
             }
 
@@ -152,43 +154,45 @@ namespace SolarisBot.Discord.Commands
 
             _dbContext.Roles.Add(dbRole);
 
-            _logger.LogDebug("Registering role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, Context.Guild.Log());
+            _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             if (await _dbContext.TrySaveChangesAsync() == -1)
             {
+                _logger.LogWarning("{intTag} Failed to register role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-            _logger.LogInformation("Registered role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, Context.Guild.Log());
-            await RespondEmbedAsync("Role Registered", $"Group: **{roleGroup.Identifier}**\nIdentifier: **{dbRole.Identifier}**\nDescription: **{(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}**");
+            _logger.LogInformation("{intTag} Registered role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
+            await RespondEmbedAsync("Role Registered", $"Group: **{roleGroup.Identifier}**\nRole: **{role.Mention}**\nIdentifier: **{dbRole.Identifier}**\nDescription: **{(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}**");
         }
 
-        [SlashCommand("role-unregister", "[MANAGE ROLES ONLY] Unregister a role"), DefaultMemberPermissions(GuildPermission.ManageRoles)]
+        [SlashCommand("role-unregister", "[MANAGE ROLES ONLY] Unregister a role"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task UnregisterRoleAsync(string identifier)
         {
             var identifierClean = identifier.Trim().ToLower();
 
             if (!DiscordUtils.IsIdentifierValid(identifierClean))
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput, isEphemeral: true);
                 return;
             }
 
             var role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierClean);
             if (role == null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
             }
 
             _dbContext.Roles.Remove(role);
 
-            _logger.LogDebug("Unregistering role {role} from groups", role);
+            _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), role);
             if (await _dbContext.TrySaveChangesAsync() == -1)
             {
+                _logger.LogWarning("{intTag} Failed to unregister role {role} from groups", GetIntTag(), role);
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-            _logger.LogInformation("Unregistered role {role} from groups", role);
+            _logger.LogInformation("{intTag} Unregistered role {role} from groups", GetIntTag(), role);
             await RespondEmbedAsync("Role Unegistered", $"A role with the identifier **\"{identifierClean}\"** has been unregistered");
         }
         #endregion
@@ -287,8 +291,8 @@ namespace SolarisBot.Discord.Commands
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to respond to interaction");
-                await RespondErrorEmbedAsync(ex, isEphemeral: true);
+                _logger.LogError(ex, "{intTag} Failed to respond to interaction", GetIntTag());
+                await RespondErrorEmbedAsync(ex);
             }
         }
 
@@ -358,7 +362,7 @@ namespace SolarisBot.Discord.Commands
                 if (rolesToAdd.Any())
                 {
                     var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RId}>)"));
-                    _logger.LogDebug("Adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), Context.Guild.Log());
+                    _logger.LogDebug("{intTag} Adding roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
                     await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RId));
                     groupFields.Add(new EmbedFieldBuilder()
                     {
@@ -366,12 +370,12 @@ namespace SolarisBot.Discord.Commands
                         Name = "Roles Added",
                         Value = rolesToAddText
                     });
-                    _logger.LogInformation("Added roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), Context.Guild.Log());
+                    _logger.LogInformation("{intTag} Added roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
                 }
                 if (rolesToRemove.Any())
                 {
                     var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RId}>)"));
-                    _logger.LogDebug("Removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), Context.Guild.Log());
+                    _logger.LogDebug("{intTag} Removing roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
                     await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RId));
                     groupFields.Add(new EmbedFieldBuilder()
                     {
@@ -379,7 +383,7 @@ namespace SolarisBot.Discord.Commands
                         Name = "Roles Removed",
                         Value = rolesToRemoveText
                     });
-                    _logger.LogInformation("Removed roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), Context.Guild.Log());
+                    _logger.LogInformation("{intTag} Removed roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
                 }
                 if (rolesInvalid.Any())
                 {
@@ -390,7 +394,7 @@ namespace SolarisBot.Discord.Commands
                         Name = "Invalid Roles",
                         Value = rolesInvalidText
                     });
-                    _logger.LogWarning("Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", rolesInvalidText, roleGroup, gUser.Log());
+                    _logger.LogWarning("{intTag} Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", GetIntTag(), rolesInvalidText, roleGroup, gUser.Log());
                 }
 
                 if (!groupFields.Any())
@@ -406,8 +410,8 @@ namespace SolarisBot.Discord.Commands
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed responding to interaction");
-                await RespondErrorEmbedAsync(ex, isEphemeral: true);
+                _logger.LogError(ex, "{intTag} Failed responding to interaction", GetIntTag());
+                await RespondErrorEmbedAsync(ex);
             }
         }
         #endregion

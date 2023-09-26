@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave, logging, setup, wipe commands, onguilddelete
+namespace SolarisBot.Discord.Commands
 {
-    [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)] //todo: [TEST] Does literally any of this work
+    [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
     public sealed class QuoteCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuoteCommands> _logger;
@@ -20,6 +20,49 @@ namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave
         }
         protected override ILogger? GetLogger() => _logger;
 
+        #region Admin
+        [SlashCommand("config", "[ADMIN ONLY] Enable quotes"), DefaultMemberPermissions(GuildPermission.Administrator), RequireUserPermission(GuildPermission.Administrator)] //todo: [FIX] Why does this not hide
+        public async Task EnableQuotesAsync(bool enabled)
+        {
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+
+            guild.QuotesOn = enabled;
+
+            _logger.LogDebug("{intTag} Setting quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
+            if (await _dbContext.TrySaveChangesAsync() == -1)
+            {
+                _logger.LogWarning("{intTag} Failed to set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
+            }
+            _logger.LogInformation("{intTag} Set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
+            await RespondEmbedAsync("Quotes Configured", $"Quotes are currently **{(enabled ? "enabled" : "disabled")}**");
+        }
+
+        [SlashCommand("wipe", "Wipe quotes from guild, make sure to use search first"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(ChannelPermission.ManageMessages)]
+        public async Task WipeQuotesAsync(IUser? author = null, IUser? creator = null, string? content = null, [MinValue(0)] int offset = 0, [MinValue(0)] int limit = 0)
+        {
+            var quotes = await GetQuotesAsync(author: author, creator: creator, content: content, offset: offset, limit: limit);
+            if (quotes.Length == 0)
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                return;
+            }
+
+            _logger.LogDebug("{intTag} Wiping {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
+            _dbContext.Quotes.RemoveRange(quotes);
+            if (await _dbContext.TrySaveChangesAsync() == -1)
+            {
+                _logger.LogWarning("{intTag} Failed to wipe {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                return;
+            }
+            _logger.LogDebug("{intTag} Wiped {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
+            await RespondEmbedAsync("Quotes Wiped", $"Wiped **{quotes.Length}** quotes from database");
+        }
+        #endregion
+
+        #region Users
         [MessageCommand("Create Quote")]
         public async Task CreateQuoteAsync(IMessage message)
         {
@@ -62,13 +105,16 @@ namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave
                 Time = Utils.GetCurrentUnix()
             };
 
+            _logger.LogDebug("{intTag} Adding quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
             _dbContext.Quotes.Add(dbQuote);
             if (await _dbContext.TrySaveChangesAsync() == -1)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError, isEphemeral: true);
+                _logger.LogWarning("{intTag} Failed to add quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
-            await RespondEmbedAsync(GetQuoteEmbed(dbQuote)); //todo: [TEST] Does this contain id after Add?
+            _logger.LogInformation("{intTag} Added quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
+            await RespondEmbedAsync(GetQuoteEmbed(dbQuote));
             return;
         }
 
@@ -84,17 +130,20 @@ namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave
                 return;
             }
 
+            _logger.LogDebug("{intTag} Removing quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
             _dbContext.Quotes.Remove(dbQuote);
             if (await _dbContext.TrySaveChangesAsync() == -1)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError, isEphemeral: true);
+                _logger.LogWarning("{intTag} Failed to remove quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
                 return;
             }
+            _logger.LogInformation("{intTag} Removed quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
             await RespondEmbedAsync("Quote Deleted", $"Quote with ID **{id}** has been deleted");
         }
 
         [SlashCommand("search", "Search (and view) quotes")]
-        public async Task SearchAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool showfirst = true)
+        public async Task SearchAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool showfirst = false)
         {
             var quotes = await GetQuotesAsync(author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
             if (quotes.Length == 0)
@@ -111,7 +160,7 @@ namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave
         }
 
         [SlashCommand("search-self", "Search through own quotes, not limited by guild")]
-        public async Task SearchSelfAsync(IUser? author, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0)
+        public async Task SearchSelfAsync(IUser? author = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0)
         {
             var quotes = await GetQuotesAsync(author: author, id: id, content: content, offset: offset, all: true);
             if (quotes.Length == 0)
@@ -134,7 +183,7 @@ namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave
                 return;
             }
 
-            var quote = await quotesQuery.Take(Utils.Faker.Random.Int(0, quoteNum+1)).FirstAsync(); //todo: [TEST] Are these index bounds correct?
+            var quote = await quotesQuery.Skip(Utils.Faker.Random.Int(0, quoteNum-1)).FirstAsync();
             await RespondEmbedAsync(GetQuoteEmbed(quote));
         }
 
@@ -156,7 +205,7 @@ namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave
                 if (creator != null)
                     dbQuery = dbQuery.Where(x => x.CreatorId == creator.Id);
                 if (content != null)
-                    dbQuery = dbQuery.Where(x => x.Text.Contains(content, StringComparison.OrdinalIgnoreCase));
+                    dbQuery = dbQuery.Where(x => EF.Functions.Like(x.Text, $"%{content}%"));
                 if (offset > 0)
                     dbQuery = dbQuery.Skip(offset);
             }
@@ -166,11 +215,20 @@ namespace SolarisBot.Discord.Commands //todo: [FEATURE] deletion on server leave
 
             return await dbQuery.ToArrayAsync();
         }
+        #endregion
 
+        #region Utils
+        /// <summary>
+        /// Generates a list of quotes for discord embeds
+        /// </summary>
         private static string GenerateQuotesList(DbQuote[] quotes)
             => string.Join("\n\n", quotes.Select(x => x.ToString()));
 
+        /// <summary>
+        /// Generates a discord embed for a quote
+        /// </summary>
         private static Embed GetQuoteEmbed(DbQuote dbQuote)
-            => DiscordUtils.Embed($"Quote Nr.{dbQuote.QId}", $"\"{dbQuote.Text}\" - <@{dbQuote.AuthorId}>\n\n*Created by <@{dbQuote.CreatorId}> at <t:{dbQuote.Time}:f>\n[Link to message](https://discord.com/channels/{dbQuote.GId}/{dbQuote.ChannelId}/{dbQuote.MessageId})*");
+            => DiscordUtils.Embed($"Quote #{dbQuote.QId}", $"\"{dbQuote.Text}\" - <@{dbQuote.AuthorId}>\n\n*Created by <@{dbQuote.CreatorId}> at <t:{dbQuote.Time}:f>\n[Link to message](https://discord.com/channels/{dbQuote.GId}/{dbQuote.ChannelId}/{dbQuote.MessageId})*");
+        #endregion
     }
 }

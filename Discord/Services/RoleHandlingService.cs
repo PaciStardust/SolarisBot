@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -25,7 +24,6 @@ namespace SolarisBot.Discord.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _client.RoleDeleted += CheckForDbRoleDuplicateAsync;
             _client.GuildMemberUpdated += CheckForLeftoverCustomColorRoleOnRemovalAsync;
             _client.UserLeft += CheckForLeftoverCustomColorRoleOnLeftAsync;
             _client.UserJoined += ApplyAutoRoleAsync;
@@ -37,16 +35,15 @@ namespace SolarisBot.Discord.Services
             return Task.CompletedTask;
         }
 
-        private async Task ApplyAutoRoleAsync(SocketGuildUser user) //todo: [TEST] Does Auto-Role work?
+        /// <summary>
+        /// Automatically applies a role to a user on join when set up
+        /// </summary>
+        private async Task ApplyAutoRoleAsync(SocketGuildUser user)
         {
-            _logger.LogDebug("User {user} has joined guild {guild}, checking for auto-role", user.Log(), user.Guild.Log());
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
             if (dbGuild == null || dbGuild.AutoRoleId == 0)
-            {
-                _logger.LogDebug("No auto-role specified for guild {guild}", user.Guild.Log());
                 return;
-            }
 
             try
             {
@@ -58,26 +55,6 @@ namespace SolarisBot.Discord.Services
             {
                 _logger.LogError(ex, "Failed to apply auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
             }
-        }
-
-        private async Task CheckForDbRoleDuplicateAsync(SocketRole role)
-        {
-            _logger.LogDebug("Role {role} has been deleted from guild {guild}, checking for match in DB", role.Log(), role.Guild.Log());
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var dbRole = await dbCtx.Roles.FirstOrDefaultAsync(x => x.RId == role.Id);
-            if (dbRole == null)
-            {
-                _logger.LogDebug("No matching role to delete found for discord role {role}", role.Log());
-                return;
-            }
-
-            _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-            dbCtx.Roles.Remove(dbRole);
-
-            if (await dbCtx.SaveChangesAsync() == -1)
-                _logger.LogError("Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-            else
-                _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
         }
 
         #region Deleting Leftover Custom Color Role
@@ -103,6 +80,9 @@ namespace SolarisBot.Discord.Services
             await TryDeleteLeftoverCustomColorRoleAsync(customColorRole, user, guild);
         }
 
+        /// <summary>
+        /// Deletes a custom color role
+        /// </summary>
         private async Task TryDeleteLeftoverCustomColorRoleAsync(SocketRole role, SocketUser user, SocketGuild guild)
         {
             try

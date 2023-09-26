@@ -14,6 +14,11 @@ namespace SolarisBot.Discord
         /// </summary>
         protected virtual ILogger? GetLogger() => null;
 
+        /// <summary>
+        /// Gets an interaction tag for logging
+        /// </summary>
+        protected string GetIntTag() => $"[Int {Context.Interaction.Id}]";
+
         #region Embeds
         /// <summary>
         /// Respond with an embed

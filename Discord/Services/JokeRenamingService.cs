@@ -33,6 +33,9 @@ namespace SolarisBot.Discord.Services
         }
 
         private static readonly Regex _amVerification = new(@"\b(?:am|i'?m) +(.+)$", RegexOptions.IgnoreCase);
+        /// <summary>
+        /// Automatically renames a user after saying "I am..." when enabled
+        /// </summary>
         private async Task CheckForAutoRename(SocketMessage message)
         {
             if (message is not IUserMessage userMessage || message.Author.IsWebhook || message.Author.IsBot || message.Author is not IGuildUser gUser)
@@ -68,10 +71,14 @@ namespace SolarisBot.Discord.Services
                 : Utils.Faker.Random.ULong(guild.JokeRenameTimeoutMin, guild.JokeRenameTimeoutMax);
             timeOut.NextUse = currTime + cooldown;
 
+            _logger.LogDebug("Setting renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
             dbCtx.JokeTimeouts.Update(timeOut);
-            var res = await dbCtx.SaveChangesAsync();
-            if (res == -1)
+            if (await dbCtx.TrySaveChangesAsync() == -1)
+            {
+                _logger.LogWarning("Failed to set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
                 return;
+            }
+            _logger.LogInformation("Set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
 
             var logTimespan = TimeSpan.FromSeconds(cooldown);
             try
