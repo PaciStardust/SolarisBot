@@ -11,7 +11,7 @@ namespace SolarisBot.Discord.Services
     /// <summary>
     /// Handles DatabaseCleanup for some discord events
     /// </summary>
-    internal sealed class DatabaseCleanupService : IHostedService //todo: [FEATURE] convert DB error to result type?
+    internal sealed class DatabaseCleanupService : IHostedService
     {
         private readonly ILogger<DatabaseCleanupService> _logger;
         private readonly DiscordSocketClient _client;
