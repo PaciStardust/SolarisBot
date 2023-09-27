@@ -25,16 +25,15 @@ namespace SolarisBot.Database
         /// Attempts to save changes to the database
         /// </summary>
         /// <returns>Number of changes, or -1 on error</returns>
-        internal async Task<int> TrySaveChangesAsync()
+        internal async Task<(int, Exception?)> TrySaveChangesAsync()
         {
             try
             {
-                return await SaveChangesAsync();
+                return (await SaveChangesAsync(), null);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed saving DB changes");
-                return -1;
+                return (-1, ex);
             }
         }
 

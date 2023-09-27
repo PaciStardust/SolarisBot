@@ -81,8 +81,9 @@ namespace SolarisBot.Discord.Services
             _logger.LogInformation("Reminders finished, removing {reminders} reminders from DB", reminders.Length);
             dbCtx.Reminders.RemoveRange(reminders);
 
-            if (await dbCtx.TrySaveChangesAsync() == -1)
-                _logger.LogWarning("Failed to remove {reminders} reminders from DB", reminders.Length);
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err != null) 
+                _logger.LogError(err, "Failed to remove {reminders} reminders from DB", reminders.Length);
             else
                 _logger.LogInformation("Removed {reminders} reminders from DB", reminders.Length);
         }

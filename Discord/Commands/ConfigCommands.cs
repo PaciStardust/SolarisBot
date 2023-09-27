@@ -28,10 +28,11 @@ namespace SolarisBot.Discord.Commands
             guild.VouchRoleId = vouch?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err,"{intTag} Failed to set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
@@ -49,10 +50,11 @@ namespace SolarisBot.Discord.Commands
             guild.MagicRoleRenameOn = renaming;
 
             _logger.LogDebug("{intTag} Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
@@ -69,10 +71,11 @@ namespace SolarisBot.Discord.Commands
             guild.JokeRenameTimeoutMin = mintimeout > maxtimeout ? maxtimeout : mintimeout;
 
             _logger.LogDebug("{intTag} Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
@@ -106,10 +109,11 @@ namespace SolarisBot.Discord.Commands
             guild.AutoRoleId = role?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());

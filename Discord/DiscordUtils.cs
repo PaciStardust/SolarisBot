@@ -94,7 +94,6 @@ namespace SolarisBot.Discord
             var data = get switch
             {
                 EmbedGenericErrorType.NoResults => ("No Results", "Request yielded no results"),
-                EmbedGenericErrorType.DatabaseError => ("Database Error", "The database encountered an error"),
                 EmbedGenericErrorType.Forbidden => ("Access Denied", "You do not have access to this feature"),
                 EmbedGenericErrorType.InvalidInput => ("Invalid Input", "Provided values are invalid"),
                 _ => ("Unknown", "Unknown")
@@ -121,7 +120,6 @@ namespace SolarisBot.Discord
     internal enum EmbedGenericErrorType
     {
         NoResults,
-        DatabaseError,
         InvalidInput,
         Forbidden
     }

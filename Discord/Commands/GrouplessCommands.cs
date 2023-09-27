@@ -84,11 +84,11 @@ namespace SolarisBot.Discord.Commands
 
                 dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
                 _dbContext.Guilds.Update(dbGuild);
-
-                if (await _dbContext.TrySaveChangesAsync() == -1)
+                var (_, err) = await _dbContext.TrySaveChangesAsync();
+                if (err != null)
                 {
-                    _logger.LogWarning("{intTag} Failed to use Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                    _logger.LogError(err, "{intTag} Failed to use Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
+                    await RespondErrorEmbedAsync(err);
                     return;
                 }
                 _logger.LogInformation("{intTag} Used Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);

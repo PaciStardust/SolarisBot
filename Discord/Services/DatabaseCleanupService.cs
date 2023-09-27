@@ -62,8 +62,9 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing {quotes} related quotes for left user {user} in guild {guild}", quotes.Length, user.Log(), guild.Log());
             dbCtx.Quotes.RemoveRange(quotes);
-            if (await dbCtx.TrySaveChangesAsync() == -1)
-                _logger.LogWarning("Failed to remove {quotes} related quotes for left user {user} in guild {guild}", quotes.Length, user.Log(), guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err != null)
+                _logger.LogError(err, "Failed to remove {quotes} related quotes for left user {user} in guild {guild}", quotes.Length, user.Log(), guild.Log());
             else
                 _logger.LogInformation("Removed {quotes} related quotes for left user {user} in guild {guild}", quotes.Length, user.Log(), guild.Log());
         }
@@ -79,8 +80,9 @@ namespace SolarisBot.Discord.Services
                 return;
 
             _logger.LogDebug("Removing {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
-            if (!await RemoveRemindersAsync(reminders, dbCtx))
-                _logger.LogWarning("Failed to remove {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
+            var err = await RemoveRemindersAsync(reminders, dbCtx);
+            if (err != null)
+                _logger.LogError(err, "Failed to remove {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
             else
                 _logger.LogInformation("Removed {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
         }
@@ -99,8 +101,9 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
             dbCtx.Roles.Remove(dbRole);
-            if (await dbCtx.TrySaveChangesAsync() == -1)
-                _logger.LogWarning("Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err != null)
+                _logger.LogError(err, "Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
             else
                 _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
         }
@@ -119,8 +122,9 @@ namespace SolarisBot.Discord.Services
                 return;
 
             _logger.LogDebug("Removing {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
-            if (!await RemoveRemindersAsync(reminders, dbCtx))
-                _logger.LogWarning("Failed to remove {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
+            var err = await RemoveRemindersAsync(reminders, dbCtx);
+            if (err != null)
+                _logger.LogError(err, "Failed to remove {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
             else
                 _logger.LogInformation("Removed {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
         }
@@ -137,18 +141,19 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing guild for deleted guild {guild}", guild.Log());
             dbCtx.Guilds.Remove(dbGuild);
-            if (await dbCtx.TrySaveChangesAsync() == -1)
-                _logger.LogWarning("Failed to remove guild for deleted guild {guild}", guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err != null)
+                _logger.LogError(err, "Failed to remove guild for deleted guild {guild}", guild.Log());
             else
                 _logger.LogDebug("Removed guild for deleted guild {guild}", guild.Log());
         }
         #endregion
 
         #region Utils
-        private static async Task<bool> RemoveRemindersAsync(DbReminder[] reminders, DatabaseContext ctx)
+        private static async Task<Exception?> RemoveRemindersAsync(DbReminder[] reminders, DatabaseContext ctx)
         {
             ctx.Reminders.RemoveRange(reminders);
-            return await ctx.TrySaveChangesAsync() != -1;
+            return (await ctx.TrySaveChangesAsync()).Item2;
         }
         #endregion
     }

@@ -70,10 +70,11 @@ namespace SolarisBot.Discord.Commands
             _dbContext.RoleGroups.Update(roleGroup);
 
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to {verb}e role group {roleGroup} for guild {guild}", GetIntTag(), logVerb.ToLower(), roleGroup, Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to {verb}e role group {roleGroup} for guild {guild}", GetIntTag(), logVerb.ToLower(), roleGroup, Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
@@ -101,10 +102,11 @@ namespace SolarisBot.Discord.Commands
             _dbContext.RoleGroups.Remove(match);
 
             _logger.LogDebug("{intTag} Deleting role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to delete role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to delete role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Deleted role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
@@ -155,10 +157,11 @@ namespace SolarisBot.Discord.Commands
             _dbContext.Roles.Add(dbRole);
 
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to register role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to register role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Registered role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
@@ -186,10 +189,11 @@ namespace SolarisBot.Discord.Commands
             _dbContext.Roles.Remove(role);
 
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), role);
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to unregister role {role} from groups", GetIntTag(), role);
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to unregister role {role} from groups", GetIntTag(), role);
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Unregistered role {role} from groups", GetIntTag(), role);

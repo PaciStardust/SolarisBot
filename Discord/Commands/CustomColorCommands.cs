@@ -29,10 +29,11 @@ namespace SolarisBot.Discord.Commands
             guild.CustomColorPermissionRoleId = creationrole?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
-            if (await _dbContext.TrySaveChangesAsync() == -1)
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
             {
-                _logger.LogWarning("{intTag} Failed to set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.DatabaseError);
+                _logger.LogError(err, "{intTag} Failed to set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
