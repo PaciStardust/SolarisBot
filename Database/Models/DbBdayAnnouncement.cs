@@ -14,6 +14,8 @@ namespace SolarisBot.Database.Models
         public ulong UserId { get; set; } = 0;
         public ulong GuildId { get; set; } = 0;
 
+        public DbGuildSettings GuildSettings { get; set; } = null!;
+
         public DbBdayAnnouncement() { }
     }
 }
