@@ -126,7 +126,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            if (await _dbContext.Roles.FirstOrDefaultAsync(x => x.RoleId == role.Id) != null)
+            if (await _dbContext.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id) != null)
             {
                 await RespondErrorEmbedAsync("Already Registered", "Role is already registered");
                 return;
@@ -146,7 +146,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var dbRole = new DbRole()
+            var dbRole = new DbRoleSettings()
             {
                 Identifier = identifierNameClean,
                 RoleId = role.Id,
@@ -154,7 +154,7 @@ namespace SolarisBot.Discord.Commands
                 Description = descriptionClean
             };
 
-            _dbContext.Roles.Add(dbRole);
+            _dbContext.RoleSettings.Add(dbRole);
 
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
@@ -179,14 +179,14 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierClean);
+            var role = await _dbContext.RoleSettings.FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierClean);
             if (role == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
                 return;
             }
 
-            _dbContext.Roles.Remove(role);
+            _dbContext.RoleSettings.Remove(role);
 
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), role);
             var (_, err) = await _dbContext.TrySaveChangesAsync();
@@ -324,8 +324,8 @@ namespace SolarisBot.Discord.Commands
 
             var dbRoles = roleGroup.Roles;
             var userRoleIds = gUser.Roles.Select(x => x.Id);
-            var rolesToAdd = new List<DbRole>();
-            var rolesToRemove = new List<DbRole>();
+            var rolesToAdd = new List<DbRoleSettings>();
+            var rolesToRemove = new List<DbRoleSettings>();
             var rolesInvalid = new List<string>();
 
             if (roleGroup.AllowOnlyOne)

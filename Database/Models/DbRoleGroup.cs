@@ -13,8 +13,8 @@ namespace SolarisBot.Database
         public string Description { get; set; } = string.Empty;
         public ulong RequiredRoleId { get; set; } = 0;
 
-        [ForeignKey(nameof(DbRole.RoleGroupId))]
-        public virtual ICollection<DbRole> Roles { get; set; } = new HashSet<DbRole>();
+        [ForeignKey(nameof(DbRoleSettings.RoleGroupId))]
+        public virtual ICollection<DbRoleSettings> Roles { get; set; } = new HashSet<DbRoleSettings>();
 
         public DbRoleGroup() { } //To avoid defaults not setting
 

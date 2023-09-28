@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SolarisBot.Database.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(GuildId))]
-    public class DbGuild
+    public class DbGuildSettings
     {
         public ulong GuildId { get; set; } = 0;
         public ulong VouchRoleId { get; set; } = 0;
@@ -33,6 +34,9 @@ namespace SolarisBot.Database
         [ForeignKey(nameof(DbJokeTimeout.GuildId))]
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
 
-        public DbGuild() { } //To avoid defaults not setting
+        [ForeignKey(nameof(DbBdayAnnouncement.GuildId))]
+        public virtual ICollection<DbBdayAnnouncement> BdayAnnouncements { get; set; } = new HashSet<DbBdayAnnouncement>();
+
+        public DbGuildSettings() { } //To avoid defaults not setting
     }
 }

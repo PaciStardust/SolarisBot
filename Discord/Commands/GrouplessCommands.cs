@@ -83,7 +83,7 @@ namespace SolarisBot.Discord.Commands
                 });
 
                 dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
-                _dbContext.Guilds.Update(dbGuild);
+                _dbContext.GuildSettings.Update(dbGuild);
                 var (_, err) = await _dbContext.TrySaveChangesAsync();
                 if (err != null)
                 {
