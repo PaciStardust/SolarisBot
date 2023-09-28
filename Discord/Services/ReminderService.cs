@@ -66,15 +66,15 @@ namespace SolarisBot.Discord.Services
                     var channel = await _client.GetChannelAsync(reminder.ChannelId);
                     if (channel != null && channel is IMessageChannel msgChannel)
                     {
-                        _logger.LogDebug("Reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GId);
+                        _logger.LogDebug("Reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                         var embed = DiscordUtils.Embed($"Reminder", $"**{reminder.Text}**\n*(Created <t:{reminder.Created}:f>)*");
                         await msgChannel.SendMessageAsync($"Here is your reminder <@{reminder.UserId}>!", embed: embed);
-                        _logger.LogInformation("Reminded user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GId);
+                        _logger.LogInformation("Reminded user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GId);
+                    _logger.LogError(ex, "Failed reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                 }
             }
 

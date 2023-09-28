@@ -23,7 +23,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("view-all", "[MANAGE ROLES ONLY] View all roles and groups (Including empty ones)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task ViewAllRolesAsync()
         {
-            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id).ToArrayAsync();
+            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GuildId == Context.Guild.Id).ToArrayAsync();
 
             if (roleGroups.Length == 0)
             {
@@ -36,7 +36,7 @@ namespace SolarisBot.Discord.Commands
                 {
                     var title = $"{x.Identifier} ({(x.AllowOnlyOne ? "One of" : "Multi")}{(x.RequiredRoleId == 0 ? string.Empty : $", <@&{x.RequiredRoleId}> Only")})";
                     var rolesText = x.Roles.Any()
-                        ? string.Join("\n", x.Roles.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier}(<@&{x.RId}>)"))
+                        ? string.Join("\n", x.Roles.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier}(<@&{x.RoleId}>)"))
                         : "┗ (No roles assigned to group)";
 
                     return $"{title}\n{rolesText}";
@@ -60,9 +60,9 @@ namespace SolarisBot.Discord.Commands
 
             var lowerName = identifierClean.ToLower();
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == lowerName)
-                ?? new() { GId = Context.Guild.Id, Identifier = identifierClean };
+                ?? new() { GuildId = Context.Guild.Id, Identifier = identifierClean };
 
-            var logVerb = roleGroup.RgId == 0 ? "Creat" : "Updat";
+            var logVerb = roleGroup.RoleGroupId == 0 ? "Creat" : "Updat";
             roleGroup.AllowOnlyOne = oneof;
             roleGroup.Description = descriptionClean;
             roleGroup.RequiredRoleId = requiredRole?.Id ?? 0;
@@ -92,7 +92,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             var lowerName = identifierClean.ToLower();
-            var match = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Identifier.ToLower() == lowerName);
+            var match = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == lowerName);
             if (match == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -126,13 +126,13 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            if (await _dbContext.Roles.FirstOrDefaultAsync(x => x.RId == role.Id) != null)
+            if (await _dbContext.Roles.FirstOrDefaultAsync(x => x.RoleId == role.Id) != null)
             {
                 await RespondErrorEmbedAsync("Already Registered", "Role is already registered");
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Identifier.ToLower() == groupNameCleanLower);
+            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupNameCleanLower);
             if (roleGroup == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -149,8 +149,8 @@ namespace SolarisBot.Discord.Commands
             var dbRole = new DbRole()
             {
                 Identifier = identifierNameClean,
-                RId = role.Id,
-                RgId = roleGroup.RgId,
+                RoleId = role.Id,
+                RoleGroupId = roleGroup.RoleGroupId,
                 Description = descriptionClean
             };
 
@@ -205,7 +205,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("view", "View all roles and groups")]
         public async Task ViewRolesAsync()
         {
-            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GId == Context.Guild.Id).ToArrayAsync();
+            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GuildId == Context.Guild.Id).ToArrayAsync();
 
             if (roleGroups.Length == 0)
             {
@@ -219,7 +219,7 @@ namespace SolarisBot.Discord.Commands
                 var roles = roleGroup.Roles;
                 if (!roles.Any()) continue;
 
-                var roleList = string.Join(", ", roles.OrderBy(x => x.Identifier).Select(x => $"{x.Identifier}(<@&{x.RId}>)"));
+                var roleList = string.Join(", ", roles.OrderBy(x => x.Identifier).Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
                 var fieldBuilder = new EmbedFieldBuilder()
                 {
                     IsInline = true,
@@ -257,7 +257,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var group = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GId == Context.Guild.Id && x.Identifier.ToLower() == cleanGroupName);
+            var group = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == cleanGroupName);
             var roles = group?.Roles;
             if (roles == null || !roles.Any())
             {
@@ -273,7 +273,7 @@ namespace SolarisBot.Discord.Commands
 
             var menuBuilder = new SelectMenuBuilder()
             {
-                CustomId = $"roleselector.{group.RgId}",
+                CustomId = $"roleselector.{group.RoleGroupId}",
                 Placeholder = group.AllowOnlyOne ? "Select a role..." : "Select roles...",
                 MaxValues = group.AllowOnlyOne ? 1 : roles.Count,
                 Type = ComponentType.SelectMenu
@@ -315,7 +315,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RgId == parsedGid && x.GId == gUser.Guild.Id);
+            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid && x.GuildId == gUser.Guild.Id);
             if (roleGroup == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -333,7 +333,7 @@ namespace SolarisBot.Discord.Commands
                 var dbRole = dbRoles.FirstOrDefault(x => x.Identifier == selections[0]);
                 if (dbRole != null)
                 {
-                    var alreadyPossesedRoles = dbRoles.Where(x => userRoleIds.Contains(x.RId));
+                    var alreadyPossesedRoles = dbRoles.Where(x => userRoleIds.Contains(x.RoleId));
                     rolesToRemove.AddRange(alreadyPossesedRoles);
                     if (!rolesToRemove.Contains(dbRole))
                         rolesToAdd.Add(dbRole);
@@ -352,7 +352,7 @@ namespace SolarisBot.Discord.Commands
                         continue;
                     }
 
-                    if (userRoleIds.Contains(dbRole.RId))
+                    if (userRoleIds.Contains(dbRole.RoleId))
                         rolesToRemove.Add(dbRole);
                     else
                         rolesToAdd.Add(dbRole);
@@ -365,9 +365,9 @@ namespace SolarisBot.Discord.Commands
 
                 if (rolesToAdd.Any())
                 {
-                    var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RId}>)"));
+                    var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
                     _logger.LogDebug("{intTag} Adding roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
-                    await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RId));
+                    await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
                     groupFields.Add(new EmbedFieldBuilder()
                     {
                         IsInline = true,
@@ -378,9 +378,9 @@ namespace SolarisBot.Discord.Commands
                 }
                 if (rolesToRemove.Any())
                 {
-                    var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RId}>)"));
+                    var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
                     _logger.LogDebug("{intTag} Removing roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
-                    await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RId));
+                    await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
                     groupFields.Add(new EmbedFieldBuilder()
                     {
                         IsInline = true,

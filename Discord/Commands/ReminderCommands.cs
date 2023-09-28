@@ -42,7 +42,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("wipe", "Wipe reminders"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task WipeRemindersAsync(IChannel? channel = null)
         {
-            var query = _dbContext.Reminders.Where(x => x.GId == Context.Guild.Id);
+            var query = _dbContext.Reminders.Where(x => x.GuildId == Context.Guild.Id);
             if (channel != null)
                 query.Where(x => x.ChannelId == channel.Id);
 
@@ -88,7 +88,7 @@ namespace SolarisBot.Discord.Commands
                 await RespondErrorEmbedAsync("Maximum Reminders", $"Reached maximum reminder count of **{_botConfig.MaxRemindersPerUser}**", isEphemeral: true);
                 return;
             }
-            else if (userReminders.Any(x => x.GId == Context.Guild.Id && x.Text == text))
+            else if (userReminders.Any(x => x.GuildId == Context.Guild.Id && x.Text == text))
             {
                 await RespondErrorEmbedAsync("Duplicate Reminder", "Reminder with this name has already been created", isEphemeral: true);
                 return;
@@ -99,7 +99,7 @@ namespace SolarisBot.Discord.Commands
             var dbReminder = new DbReminder()
             {
                 ChannelId = Context.Channel.Id,
-                GId = Context.Guild.Id,
+                GuildId = Context.Guild.Id,
                 Text = text,
                 Time = reminderTime,
                 UserId = Context.User.Id,
@@ -117,7 +117,7 @@ namespace SolarisBot.Discord.Commands
             }
             _logger.LogInformation("{intTag} Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
 
-            await RespondEmbedAsync($"Reminder #{dbReminder.RId} Created", $"**{text}**\n*(Reminding <t:{reminderTime}:f>)*");
+            await RespondEmbedAsync($"Reminder #{dbReminder.ReminderId} Created", $"**{text}**\n*(Reminding <t:{reminderTime}:f>)*");
         }
 
         [SlashCommand("list", "List your reminders")]
@@ -131,14 +131,14 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var reminderText = string.Join("\n", reminders.Select(x => $"- [{x.RId}] {x.Text} *(<t:{x.Time}:f>)*"));
+            var reminderText = string.Join("\n", reminders.Select(x => $"- [{x.ReminderId}] {x.Text} *(<t:{x.Time}:f>)*"));
             await RespondEmbedAsync("Your Reminders", reminderText, isEphemeral: true);
         }
 
         [SlashCommand("delete", "Delete a reminder")]
         public async Task DeleteReminder(ulong id)
         {
-            var reminder = await _dbContext.Reminders.FirstOrDefaultAsync(x => x.RId == id && x.UserId == Context.User.Id);
+            var reminder = await _dbContext.Reminders.FirstOrDefaultAsync(x => x.ReminderId == id && x.UserId == Context.User.Id);
             if (reminder == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);

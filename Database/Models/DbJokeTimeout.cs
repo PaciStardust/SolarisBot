@@ -2,12 +2,12 @@
 
 namespace SolarisBot.Database
 {
-    [PrimaryKey(nameof(JtId))]
+    [PrimaryKey(nameof(JokeTimeoutId))]
     public class DbJokeTimeout
     {
-        public ulong JtId { get; set; } = 0;
+        public ulong JokeTimeoutId { get; set; } = 0;
         public ulong UserId { get; set; } = 0;
-        public ulong GId { get; set; } = 0;
+        public ulong GuildId { get; set; } = 0;
         public ulong NextUse { get; set; } = 0;
 
         public DbJokeTimeout() { }

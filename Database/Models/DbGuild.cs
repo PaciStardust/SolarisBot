@@ -3,10 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
 {
-    [PrimaryKey(nameof(GId))]
+    [PrimaryKey(nameof(GuildId))]
     public class DbGuild
     {
-        public ulong GId { get; set; } = 0;
+        public ulong GuildId { get; set; } = 0;
         public ulong VouchRoleId { get; set; } = 0;
         public ulong VouchPermissionRoleId { get; set; } = 0;
         public ulong CustomColorPermissionRoleId { get; set; } = 0;
@@ -21,16 +21,16 @@ namespace SolarisBot.Database
         public bool QuotesOn { get; set; } = false;
         public ulong AutoRoleId { get; set; } = 0;
 
-        [ForeignKey(nameof(DbRoleGroup.GId))]
+        [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
 
-        [ForeignKey(nameof(DbQuote.GId))]
+        [ForeignKey(nameof(DbQuote.GuildId))]
         public virtual ICollection<DbQuote> Quotes { get; set; } = new HashSet<DbQuote>();
 
-        [ForeignKey(nameof(DbJokeTimeout.GId))]
+        [ForeignKey(nameof(DbJokeTimeout.GuildId))]
         public virtual ICollection<DbJokeTimeout> JokeTimeouts { get; set; } = new HashSet<DbJokeTimeout>();
 
-        [ForeignKey(nameof(DbJokeTimeout.GId))]
+        [ForeignKey(nameof(DbJokeTimeout.GuildId))]
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
 
         public DbGuild() { } //To avoid defaults not setting

@@ -2,11 +2,11 @@
 
 namespace SolarisBot.Database
 {
-    [PrimaryKey(nameof(RId))]
+    [PrimaryKey(nameof(RoleId))]
     public class DbRole
     {
-        public ulong RId { get; set; } = 0;
-        public ulong RgId { get; set; } = 0;
+        public ulong RoleId { get; set; } = 0;
+        public ulong RoleGroupId { get; set; } = 0;
         public string Identifier { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
 
@@ -15,6 +15,6 @@ namespace SolarisBot.Database
         public DbRole() { }
 
         public override string ToString()
-            => $"{Identifier}(Group {RgId})";
+            => $"{Identifier}(Group {RoleGroupId})";
     }
 }

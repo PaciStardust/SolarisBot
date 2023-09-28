@@ -2,11 +2,11 @@
 
 namespace SolarisBot.Database
 {
-    [PrimaryKey(nameof(RId))]
+    [PrimaryKey(nameof(ReminderId))]
     public class DbReminder
     {
-        public ulong RId { get; set; } = 0;
-        public ulong GId { get; set; } = 0;
+        public ulong ReminderId { get; set; } = 0;
+        public ulong GuildId { get; set; } = 0;
         public ulong UserId { get; set; } = 0;
         public ulong ChannelId { get; set; } = 0;
         public ulong Time { get; set; } = 0;

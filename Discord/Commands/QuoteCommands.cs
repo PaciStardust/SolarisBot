@@ -83,7 +83,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             //Check for duplicates
-            if (guild.Quotes.Any(x => x.MessageId == message.Id || (x.AuthorId == message.Author.Id && x.Text == message.CleanContent && x.GId == Context.Guild.Id)))
+            if (guild.Quotes.Any(x => x.MessageId == message.Id || (x.AuthorId == message.Author.Id && x.Text == message.CleanContent && x.GuildId == Context.Guild.Id)))
             {
                 await RespondErrorEmbedAsync("Duplicate Quote", "Message has already been quoted", isEphemeral: true);
                 return;
@@ -101,7 +101,7 @@ namespace SolarisBot.Discord.Commands
                 AuthorId = message.Author.Id,
                 ChannelId = message.Channel.Id,
                 CreatorId = Context.User.Id,
-                GId = Context.Guild.Id,
+                GuildId = Context.Guild.Id,
                 MessageId = message.Id,
                 Text = message.CleanContent,
                 Time = Utils.GetCurrentUnix()
@@ -126,7 +126,7 @@ namespace SolarisBot.Discord.Commands
         {
             bool isAdmin = Context.User is IGuildUser user && user.GuildPermissions.ManageMessages;
 
-            var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GId)));
+            var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QuoteId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GuildId)));
             if (dbQuote == null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
@@ -178,7 +178,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("random", "Picks a random quote")]
         public async Task RandomQuoteAsync()
         {
-            var quotesQuery = _dbContext.Quotes.Where(x => x.GId == Context.Guild.Id);
+            var quotesQuery = _dbContext.Quotes.Where(x => x.GuildId == Context.Guild.Id);
 
             var quoteNum = await quotesQuery.CountAsync();
             if (quoteNum == 0)
@@ -198,10 +198,10 @@ namespace SolarisBot.Discord.Commands
 
             IQueryable<DbQuote> dbQuery = _dbContext.Quotes;
             if (!all)
-                dbQuery = dbQuery.Where(x => x.GId == Context.Guild.Id);
+                dbQuery = dbQuery.Where(x => x.GuildId == Context.Guild.Id);
 
             if (id != null)
-                dbQuery = dbQuery.Where(x => x.QId == id);
+                dbQuery = dbQuery.Where(x => x.QuoteId == id);
             else
             {
                 if (author != null)
@@ -232,7 +232,7 @@ namespace SolarisBot.Discord.Commands
         /// Generates a discord embed for a quote
         /// </summary>
         private static Embed GetQuoteEmbed(DbQuote dbQuote)
-            => DiscordUtils.Embed($"Quote #{dbQuote.QId}", $"\"{dbQuote.Text}\" - <@{dbQuote.AuthorId}>\n\n*Created by <@{dbQuote.CreatorId}> at <t:{dbQuote.Time}:f>\n[Link to message](https://discord.com/channels/{dbQuote.GId}/{dbQuote.ChannelId}/{dbQuote.MessageId})*");
+            => DiscordUtils.Embed($"Quote #{dbQuote.QuoteId}", $"\"{dbQuote.Text}\" - <@{dbQuote.AuthorId}>\n\n*Created by <@{dbQuote.CreatorId}> at <t:{dbQuote.Time}:f>\n[Link to message](https://discord.com/channels/{dbQuote.GuildId}/{dbQuote.ChannelId}/{dbQuote.MessageId})*");
         #endregion
     }
 }

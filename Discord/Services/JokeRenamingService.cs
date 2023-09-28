@@ -63,7 +63,7 @@ namespace SolarisBot.Discord.Services
             timeOut ??= new()
                 {
                     UserId = gUser.Id,
-                    GId = gUser.GuildId
+                    GuildId = gUser.GuildId
                 };
 
             var cooldown = guild.JokeRenameTimeoutMin >= guild.JokeRenameTimeoutMax

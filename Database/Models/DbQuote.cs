@@ -2,11 +2,11 @@
 
 namespace SolarisBot.Database
 {
-    [PrimaryKey(nameof(QId))]
+    [PrimaryKey(nameof(QuoteId))]
     public class DbQuote
     {
-        public ulong QId { get; set; } = 0;
-        public ulong GId { get; set; } = 0;
+        public ulong QuoteId { get; set; } = 0;
+        public ulong GuildId { get; set; } = 0;
         public string Text { get; set; } = string.Empty;
         public ulong AuthorId { get; set; } = 0;
         public ulong Time { get; set; } = 0;
@@ -20,7 +20,7 @@ namespace SolarisBot.Database
         {
             var len = Text.Length;
             var text = len > 30 ? Text[..27] + "..." : Text;
-            return $"{QId}: \"{text}\" - <@{AuthorId}>";
+            return $"{QuoteId}: \"{text}\" - <@{AuthorId}>";
         }
     }
 }

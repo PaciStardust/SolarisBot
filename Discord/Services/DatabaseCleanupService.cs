@@ -56,7 +56,7 @@ namespace SolarisBot.Discord.Services
         private async Task OnUserLeftRemoveQuotesAsync(SocketGuild guild, SocketUser user)
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var quotes = await dbCtx.Quotes.Where(x => x.GId == guild.Id && x.CreatorId == user.Id).ToArrayAsync();
+            var quotes = await dbCtx.Quotes.Where(x => x.GuildId == guild.Id && x.CreatorId == user.Id).ToArrayAsync();
             if (quotes.Length == 0)
                 return;
 
@@ -75,7 +75,7 @@ namespace SolarisBot.Discord.Services
         private async Task OnUserLeftRemoveRemindersAsync(SocketGuild guild, SocketUser user)
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var reminders = await dbCtx.Reminders.Where(x => x.GId == guild.Id && x.UserId == user.Id).ToArrayAsync();
+            var reminders = await dbCtx.Reminders.Where(x => x.GuildId == guild.Id && x.UserId == user.Id).ToArrayAsync();
             if (reminders.Length == 0)
                 return;
 
@@ -95,7 +95,7 @@ namespace SolarisBot.Discord.Services
         private async Task OnRoleDeletedCheckForDbDuplicateAsync(SocketRole role)
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var dbRole = await dbCtx.Roles.FirstOrDefaultAsync(x => x.RId == role.Id);
+            var dbRole = await dbCtx.Roles.FirstOrDefaultAsync(x => x.RoleId == role.Id);
             if (dbRole == null)
                 return;
 
