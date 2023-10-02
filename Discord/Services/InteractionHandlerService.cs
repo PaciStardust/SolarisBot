@@ -49,7 +49,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles an interaction
         /// </summary>
-        private async Task HandleInteraction(SocketInteraction interaction)
+        private async Task HandleInteraction(SocketInteraction interaction) //todo: [FEATURE] Can this be used to catch exceptions better?
         {
             var context = new SocketInteractionContext(_client, interaction);
             _logger.LogDebug("Executing command {interactionId} for user {user}", context.Interaction.Id, context.User.Log());
@@ -57,7 +57,7 @@ namespace SolarisBot.Discord.Services
 
             if (!result.IsSuccess)
             {
-                _logger.LogDebug("Failed to execute command {interactionId} for user {user} ({resultError})", context.Interaction.Id, context.User.Log(), result.Error);
+                _logger.LogError("Failed to execute command {interactionId} for user {user} ({resultError})", context.Interaction.Id, context.User.Log(), result.Error);
                 var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason);
                 await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
             }

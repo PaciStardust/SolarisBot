@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SolarisBot.Database.Models;
 
 namespace SolarisBot.Database
 {
@@ -21,8 +20,6 @@ namespace SolarisBot.Database
         public DbSet<DbRoleSettings> RoleSettings { get; set; }
         public DbSet<DbRoleGroup> RoleGroups { get; set; }
         public DbSet<DbReminder> Reminders { get; set; }
-        public DbSet<DbUserSettings> UserSettings { get; set; }
-        public DbSet<DbBdayAnnouncement> BdayAnnouncements { get; set; }
 
         /// <summary>
         /// Attempts to save changes to the database
@@ -72,38 +69,6 @@ namespace SolarisBot.Database
         }
         #endregion
 
-        #region Users
-        /// <summary>
-        /// Compiled Query for GetUserByIdAsync
-        /// </summary>
-        private static readonly Func<DatabaseContext, ulong, Task<DbUserSettings?>> GetUserByIdCompiled
-            = EF.CompileAsyncQuery((DatabaseContext ctx, ulong id) => ctx.UserSettings.FirstOrDefault(x => x.UserId == id));
-
-        /// <summary>
-        /// Get an untracked user by Id
-        /// </summary>
-        /// <param name="id">User ID</param>
-        /// <returns>User matching ID or null, if no match is found or an error occured</returns>
-        internal async Task<DbUserSettings?> GetUserByIdAsync(ulong id)
-            => await GetUserByIdCompiled(this, id);
-
-        /// <summary>
-        /// Get a tracked user by ID
-        /// </summary>
-        /// <param name="id">User ID</param>
-        /// <returns>Tracked user matching id, or a new instance, automatically added to database, or null on error</returns>
-        internal async Task<DbUserSettings> GetOrCreateTrackedUserAsync(ulong id)
-        {
-            var user = await UserSettings.AsTracking().FirstOrDefaultAsync(x => x.UserId == id);
-            if (user == null)
-            {
-                user = new() { UserId = id };
-                UserSettings.Add(user);
-            }
-            return user;
-        }
-        #endregion
-
         #region Migration
         /// <summary>
         /// Attempts to migrate the database, throws on error
@@ -130,9 +95,7 @@ namespace SolarisBot.Database
                         "CREATE TABLE RoleSettings(RoleId INTEGER PRIMARY KEY, RoleGroupId INTEGER REFERENCES RoleGroups(RoleGroupId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", UNIQUE(RoleGroupId, Identifier))",
                         "CREATE TABLE Quotes(QuoteId INTEGER PRIMARY KEY, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, Text TEXT NOT NULL DEFAULT \"\", AuthorId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, CreatorId INTEGER NOT NULL DEFAULT 0, ChannelId INTEGER NOT NULL DEFAULT 0, MessageId INTEGER NOT NULL DEFAULT 0, UNIQUE(MessageId), UNIQUE(AuthorId, GuildId, Text))",
                         "CREATE TABLE JokeTimeouts(JokeTimeoutId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, NextUse INTEGER NOT NULL DEFAULT 0, UNIQUE(GuildId, UserId))",
-                        "CREATE TABLE Reminders(ReminderId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, ChannelId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, Created INTEGER NOT NULL DEFAULT 0, Text TEXT NOT NULL DEFAULT \"\", UNIQUE(GuildId, UserId, Text))",
-                        "CREATE TABLE UserSettings(UserId INTEGER PRIMARY KEY, Birthday INTEGER NOT NULL DEFAULT 0)",
-                        "CREATE TABLE BdayAnnouncements(BdayAnnouncementId INTEGER PRIMARY KEY, GuildId INTEGER REFERENCES GuildSettings(GuildId), UserId INTEGER REFERENCES UserSettings(UserId), UNIQUE(GuildId, UserId))"
+                        "CREATE TABLE Reminders(ReminderId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, ChannelId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, Created INTEGER NOT NULL DEFAULT 0, Text TEXT NOT NULL DEFAULT \"\", UNIQUE(GuildId, UserId, Text))"
                     };
 
                     foreach (var query in queries)

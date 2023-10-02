@@ -95,7 +95,7 @@ namespace SolarisBot.Discord
             {
                 EmbedGenericErrorType.NoResults => ("No Results", "Request yielded no results"),
                 EmbedGenericErrorType.Forbidden => ("Access Denied", "You do not have access to this feature"),
-                EmbedGenericErrorType.InvalidInput => ("Invalid Input", "Provided values are invalid"),
+                EmbedGenericErrorType.InvalidInput => ("Invalid Input", "Provided values are invalid"), //todo: [FEATURE] Remove this.
                 _ => ("Unknown", "Unknown")
             };
 
