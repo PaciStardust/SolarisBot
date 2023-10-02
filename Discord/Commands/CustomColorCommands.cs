@@ -52,7 +52,7 @@ namespace SolarisBot.Discord.Commands
             var upperHex = hex.ToUpper();
             if (!_hexCodeValidator.IsMatch(upperHex) || !uint.TryParse(upperHex, System.Globalization.NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var colorNumber))
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput, isEphemeral:true);
+                await RespondInvalidInputErrorEmbedAsync($"Failed to convert **{upperHex}** to hex code");
                 return;
             }
             await SetRoleColorAsync(new(colorNumber));
@@ -62,7 +62,7 @@ namespace SolarisBot.Discord.Commands
         {
             if (Context.User is not SocketGuildUser gUser)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
             }
 
@@ -72,7 +72,7 @@ namespace SolarisBot.Discord.Commands
             var requiredRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
             if (role == null && (requiredRole == null || requiredRole == 0 || gUser.Roles.FirstOrDefault(x => x.Id == requiredRole) == null))
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
             }
 
@@ -117,7 +117,7 @@ namespace SolarisBot.Discord.Commands
 
             if (role == null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
@@ -144,7 +144,7 @@ namespace SolarisBot.Discord.Commands
 
             if (roleCount == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 

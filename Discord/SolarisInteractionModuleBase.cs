@@ -47,28 +47,37 @@ namespace SolarisBot.Discord
         /// <summary>
         /// Respond with an error embed
         /// </summary>
-        internal async Task RespondErrorEmbedAsync(string title, string content, bool isEphemeral = false)
+        internal async Task RespondErrorEmbedAsync(string title, string content)
         {
             var embed = DiscordUtils.EmbedError(title, content);
-            await RespondEmbedAsync(embed, isEphemeral: isEphemeral);
+            await RespondEmbedAsync(embed, true);
         }
 
         /// <summary>
         /// Respond with an error embed by exception
         /// </summary>
-        internal async Task RespondErrorEmbedAsync(Exception exception, bool isEphemeral = false)
+        internal async Task RespondErrorEmbedAsync(Exception exception)
         {
             var embed = DiscordUtils.EmbedError(exception);
-            await RespondEmbedAsync(embed, isEphemeral: isEphemeral);
+            await RespondEmbedAsync(embed, true);
         }
 
         /// <summary>
         /// Respond with error embed by GET
         /// </summary>
-        internal async Task RespondErrorEmbedAsync(EmbedGenericErrorType get, bool isEphemeral = false)
+        internal async Task RespondErrorEmbedAsync(EmbedGenericErrorType get)
         {
             var embed = DiscordUtils.EmbedError(get);
-            await RespondEmbedAsync(embed, isEphemeral: isEphemeral);
+            await RespondEmbedAsync(embed, true);
+        }
+
+        /// <summary>
+        /// Respond with an invalid input error
+        /// </summary>
+        internal async Task RespondInvalidInputErrorEmbedAsync(string reason)
+        {
+            var embed = DiscordUtils.EmbedError("Invalid Input", reason);
+            await RespondEmbedAsync(embed, true);
         }
         #endregion
     }

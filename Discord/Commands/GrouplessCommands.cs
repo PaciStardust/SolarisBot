@@ -28,7 +28,7 @@ namespace SolarisBot.Discord.Commands
                 || dbGuild.VouchPermissionRoleId == 0 || dbGuild.VouchRoleId == 0 //Vouching not set up
                 || gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) == null) //User can vouch
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
             }
 
@@ -59,14 +59,14 @@ namespace SolarisBot.Discord.Commands
 
             if (dbGuild == null || dbGuild.MagicRoleId == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
             }
 
             var currentTime = Utils.GetCurrentUnix(_logger);
             if (currentTime < dbGuild.MagicRoleNextUse)
             {
-                await RespondErrorEmbedAsync("Mana Exhausted", $"There is currently not enough mana to use magic, please wait until <t:{dbGuild.MagicRoleNextUse}:R>", isEphemeral: true);
+                await RespondErrorEmbedAsync("Mana Exhausted", $"There is currently not enough mana to use magic, please wait until <t:{dbGuild.MagicRoleNextUse}:R>");
                 return;
             }
 

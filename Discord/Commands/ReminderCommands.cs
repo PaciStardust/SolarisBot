@@ -49,7 +49,7 @@ namespace SolarisBot.Discord.Commands
             var reminders = await query.ToArrayAsync();
             if (reminders.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
@@ -71,26 +71,26 @@ namespace SolarisBot.Discord.Commands
         {
             if (days == 0 && hours == 0 && minutes == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.InvalidInput, isEphemeral: true);
+                await RespondInvalidInputErrorEmbedAsync("Time values can not be zero");
                 return;
             }
 
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
             if (dbGuild == null || !dbGuild.RemindersOn)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
             }
 
             var userReminders = await _dbContext.Reminders.Where(x => x.UserId == Context.User.Id).ToListAsync();
             if (userReminders.Count >= _botConfig.MaxRemindersPerUser)
             {
-                await RespondErrorEmbedAsync("Maximum Reminders", $"Reached maximum reminder count of **{_botConfig.MaxRemindersPerUser}**", isEphemeral: true);
+                await RespondErrorEmbedAsync("Maximum Reminders", $"Reached maximum reminder count of **{_botConfig.MaxRemindersPerUser}**");
                 return;
             }
             else if (userReminders.Any(x => x.GuildId == Context.Guild.Id && x.Text == text))
             {
-                await RespondErrorEmbedAsync("Duplicate Reminder", "Reminder with this name has already been created", isEphemeral: true);
+                await RespondErrorEmbedAsync("Duplicate Reminder", "Reminder with this name has already been created");
                 return;
             }
 
@@ -127,7 +127,7 @@ namespace SolarisBot.Discord.Commands
 
             if (reminders.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
@@ -141,7 +141,7 @@ namespace SolarisBot.Discord.Commands
             var reminder = await _dbContext.Reminders.FirstOrDefaultAsync(x => x.ReminderId == id && x.UserId == Context.User.Id);
             if (reminder == null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 

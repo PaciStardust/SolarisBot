@@ -46,7 +46,7 @@ namespace SolarisBot.Discord.Commands
             var quotes = await GetQuotesAsync(author: author, creator: creator, content: content, offset: offset, limit: limit);
             if (quotes.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
@@ -71,28 +71,28 @@ namespace SolarisBot.Discord.Commands
             var msgLen = message.CleanContent.Length;
             if (msgLen > _botConfig.MaxQuoteCharacters)
             {
-                await RespondErrorEmbedAsync("Message Too Long", $"Message is too long to quote, message has **{msgLen - _botConfig.MaxQuoteCharacters}** characters too many *(Max is {_botConfig.MaxQuoteCharacters})*", isEphemeral: true);
+                await RespondInvalidInputErrorEmbedAsync($"Message is too long to quote, message has **{msgLen - _botConfig.MaxQuoteCharacters}** characters too many *(Max is {_botConfig.MaxQuoteCharacters})*");
                 return;
             }
 
             var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
             if (guild == null || !guild.QuotesOn)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
             }
 
             //Check for duplicates
             if (guild.Quotes.Any(x => x.MessageId == message.Id || (x.AuthorId == message.Author.Id && x.Text == message.CleanContent && x.GuildId == Context.Guild.Id)))
             {
-                await RespondErrorEmbedAsync("Duplicate Quote", "Message has already been quoted", isEphemeral: true);
+                await RespondErrorEmbedAsync("Already Quoted", "Message has already been quoted");
                 return;
             }
 
             //Check if user has available slots
             if (guild.Quotes.Count(x => x.CreatorId == Context.User.Id) >= _botConfig.MaxQuotesPerUser)
             {
-                await RespondErrorEmbedAsync("Too Many Quotes", $"You already have **{_botConfig.MaxQuotesPerUser}** Quotes on this server, please delete some to create more", isEphemeral: true);
+                await RespondErrorEmbedAsync("Too Many Quotes", $"You already have **{_botConfig.MaxQuotesPerUser}** Quotes on this server, please delete some to create more");
                 return;
             }
 
@@ -129,7 +129,7 @@ namespace SolarisBot.Discord.Commands
             var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QuoteId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GuildId)));
             if (dbQuote == null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
@@ -152,7 +152,7 @@ namespace SolarisBot.Discord.Commands
             var quotes = await GetQuotesAsync(author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
             if (quotes.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
             else if (showfirst)
@@ -160,7 +160,7 @@ namespace SolarisBot.Discord.Commands
                 await RespondEmbedAsync(GetQuoteEmbed(quotes[0]));
                 return;
             }
-            await RespondEmbedAsync("Quote Search Results", GenerateQuotesList(quotes), isEphemeral: true);
+            await RespondEmbedAsync("Quote Search Results", GenerateQuotesList(quotes));
         }
 
         [SlashCommand("search-self", "Search through own quotes, not limited by guild")]
@@ -169,10 +169,10 @@ namespace SolarisBot.Discord.Commands
             var quotes = await GetQuotesAsync(author: author, id: id, content: content, offset: offset, all: true);
             if (quotes.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
-            await RespondEmbedAsync("Quote Search Results", GenerateQuotesList(quotes), isEphemeral: true);
+            await RespondEmbedAsync("Quote Search Results", GenerateQuotesList(quotes));
         }
 
         [SlashCommand("random", "Picks a random quote")]
@@ -183,7 +183,7 @@ namespace SolarisBot.Discord.Commands
             var quoteNum = await quotesQuery.CountAsync();
             if (quoteNum == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 

@@ -73,7 +73,6 @@ namespace SolarisBot.Discord
             => EmbedBuilder(title, colorOverride)
                 .WithDescription(content)
                 .Build();
-
         /// <summary>
         /// Generates an embed error
         /// </summary>
@@ -95,7 +94,6 @@ namespace SolarisBot.Discord
             {
                 EmbedGenericErrorType.NoResults => ("No Results", "Request yielded no results"),
                 EmbedGenericErrorType.Forbidden => ("Access Denied", "You do not have access to this feature"),
-                EmbedGenericErrorType.InvalidInput => ("Invalid Input", "Provided values are invalid"), //todo: [FEATURE] Remove this.
                 _ => ("Unknown", "Unknown")
             };
 
@@ -120,7 +118,6 @@ namespace SolarisBot.Discord
     internal enum EmbedGenericErrorType
     {
         NoResults,
-        InvalidInput,
         Forbidden
     }
 }

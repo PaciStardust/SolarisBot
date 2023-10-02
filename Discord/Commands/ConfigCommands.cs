@@ -91,7 +91,7 @@ namespace SolarisBot.Discord.Commands
                 var deleted = await _dbContext.JokeTimeouts.Where(x => x.GuildId == Context.Guild.Id).ExecuteDeleteAsync();
                 _logger.LogInformation("{intTag} Deleted all {delCount} joke timeout cooldowns for guild {guild}", GetIntTag(), deleted, Context.Guild.Log());
                 if (deleted == 0)
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults, isEphemeral: true);
+                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 else
                     await RespondEmbedAsync("Joke Timeouts Deleted", $"Successfully deleted all **{deleted}** joke timeouts for this guild");
             }
@@ -117,7 +117,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
             _logger.LogInformation("{intTag} Set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await RespondErrorEmbedAsync("Auto-Role Configured", $"Auto-Role is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+            await RespondEmbedAsync("Auto-Role Configured", $"Auto-Role is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
     }
 }
