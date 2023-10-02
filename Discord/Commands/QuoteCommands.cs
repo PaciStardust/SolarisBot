@@ -40,7 +40,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Quotes Configured", $"Quotes are currently **{(enabled ? "enabled" : "disabled")}**");
         }
 
-        [SlashCommand("wipe", "Wipe quotes from guild, make sure to use search first"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(ChannelPermission.ManageMessages)]
+        [SlashCommand("wipe", "[MANAGE MESSAGES ONLY] Wipe quotes from guild, make sure to search"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(ChannelPermission.ManageMessages)]
         public async Task WipeQuotesAsync(IUser? author = null, IUser? creator = null, string? content = null, [MinValue(0)] int offset = 0, [MinValue(0)] int limit = 0)
         {
             var quotes = await GetQuotesAsync(author: author, creator: creator, content: content, offset: offset, limit: limit);

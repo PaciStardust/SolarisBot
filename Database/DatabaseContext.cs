@@ -72,6 +72,38 @@ namespace SolarisBot.Database
         }
         #endregion
 
+        #region Users
+        /// <summary>
+        /// Compiled Query for GetUserByIdAsync
+        /// </summary>
+        private static readonly Func<DatabaseContext, ulong, Task<DbUserSettings?>> GetUserByIdCompiled
+            = EF.CompileAsyncQuery((DatabaseContext ctx, ulong id) => ctx.UserSettings.FirstOrDefault(x => x.UserId == id));
+
+        /// <summary>
+        /// Get an untracked user by Id
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <returns>User matching ID or null, if no match is found or an error occured</returns>
+        internal async Task<DbUserSettings?> GetUserByIdAsync(ulong id)
+            => await GetUserByIdCompiled(this, id);
+
+        /// <summary>
+        /// Get a tracked user by ID
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <returns>Tracked user matching id, or a new instance, automatically added to database, or null on error</returns>
+        internal async Task<DbUserSettings> GetOrCreateTrackedUserAsync(ulong id)
+        {
+            var user = await UserSettings.AsTracking().FirstOrDefaultAsync(x => x.UserId == id);
+            if (user == null)
+            {
+                user = new() { UserId = id };
+                UserSettings.Add(user);
+            }
+            return user;
+        }
+        #endregion
+
         #region Migration
         /// <summary>
         /// Attempts to migrate the database, throws on error
@@ -93,7 +125,7 @@ namespace SolarisBot.Database
                 {
                     var queries = new string[]{
                         "PRAGMA foreign_keys = ON",
-                        "CREATE TABLE GuildSettings(GuildId INTEGER PRIMARY KEY, VouchRoleId INTEGER NOT NULL DEFAULT 0, VouchPermissionRoleId INTEGER NOT NULL DEFAULT 0, CustomColorPermissionRoleId INTEGER NOT NULL DEFAULT 0, JokeRenameOn BOOL NOT NULL DEFAULT 0, JokeRenameTimeoutMin INTEGER NOT NULL DEFAULT 0, JokeRenameTimeoutMax INTEGER NOT NULL DEFAULT 0, MagicRoleId INTEGER NOT NULL DEFAULT 0, MagicRoleTimeout INTEGER NOT NULL DEFAULT 0, MagicRoleNextUse INTEGER NOT NULL DEFAULT 0, MagicRoleRenameOn BOOL NOT NULL DEFAULT 0, RemindersOn BOOL NOT NULL DEFAULT 0, QuotesOn BOOL NOT NULL DEFAULT 0, AutoRoleId INTEGER NOT NULL DEFAULT 0, UNIQUE(VouchRoleId), UNIQUE(VouchPermissionRoleId), UNIQUE(AutoRoleId), UNIQUE(CustomColorPermissionRoleId), UNIQUE(MagicRoleId))",
+                        "CREATE TABLE GuildSettings(GuildId INTEGER PRIMARY KEY, VouchRoleId INTEGER NOT NULL DEFAULT 0, VouchPermissionRoleId INTEGER NOT NULL DEFAULT 0, CustomColorPermissionRoleId INTEGER NOT NULL DEFAULT 0, JokeRenameOn BOOL NOT NULL DEFAULT 0, JokeRenameTimeoutMin INTEGER NOT NULL DEFAULT 0, JokeRenameTimeoutMax INTEGER NOT NULL DEFAULT 0, MagicRoleId INTEGER NOT NULL DEFAULT 0, MagicRoleTimeout INTEGER NOT NULL DEFAULT 0, MagicRoleNextUse INTEGER NOT NULL DEFAULT 0, MagicRoleRenameOn BOOL NOT NULL DEFAULT 0, RemindersOn BOOL NOT NULL DEFAULT 0, QuotesOn BOOL NOT NULL DEFAULT 0, AutoRoleId INTEGER NOT NULL DEFAULT 0, BirthdayChannelId INTEGER NOT NULL DEFAULT 0, BirthdayRoleId INTEGER NOT NULL DEFAULT 0)",
                         "CREATE TABLE RoleGroups(RoleGroupId INTEGER PRIMARY KEY AUTOINCREMENT, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", AllowOnlyOne BOOL NOT NULL DEFAULT 0, RequiredRoleId INTEGER NOT NULL DEFAULT 0, UNIQUE(GuildId, Identifier))",
                         "CREATE TABLE RoleSettings(RoleId INTEGER PRIMARY KEY, RoleGroupId INTEGER REFERENCES RoleGroups(RoleGroupId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", UNIQUE(RoleGroupId, Identifier))",
                         "CREATE TABLE Quotes(QuoteId INTEGER PRIMARY KEY, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, Text TEXT NOT NULL DEFAULT \"\", AuthorId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, CreatorId INTEGER NOT NULL DEFAULT 0, ChannelId INTEGER NOT NULL DEFAULT 0, MessageId INTEGER NOT NULL DEFAULT 0, UNIQUE(MessageId), UNIQUE(AuthorId, GuildId, Text))",

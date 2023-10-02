@@ -39,7 +39,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Reminders Configured", $"Reminders are currently **{(enabled ? "enabled" : "disabled")}**");
         }
 
-        [SlashCommand("wipe", "Wipe reminders"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(GuildPermission.ManageMessages)]
+        [SlashCommand("wipe", "[MANAGE MESSAGES ONLY] Wipe reminders"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task WipeRemindersAsync(IChannel? channel = null)
         {
             var query = _dbContext.Reminders.Where(x => x.GuildId == Context.Guild.Id);
