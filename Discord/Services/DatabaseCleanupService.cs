@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,7 @@ namespace SolarisBot.Discord.Services
         #region Start / Stop
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _client.RoleDeleted += OnRoleDeletedCheckForDbDuplicateAsync;
+            _client.RoleDeleted += OnRoleDeletedHandleAsync;
             _client.ChannelDestroyed += OnChannelDestroyedRemoveRemindersAsync;
             _client.UserLeft += OnUserLeftHandleAsync;
             _client.LeftGuild += OnLeftGuildRemoveGuildAsync;
@@ -44,70 +45,137 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles all OnUserLeft events
         /// </summary>
-        private async Task OnUserLeftHandleAsync(SocketGuild guild, SocketUser user)
+        private async Task OnUserLeftHandleAsync(SocketGuild guild, SocketUser user) //todo: [TEST] Test new OnUserLeft
         {
-            await OnUserLeftRemoveQuotesAsync(guild, user);
-            await OnUserLeftRemoveRemindersAsync(guild, user);
+            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+
+            var changes = await OnUserLeftRemoveQuotesAsync(dbCtx, guild, user);
+            changes = changes || await OnUserLeftRemoveRemindersAsync(dbCtx, guild, user);
+
+            if (!changes)
+                return;
+
+            _logger.LogDebug("Deleting references to user {user} in guild {guild} from DB", user.Log(), guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err != null)
+                _logger.LogError(err, "Failed to delete references to user {user} in guild {guild} from DB", user.Log(), guild.Log());
+            else
+                _logger.LogInformation("Deleted references to user {user} in guild {guild} from DB", user.Log(), guild.Log());
         }
 
         /// <summary>
         /// Deletes associated DbQuotes for left user
         /// </summary>
-        private async Task OnUserLeftRemoveQuotesAsync(SocketGuild guild, SocketUser user)
+        private async Task<bool> OnUserLeftRemoveQuotesAsync(DatabaseContext dbCtx, SocketGuild guild, SocketUser user)
         {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var quotes = await dbCtx.Quotes.Where(x => x.GuildId == guild.Id && x.CreatorId == user.Id).ToArrayAsync();
             if (quotes.Length == 0)
-                return;
+                return false;
 
             _logger.LogDebug("Removing {quotes} related quotes for left user {user} in guild {guild}", quotes.Length, user.Log(), guild.Log());
             dbCtx.Quotes.RemoveRange(quotes);
-            var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err != null)
-                _logger.LogError(err, "Failed to remove {quotes} related quotes for left user {user} in guild {guild}", quotes.Length, user.Log(), guild.Log());
-            else
-                _logger.LogInformation("Removed {quotes} related quotes for left user {user} in guild {guild}", quotes.Length, user.Log(), guild.Log());
+            return true;
         }
 
         /// <summary>
         /// Deletes associated DbReminders for left user
         /// </summary>
-        private async Task OnUserLeftRemoveRemindersAsync(SocketGuild guild, SocketUser user)
+        private async Task<bool> OnUserLeftRemoveRemindersAsync(DatabaseContext dbCtx, SocketGuild guild, SocketUser user)
         {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var reminders = await dbCtx.Reminders.Where(x => x.GuildId == guild.Id && x.UserId == user.Id).ToArrayAsync();
             if (reminders.Length == 0)
-                return;
+                return false;
 
             _logger.LogDebug("Removing {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
             var err = await RemoveRemindersAsync(reminders, dbCtx);
+            return true;
+        }
+        #endregion
+
+        #region Events - OnRoleDeleted
+        /// <summary>
+        /// Cleans up any role references in DB for deleted role
+        /// </summary>
+        private async Task OnRoleDeletedHandleAsync(SocketRole role) //todo: [TEST] Test new OnRoleDeleted
+        {
+            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            
+            var changes = await OnRoleDeletedCleanRoleSettingsAsync(dbCtx, role);
+            changes = changes || await OnRoleDeletedCleanGuildSettingsAsync(dbCtx, role);
+
+            if (!changes)
+                return;
+
+            _logger.LogDebug("Deleting references to role {role} in DB", role.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err != null)
-                _logger.LogError(err, "Failed to remove {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
+                _logger.LogError(err, "Failed to delete references to role {role} in DB", role.Log());
             else
-                _logger.LogInformation("Removed {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
+                _logger.LogInformation("Deleted references to role {role} in DB", role.Log());
+        }
+
+        /// <summary>
+        /// Removes RoleSetting if maz
+        /// </summary>
+        private async Task<bool> OnRoleDeletedCleanRoleSettingsAsync(DatabaseContext dbCtx, SocketRole role)
+        {
+            var dbRole = await dbCtx.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id);
+            if (dbRole == null)
+                return false;
+
+            _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
+            dbCtx.RoleSettings.Remove(dbRole);
+            return true;
+        }
+
+
+        /// <summary>
+        /// Updates GuildSettings if RoleId is contained in settings
+        /// </summary>
+        private async Task<bool> OnRoleDeletedCleanGuildSettingsAsync(DatabaseContext dbCtx, SocketRole role)
+        {
+            var guild = await dbCtx.GetGuildByIdAsync(role.Guild.Id);
+            if (guild == null)
+                return false;
+
+            bool changeMade = false;
+
+            if (guild.MagicRoleId == role.Id)
+            {
+                guild.MagicRoleId = 0;
+                changeMade = true;
+            }
+            if (guild.VouchPermissionRoleId == role.Id)
+            {
+                guild.VouchPermissionRoleId = 0;
+                changeMade = true;
+            }
+            if (guild.VouchRoleId == role.Id)
+            {
+                guild.VouchRoleId = 0;
+                changeMade = true;
+            }
+            if (guild.CustomColorPermissionRoleId == role.Id)
+            {
+                guild.CustomColorPermissionRoleId = 0;
+                changeMade = true;
+            }
+            if (guild.AutoRoleId == role.Id)
+            {
+                guild.AutoRoleId = 0;
+                changeMade = true;
+            }
+
+            if (!changeMade)
+                return false;
+
+            _logger.LogDebug("Removing references of role {role} from guild {guild} in DB", role.Log(), guild);
+            dbCtx.Update(guild);
+            return true;
         }
         #endregion
 
         #region Events - Other
-        /// <summary>
-        /// Deleted DbRoles if associated with a deleted role
-        /// </summary>
-        private async Task OnRoleDeletedCheckForDbDuplicateAsync(SocketRole role)
-        {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var dbRole = await dbCtx.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id);
-            if (dbRole == null)
-                return;
-
-            _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-            dbCtx.RoleSettings.Remove(dbRole);
-            var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err != null)
-                _logger.LogError(err, "Failed to delete match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-            else
-                _logger.LogInformation("Deleted match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-        }
-
         /// <summary>
         /// Removes all DbReminders associated with a destroyed channel
         /// </summary>
