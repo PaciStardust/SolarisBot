@@ -245,16 +245,16 @@ namespace SolarisBot.Discord.Commands
                     featuresList.Add("Multiselect");
 
                 var valueTextBuilder = new StringBuilder();
-                if (featuresList.Any())
-                    valueTextBuilder.Append(string.Join(", ", featuresList));
                 if (!string.IsNullOrWhiteSpace(roleGroup.Description))
+                    valueTextBuilder.Append(roleGroup.Description);
+                if (featuresList.Any())
                 {
                     if (valueTextBuilder.Length != 0)
                         valueTextBuilder.Append(" - ");
-                    valueTextBuilder.Append(roleGroup.Description);
+                    valueTextBuilder.Append(string.Join(", ", featuresList));
                 }
-                valueTextBuilder.Append($"{(valueTextBuilder.Length == 0 ? "\n" : "\n\n")}Roles({roleGroup.Roles.Count})");
-                valueTextBuilder.AppendLine(string.Join("\n", roles.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier}(<@&{x.RoleId}>)")));
+                valueTextBuilder.AppendLine($"{(valueTextBuilder.Length == 0 ? "\n" : "\n\n")}Roles({roleGroup.Roles.Count})");
+                valueTextBuilder.Append(string.Join("\n", roles.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier}(<@&{x.RoleId}>)")));
 
                 var fieldBuilder = new EmbedFieldBuilder()
                 {
