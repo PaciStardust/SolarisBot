@@ -24,6 +24,8 @@ namespace SolarisBot
 
             logger.Information("Loading BotConfig from {cfgPath}", Utils.PathConfigFile);
             var botConfig = GetConfig();
+            if (!botConfig.SaveAt(Utils.PathConfigFile))
+                logger.Warning("Failed to save BotConfig");
             logger.Information("Successfully loaded BotConfig");
 
             logger.Information("Initializing hosting, building host");
@@ -64,6 +66,7 @@ namespace SolarisBot
                     services.AddHostedService<InteractionHandlerService>();
                     services.AddHostedService<RoleHandlingService>();
                     services.AddHostedService<JokeRenamingService>();
+                    services.AddHostedService<SpellcheckService>();
                     services.AddHostedService<ReminderService>();
                     services.AddHostedService<DatabaseCleanupService>();
                     services.AddHostedService<DiscordClientService>();
@@ -81,10 +84,8 @@ namespace SolarisBot
             Console.Write("Token > ");
             botConfig.Token = Console.ReadLine() ?? string.Empty;
             Console.Write("Main Guild > ");
-            botConfig.MainGuild = ulong.Parse(Console.ReadLine() ?? string.Empty);
+            botConfig.MainGuilds.Add(ulong.Parse(Console.ReadLine() ?? string.Empty));
 
-            var saved = botConfig.SaveAt(Utils.PathConfigFile);
-            Console.WriteLine(saved ? "Successfully saved config" : "Unable to save config");
             return botConfig;
         }
         #endregion

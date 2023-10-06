@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Services
         private async Task CheckForLeftoverCustomColorRoleOnRemovalAsync(Cacheable<SocketGuildUser, ulong> oldData, SocketGuildUser newUser)
         {
             var oldUser = oldData.Value;
-            if (oldUser.Roles.Count <= newUser.Roles.Count)
+            if (oldUser == null || oldUser.Roles.Count <= newUser.Roles.Count)
                 return;
 
             var removedRole = oldUser.Roles.FirstOrDefault(x => !newUser.Roles.Contains(x));

@@ -7,6 +7,7 @@ namespace SolarisBot
     internal static class Utils
     {
         internal static string PathConfigFile { get; private set; }
+        internal static string PathDictionaryFile { get; private set; }
         internal static string PathDatabaseFile { get; private set; }
 
         static Utils()
@@ -15,6 +16,7 @@ namespace SolarisBot
 
             PathConfigFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "config.json"));
             PathDatabaseFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "database.db"));
+            PathDictionaryFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "dictionary.txt"));
         }
 
         /// <summary>

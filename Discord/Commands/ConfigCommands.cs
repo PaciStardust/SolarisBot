@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Commands
 {
-    [Group("config", "[ADMIN ONLY] Configure other Solaris features"), DefaultMemberPermissions(GuildPermission.Administrator), RequireUserPermission(GuildPermission.Administrator)]
+    [Group("config", "[MANAGE GUILD ONLY] Configure other Solaris features"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)]
     public sealed class ConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<ConfigCommands> _logger;
@@ -118,6 +118,24 @@ namespace SolarisBot.Discord.Commands
             }
             _logger.LogInformation("{intTag} Set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await RespondEmbedAsync("Auto-Role Configured", $"Auto-Role is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+        }
+
+        [SlashCommand("spellcheck", "Set a spellcheck role")]
+        public async Task SetSpellcheckRoleAsync(IRole? role = null)
+        {
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            guild.SpellcheckRoleId = role?.Id ?? 0;
+
+            _logger.LogDebug("{intTag} Setting spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
+            var (_, err) = await _dbContext.TrySaveChangesAsync();
+            if (err != null)
+            {
+                _logger.LogError(err, "{intTag} Failed to set spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
+                await RespondErrorEmbedAsync(err);
+                return;
+            }
+            _logger.LogInformation("{intTag} Set spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
+            await RespondEmbedAsync("Spellcheck Configured", $"Spellcheck is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
     }
 }

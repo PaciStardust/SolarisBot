@@ -165,6 +165,11 @@ namespace SolarisBot.Discord.Services
                 guild.AutoRoleId = 0;
                 changeMade = true;
             }
+            if (guild.SpellcheckRoleId == role.Id)
+            {
+                guild.SpellcheckRoleId = 0;
+                changeMade = true;
+            }
 
             if (!changeMade)
                 return false;

@@ -31,12 +31,16 @@ namespace SolarisBot.Discord.Services
 
             if (_config.GlobalLoad)
             {
-                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild); //this will clear them locally
                 _client.Ready += () => _intService.RegisterCommandsGloballyAsync();
             }
             else
             {
-                _client.Ready += () => _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
+                _client.Ready += () =>
+                {
+                    foreach (var guild in _config.MainGuilds)
+                        _intService.RegisterCommandsToGuildAsync(guild);
+                    return Task.CompletedTask;
+                };
             }
         }
 

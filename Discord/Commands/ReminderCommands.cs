@@ -20,7 +20,7 @@ namespace SolarisBot.Discord.Commands
         }
         protected override ILogger? GetLogger() => _logger;
 
-        [SlashCommand("config", "[ADMIN ONLY] Enable reminders"), DefaultMemberPermissions(GuildPermission.Administrator), RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("config", "[MANAGE GUILD ONLY] Enable reminders"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task EnableRemindersAsync(bool enabled)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);

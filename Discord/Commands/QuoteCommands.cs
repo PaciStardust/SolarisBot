@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Commands
         protected override ILogger? GetLogger() => _logger;
 
         #region Admin
-        [SlashCommand("config", "[ADMIN ONLY] Enable quotes"), DefaultMemberPermissions(GuildPermission.Administrator), RequireUserPermission(GuildPermission.Administrator)]
+        [SlashCommand("config", "[MANAGE GUILD ONLY] Enable quotes"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task EnableQuotesAsync(bool enabled)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
