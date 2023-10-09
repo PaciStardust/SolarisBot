@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class InteractionHandlerService : IHostedService
+    internal sealed class InteractionHandlerService : IHostedService //todo: [FEATURE] How do other bots do this?
     {
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _intService;
