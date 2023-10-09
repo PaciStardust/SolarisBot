@@ -24,7 +24,7 @@ namespace SolarisBot.Discord.Services
             _intService.Log += logMessage => logMessage.Log(_logger);
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken) //todo: [BUG] Can crash with invalid guilds
         {
             _client.InteractionCreated += HandleInteraction;
             await _intService.AddModulesAsync(GetType().Assembly, _services);
@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles an interaction
         /// </summary>
-        private async Task HandleInteraction(SocketInteraction interaction) //todo: [FEATURE] Can this be used to catch exceptions better?
+        private async Task HandleInteraction(SocketInteraction interaction) //todo: [REFACTOR] Can this be used to catch exceptions better?
         {
             var context = new SocketInteractionContext(_client, interaction);
             _logger.LogDebug("Executing command {interactionId} for user {user}", context.Interaction.Id, context.User.Log());

@@ -66,7 +66,7 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Reminders Wiped", $"Wiped **{reminders.Length}** reminders from database");
         }
 
-        [SlashCommand("create", "Create a reminder")]
+        [SlashCommand("create", "Create a reminder")] //todo: [FEATURE] Creation w timestamp? DateTime Timezone?
         public async Task CreateReminderAsync(string text, ulong days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
         {
             if (days == 0 && hours == 0 && minutes == 0)

@@ -32,7 +32,7 @@ namespace SolarisBot.Discord.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed loading dictionary"); //todo: [FEATURE] module disable via config?
+                _logger.LogError(ex, "Failed loading dictionary"); //todo: [FEATURE] Disable modules for whole bot?
             }
 
             _client.MessageReceived += CheckForSpellErrors;

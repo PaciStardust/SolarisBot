@@ -8,7 +8,7 @@ using System.Text;
 
 namespace SolarisBot.Discord.Commands
 {
-    [Group("roles", "Role related commands"), RequireContext(ContextType.Guild)]
+    [Group("roles", "Role related commands"), RequireContext(ContextType.Guild)] //todo: [FEATURE] Color of the day Role?
     public sealed class RoleCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RoleCommands> _logger;
