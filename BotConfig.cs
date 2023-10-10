@@ -50,7 +50,6 @@ namespace SolarisBot
         public string Token { get; set; } = string.Empty;
         public ulong MainGuild { get; set; } = ulong.MinValue;
         public string DefaultStatus { get; set; } = "SolarisBot by Paci";
-        public bool GlobalLoad { get; set; } = false; //todo: [FEATURE] Find a way to fix the loading (Guild.Clear supposedly?)
         public byte MaxRemindersPerUser { get; set; } = 16;
         public short MaxQuoteCharacters { get; set; } = 500;
         public byte MaxQuotesPerUser { get; set; } = 32; //Per server

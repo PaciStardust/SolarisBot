@@ -24,24 +24,33 @@ namespace SolarisBot.Discord.Services
             _intService.Log += logMessage => logMessage.Log(_logger);
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken) //todo: [BUG] Can crash with invalid guilds
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated += HandleInteraction;
             await _intService.AddModulesAsync(GetType().Assembly, _services);
 
-            if (_config.GlobalLoad)
-            {
-                _client.Ready += () => _intService.RegisterCommandsGloballyAsync();
-            }
-            else
-            {
-                _client.Ready += () =>
-                {
-                    _intService.RegisterCommandsToGuildAsync(_config.MainGuild); //todo: [FEATURE] Local only commands?
-                    return Task.CompletedTask;
-                };
-            }
+#if DEBUG
+            _client.Ready += RegisterCommandsToMainAsync;
+#else
+            _client.Ready += RegisterCommandsGloballyAsync;
+#endif
         }
+
+#pragma warning disable IDE0051 // Remove unused private members
+        private async Task RegisterCommandsToMainAsync()
+        {
+            if (_client.Guilds.Any(x => x.Id == _config.MainGuild))
+                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
+        }
+
+        private async Task RegisterCommandsGloballyAsync()
+        {
+            var guild = _client.GetGuild(_config.MainGuild);
+            if (guild is not null)
+                await guild.DeleteApplicationCommandsAsync();
+            await _intService.RegisterCommandsGloballyAsync();
+        }
+#pragma warning restore IDE0051 // Remove unused private members
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
