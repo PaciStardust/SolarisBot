@@ -57,7 +57,7 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Deleting references to user {user} in guild {guild} from DB", user.Log(), guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
                 _logger.LogError(err, "Failed to delete references to user {user} in guild {guild} from DB", user.Log(), guild.Log());
             else
                 _logger.LogInformation("Deleted references to user {user} in guild {guild} from DB", user.Log(), guild.Log());
@@ -108,7 +108,7 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Deleting references to role {role} in DB", role.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
                 _logger.LogError(err, "Failed to delete references to role {role} in DB", role.Log());
             else
                 _logger.LogInformation("Deleted references to role {role} in DB", role.Log());
@@ -120,7 +120,7 @@ namespace SolarisBot.Discord.Services
         private async Task<bool> OnRoleDeletedCleanRoleSettingsAsync(DatabaseContext dbCtx, SocketRole role)
         {
             var dbRole = await dbCtx.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id);
-            if (dbRole == null)
+            if (dbRole is null)
                 return false;
 
             _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
@@ -135,7 +135,7 @@ namespace SolarisBot.Discord.Services
         private async Task<bool> OnRoleDeletedCleanGuildSettingsAsync(DatabaseContext dbCtx, SocketRole role)
         {
             var guild = await dbCtx.GetGuildByIdAsync(role.Guild.Id);
-            if (guild == null)
+            if (guild is null)
                 return false;
 
             bool changeMade = false;
@@ -196,7 +196,7 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
             var err = await RemoveRemindersAsync(reminders, dbCtx);
-            if (err != null)
+            if (err is not null)
                 _logger.LogError(err, "Failed to remove {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
             else
                 _logger.LogInformation("Removed {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
@@ -209,13 +209,13 @@ namespace SolarisBot.Discord.Services
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
-            if (dbGuild == null)
+            if (dbGuild is null)
                 return;
 
             _logger.LogDebug("Removing guild for deleted guild {guild}", guild.Log());
             dbCtx.GuildSettings.Remove(dbGuild);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
                 _logger.LogError(err, "Failed to remove guild for deleted guild {guild}", guild.Log());
             else
                 _logger.LogDebug("Removed guild for deleted guild {guild}", guild.Log());

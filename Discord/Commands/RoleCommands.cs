@@ -68,23 +68,23 @@ namespace SolarisBot.Discord.Commands
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
                 ?? new() { GuildId = Context.Guild.Id, Identifier = identifierTrimmed };
 
-            var logVerb = roleGroup.RoleGroupId == 0 ? "Creat" : "Updat";
+            var logVerb = roleGroup.RoleGroupId == ulong.MinValue ? "Creat" : "Updat";
             roleGroup.AllowOnlyOne = oneof;
             roleGroup.Description = descriptionTrimmed;
-            roleGroup.RequiredRoleId = requiredRole?.Id ?? 0;
+            roleGroup.RequiredRoleId = requiredRole?.Id ?? ulong.MinValue;
 
             _dbContext.RoleGroups.Update(roleGroup);
 
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to {verb}e role group {roleGroup} for guild {guild}", GetIntTag(), logVerb.ToLower(), roleGroup, Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            await RespondEmbedAsync($"Role Group {logVerb}ed", $"Identifier: **{roleGroup.Identifier}**\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
+            await RespondEmbedAsync($"Role Group {logVerb}ed", $"Identifier: **{roleGroup.Identifier}**\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
 
         [SlashCommand("group-delete", "[MANAGE ROLES ONLY] Delete a role group"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
@@ -99,7 +99,7 @@ namespace SolarisBot.Discord.Commands
 
             var identifierSearch = identifierTrimmed.ToLower();
             var match = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == identifierSearch);
-            if (match == null)
+            if (match is null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
@@ -109,7 +109,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Deleting role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to delete role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
@@ -141,21 +141,21 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            if (await _dbContext.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id) != null)
+            if (await _dbContext.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
             {
                 await RespondErrorEmbedAsync("Already Registered", "Role is already registered");
                 return;
             }
 
             var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
-            if (roleGroup == null)
+            if (roleGroup is null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
             var lowerIdentifierName = identifierTrimmed.ToLower();
-            if (roleGroup.Roles.FirstOrDefault(x => x.Identifier.ToLower() == lowerIdentifierName) != null)
+            if (roleGroup.Roles.FirstOrDefault(x => x.Identifier.ToLower() == lowerIdentifierName) is not null)
             {
                 await RespondErrorEmbedAsync("Already Registered", "A Role with that identifier is already registered");
                 return;
@@ -173,7 +173,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to register role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
@@ -198,7 +198,7 @@ namespace SolarisBot.Discord.Commands
 
             var dbGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
             var dbRole = dbGroup?.Roles.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch);
-            if (dbRole == null)
+            if (dbRole is null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
@@ -208,7 +208,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), dbRole);
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to unregister role {role} from groups", GetIntTag(), dbRole);
                 await RespondErrorEmbedAsync(err);
@@ -239,7 +239,7 @@ namespace SolarisBot.Discord.Commands
 
 
                 var featuresList = new List<string>();
-                if (roleGroup.RequiredRoleId != 0)
+                if (roleGroup.RequiredRoleId != ulong.MinValue)
                     featuresList.Add($"Requires <@&{roleGroup.RequiredRoleId}>");
                 if (!roleGroup.AllowOnlyOne)
                     featuresList.Add("Multiselect");
@@ -296,13 +296,13 @@ namespace SolarisBot.Discord.Commands
 
             var dbGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
             var roles = dbGroup?.Roles;
-            if (roles == null || !roles.Any())
+            if (roles is null || !roles.Any())
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
             }
 
-            if (dbGroup!.RequiredRoleId != 0 && !gUser.Roles.Select(x => x.Id).Contains(dbGroup.RequiredRoleId))
+            if (dbGroup!.RequiredRoleId != ulong.MinValue && !gUser.Roles.Select(x => x.Id).Contains(dbGroup.RequiredRoleId))
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
@@ -358,7 +358,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid && x.GuildId == gUser.Guild.Id);
-            if (roleGroup == null)
+            if (roleGroup is null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
@@ -373,7 +373,7 @@ namespace SolarisBot.Discord.Commands
             if (roleGroup.AllowOnlyOne)
             {
                 var dbRole = dbRoles.FirstOrDefault(x => x.Identifier == selections[0]);
-                if (dbRole != null)
+                if (dbRole is not null)
                 {
                     var alreadyPossesedRoles = dbRoles.Where(x => userRoleIds.Contains(x.RoleId));
                     rolesToRemove.AddRange(alreadyPossesedRoles);
@@ -388,7 +388,7 @@ namespace SolarisBot.Discord.Commands
                 foreach (var selection in selections)
                 {
                     var dbRole = dbRoles.FirstOrDefault(x => x.Identifier == selection);
-                    if (dbRole == null)
+                    if (dbRole is null)
                     {
                         rolesInvalid.Add(selection);
                         continue;

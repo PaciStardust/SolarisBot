@@ -30,7 +30,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Setting quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Wiping {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
             _dbContext.Quotes.RemoveRange(quotes);
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to wipe {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
@@ -76,7 +76,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
-            if (guild == null || !guild.QuotesOn)
+            if (guild is null || !guild.QuotesOn)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
@@ -110,7 +110,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Adding quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
             _dbContext.Quotes.Add(dbQuote);
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to add quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
@@ -127,7 +127,7 @@ namespace SolarisBot.Discord.Commands
             bool isAdmin = Context.User is IGuildUser user && user.GuildPermissions.ManageMessages;
 
             var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QuoteId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GuildId)));
-            if (dbQuote == null)
+            if (dbQuote is null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;
@@ -136,7 +136,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Removing quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
             _dbContext.Quotes.Remove(dbQuote);
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to remove quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
                 await RespondErrorEmbedAsync(err);
@@ -193,22 +193,22 @@ namespace SolarisBot.Discord.Commands
 
         private async Task<DbQuote[]> GetQuotesAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, int offset = 0, int limit = 0, bool all = false)
         {
-            if (author == null && creator == null && id == null && content == null && offset != 0)
+            if (author is null && creator is null && id is null && content is null && offset != 0)
                 return Array.Empty<DbQuote>();
 
             IQueryable<DbQuote> dbQuery = _dbContext.Quotes;
             if (!all)
                 dbQuery = dbQuery.Where(x => x.GuildId == Context.Guild.Id);
 
-            if (id != null)
+            if (id is not null)
                 dbQuery = dbQuery.Where(x => x.QuoteId == id);
             else
             {
-                if (author != null)
+                if (author is not null)
                     dbQuery = dbQuery.Where(x => x.AuthorId == author.Id);
-                if (creator != null)
+                if (creator is not null)
                     dbQuery = dbQuery.Where(x => x.CreatorId == creator.Id);
-                if (content != null)
+                if (content is not null)
                     dbQuery = dbQuery.Where(x => EF.Functions.Like(x.Text, $"%{content}%"));
                 if (offset > 0)
                     dbQuery = dbQuery.Skip(offset);

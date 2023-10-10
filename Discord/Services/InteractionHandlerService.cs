@@ -37,8 +37,7 @@ namespace SolarisBot.Discord.Services
             {
                 _client.Ready += () =>
                 {
-                    foreach (var guild in _config.MainGuilds)
-                        _intService.RegisterCommandsToGuildAsync(guild); //todo: [FEATURE] Local only commands?
+                    _intService.RegisterCommandsToGuildAsync(_config.MainGuild); //todo: [FEATURE] Local only commands?
                     return Task.CompletedTask;
                 };
             }

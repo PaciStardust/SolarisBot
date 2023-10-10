@@ -77,14 +77,14 @@ namespace SolarisBot
         private static BotConfig GetConfig()
         {
             var botConfig = BotConfig.FromFile(Utils.PathConfigFile);
-            if (botConfig != null)
+            if (botConfig is not null)
                 return botConfig;
 
             botConfig = new();
             Console.Write("Token > ");
             botConfig.Token = Console.ReadLine() ?? string.Empty;
             Console.Write("Main Guild > ");
-            botConfig.MainGuilds.Add(ulong.Parse(Console.ReadLine() ?? string.Empty));
+            botConfig.MainGuild = ulong.Parse(Console.ReadLine() ?? string.Empty);
 
             return botConfig;
         }

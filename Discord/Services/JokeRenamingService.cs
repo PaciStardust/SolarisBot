@@ -52,12 +52,12 @@ namespace SolarisBot.Discord.Services
 
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
-            if (guild == null || guild.JokeRenameOn == false)
+            if (guild is null || guild.JokeRenameOn == false)
                 return;
 
             var timeOut = guild.JokeTimeouts.FirstOrDefault(x => x.UserId == gUser.Id);
             var currTime = Utils.GetCurrentUnix(_logger);
-            if (timeOut != null && timeOut.NextUse > currTime)
+            if (timeOut is not null && timeOut.NextUse > currTime)
                 return;
 
             timeOut ??= new()
@@ -74,7 +74,7 @@ namespace SolarisBot.Discord.Services
             _logger.LogDebug("Setting renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
             dbCtx.JokeTimeouts.Update(timeOut);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err,"Failed to set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
                 return;

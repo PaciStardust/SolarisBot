@@ -60,7 +60,7 @@ namespace SolarisBot.Database
         internal async Task<DbGuildSettings> GetOrCreateTrackedGuildAsync(ulong id)
         {
             var guild = await GuildSettings.AsTracking().FirstOrDefaultAsync(x => x.GuildId == id);
-            if (guild == null)
+            if (guild is null)
             {
                 guild = new() { GuildId = id };
                 GuildSettings.Add(guild);

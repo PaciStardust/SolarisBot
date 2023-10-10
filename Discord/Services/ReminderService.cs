@@ -64,7 +64,7 @@ namespace SolarisBot.Discord.Services
                 try
                 {
                     var channel = await _client.GetChannelAsync(reminder.ChannelId);
-                    if (channel != null && channel is IMessageChannel msgChannel)
+                    if (channel is not null && channel is IMessageChannel msgChannel)
                     {
                         _logger.LogDebug("Reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                         var embed = DiscordUtils.Embed($"Reminder", $"**{reminder.Text}**\n*(Created <t:{reminder.Created}:f>)*");
@@ -82,7 +82,7 @@ namespace SolarisBot.Discord.Services
             dbCtx.Reminders.RemoveRange(reminders);
 
             var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err != null) 
+            if (err is not null) 
                 _logger.LogError(err, "Failed to remove {reminders} reminders from DB", reminders.Length);
             else
                 _logger.LogInformation("Removed {reminders} reminders from DB", reminders.Length);

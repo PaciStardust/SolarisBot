@@ -24,15 +24,15 @@ namespace SolarisBot.Discord.Commands
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
 
-            if (Context.User is not SocketGuildUser gUser || user is not SocketGuildUser gTargetUser || dbGuild == null //Not a guild or no dbguild
-                || dbGuild.VouchPermissionRoleId == 0 || dbGuild.VouchRoleId == 0 //Vouching not set up
-                || gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) == null) //User can vouch
+            if (Context.User is not SocketGuildUser gUser || user is not SocketGuildUser gTargetUser || dbGuild is null //Not a guild or no dbguild
+                || dbGuild.VouchPermissionRoleId == ulong.MinValue || dbGuild.VouchRoleId == ulong.MinValue //Vouching not set up
+                || gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) is null) //User can vouch
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
             }
 
-            if (gTargetUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchRoleId) != null)
+            if (gTargetUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchRoleId) is not null)
             {
                 await RespondEmbedAsync("Already Vouched", $"{gTargetUser.Mention} has already been vouched", isEphemeral: true);
                 return;
@@ -57,7 +57,7 @@ namespace SolarisBot.Discord.Commands
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
 
-            if (dbGuild == null || dbGuild.MagicRoleId == 0)
+            if (dbGuild is null || dbGuild.MagicRoleId == ulong.MinValue)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
@@ -85,7 +85,7 @@ namespace SolarisBot.Discord.Commands
                 dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
                 _dbContext.GuildSettings.Update(dbGuild);
                 var (_, err) = await _dbContext.TrySaveChangesAsync();
-                if (err != null)
+                if (err is not null)
                 {
                     _logger.LogError(err, "{intTag} Failed to use Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
                     await RespondErrorEmbedAsync(err);

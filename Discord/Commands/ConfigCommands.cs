@@ -24,19 +24,19 @@ namespace SolarisBot.Discord.Commands
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.VouchPermissionRoleId = permission?.Id ?? 0;
-            guild.VouchRoleId = vouch?.Id ?? 0;
+            guild.VouchPermissionRoleId = permission?.Id ?? ulong.MinValue;
+            guild.VouchRoleId = vouch?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err,"{intTag} Failed to set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
-            await RespondEmbedAsync("Vouching Configured", $"Vouching is currently **{(permission != null && vouch != null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**");
+            await RespondEmbedAsync("Vouching Configured", $"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**");
         }
 
         [SlashCommand("magic", "Set up magic role (Not setting role disables it)")]
@@ -44,25 +44,25 @@ namespace SolarisBot.Discord.Commands
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.MagicRoleId = role?.Id ?? 0;
-            guild.MagicRoleNextUse = 0;
-            guild.MagicRoleTimeout = timeoutsecs >= 0 ? timeoutsecs : 0;
+            guild.MagicRoleId = role?.Id ?? ulong.MinValue;
+            guild.MagicRoleNextUse = ulong.MinValue;
+            guild.MagicRoleTimeout = timeoutsecs >= ulong.MinValue ? timeoutsecs : ulong.MinValue;
             guild.MagicRoleRenameOn = renaming;
 
             _logger.LogDebug("{intTag} Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
-            await RespondEmbedAsync("Magic Configured", $"Magic is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
+            await RespondEmbedAsync("Magic Configured", $"Magic is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
         }
 
         [SlashCommand("joke-rename", "Set up joke renaming (Timeout in seconds)")]
-        public async Task ConfigureJokeRenameAsync(bool enabled, [MinValue(0), MaxValue(2.628e+6)] ulong mintimeout = 1800, [MinValue(0), MaxValue(2.628e+6)] ulong maxtimeout = 86400)
+        public async Task ConfigureJokeRenameAsync(bool enabled, [MinValue(ulong.MinValue), MaxValue(2.628e+6)] ulong mintimeout = 1800, [MinValue(ulong.MinValue), MaxValue(2.628e+6)] ulong maxtimeout = 86400)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
@@ -72,7 +72,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
@@ -106,36 +106,36 @@ namespace SolarisBot.Discord.Commands
         public async Task SetAutoRoleAsync(IRole? role = null)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-            guild.AutoRoleId = role?.Id ?? 0;
+            guild.AutoRoleId = role?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await RespondEmbedAsync("Auto-Role Configured", $"Auto-Role is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+            await RespondEmbedAsync("Auto-Role Configured", $"Auto-Role is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
 
         [SlashCommand("spellcheck", "Set a spellcheck role")]
         public async Task SetSpellcheckRoleAsync(IRole? role = null)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-            guild.SpellcheckRoleId = role?.Id ?? 0;
+            guild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to set spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await RespondEmbedAsync("Spellcheck Configured", $"Spellcheck is currently **{(role != null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+            await RespondEmbedAsync("Spellcheck Configured", $"Spellcheck is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
     }
 }

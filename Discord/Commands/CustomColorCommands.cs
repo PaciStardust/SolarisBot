@@ -26,18 +26,18 @@ namespace SolarisBot.Discord.Commands
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.CustomColorPermissionRoleId = creationrole?.Id ?? 0;
+            guild.CustomColorPermissionRoleId = creationrole?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
             var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err != null)
+            if (err is not null)
             {
                 _logger.LogError(err, "{intTag} Failed to set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
                 await RespondErrorEmbedAsync(err);
                 return;
             }
             _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
-            await RespondEmbedAsync("Custom Colors Configured", $"Custom color creation is currently **{(creationrole != null ? "enabled" : "disabled")}**\n\nCreation Role: **{creationrole?.Mention ?? "None"}**");
+            await RespondEmbedAsync("Custom Colors Configured", $"Custom color creation is currently **{(creationrole is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{creationrole?.Mention ?? "None"}**");
         }
 
         [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)"), RequireBotPermission(ChannelPermission.ManageRoles)]
@@ -70,7 +70,7 @@ namespace SolarisBot.Discord.Commands
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
 
             var requiredRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
-            if (role == null && (requiredRole == null || requiredRole == 0 || gUser.Roles.FirstOrDefault(x => x.Id == requiredRole) == null))
+            if (role is null && (requiredRole is null || requiredRole == ulong.MinValue || gUser.Roles.FirstOrDefault(x => x.Id == requiredRole) is null))
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
                 return;
@@ -78,7 +78,7 @@ namespace SolarisBot.Discord.Commands
 
             try
             {
-                if (role == null)
+                if (role is null)
                 {
                     _logger.LogDebug("{intTag} Creating custom color role {roleName} for user {user} in guild {guild}", GetIntTag(), roleName, gUser.Log(), Context.Guild.Log());
                     role = await Context.Guild.CreateRoleAsync(roleName, color: color, isMentionable: false);
@@ -115,7 +115,7 @@ namespace SolarisBot.Discord.Commands
             var roleName = DiscordUtils.GetCustomColorRoleName(Context.User);
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
 
-            if (role == null)
+            if (role is null)
             {
                 await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
                 return;

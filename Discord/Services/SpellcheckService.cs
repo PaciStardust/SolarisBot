@@ -72,7 +72,7 @@ namespace SolarisBot.Discord.Services
 
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
-            if (guild == null || guild.SpellcheckRoleId == 0)
+            if (guild is null || guild.SpellcheckRoleId == 0)
                 return;
 
             if (!gUser.RoleIds.Contains(guild.SpellcheckRoleId))
