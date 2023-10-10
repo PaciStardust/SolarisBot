@@ -1,18 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(QuoteId))]
     public class DbQuote
     {
-        public ulong QuoteId { get; set; } = 0;
-        public ulong GuildId { get; set; } = 0;
+        public ulong QuoteId { get; set; } = ulong.MinValue;
+        [ForeignKey(nameof(DbGuildSettings))]
+        public ulong GuildId { get; set; } = ulong.MinValue;
         public string Text { get; set; } = string.Empty;
-        public ulong AuthorId { get; set; } = 0;
-        public ulong Time { get; set; } = 0;
-        public ulong CreatorId { get; set; } = 0;
-        public ulong ChannelId { get; set; } = 0;
-        public ulong MessageId { get; set; } = 0;
+        public ulong AuthorId { get; set; } = ulong.MinValue;
+        public ulong Time { get; set; } = ulong.MinValue;
+        public ulong CreatorId { get; set; } = ulong.MinValue;
+        public ulong ChannelId { get; set; } = ulong.MinValue;
+        public ulong MessageId { get; set; } = ulong.MinValue;
 
         public DbQuote() { }
 
