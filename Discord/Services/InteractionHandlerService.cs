@@ -40,15 +40,15 @@ namespace SolarisBot.Discord.Services
         private async Task RegisterCommandsToMainAsync()
         {
             if (_client.Guilds.Any(x => x.Id == _config.MainGuild))
-                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
+                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild).ConfigureAwait(false);
         }
 
         private async Task RegisterCommandsGloballyAsync()
         {
             var guild = _client.GetGuild(_config.MainGuild);
-            if (guild is not null)
-                await guild.DeleteApplicationCommandsAsync();
-            await _intService.RegisterCommandsGloballyAsync();
+            if (guild is not null) //todo: [TEST] Does this maybe work on Globals???
+                await guild.DeleteApplicationCommandsAsync().ConfigureAwait(false);
+            await _intService.RegisterCommandsGloballyAsync().ConfigureAwait(false);
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
