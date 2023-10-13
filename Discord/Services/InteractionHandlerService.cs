@@ -1,4 +1,5 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,8 @@ namespace SolarisBot.Discord.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _client.InteractionCreated += HandleInteraction;
+            _client.InteractionCreated += HandleInteractionCreated;
+            _intService.InteractionExecuted += HandleInteractionExecuted;
             await _intService.AddModulesAsync(GetType().Assembly, _services);
 
 #if DEBUG
@@ -40,15 +42,15 @@ namespace SolarisBot.Discord.Services
         private async Task RegisterCommandsToMainAsync() //todo: [FEATURE] Log this
         {
             if (_client.Guilds.Any(x => x.Id == _config.MainGuild))
-                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild).ConfigureAwait(false);
+                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
         }
 
         private async Task RegisterCommandsGloballyAsync()
         {
             var guild = _client.GetGuild(_config.MainGuild);
             if (guild is not null) //todo: [TEST] Does this maybe work on Globals???
-                await guild.DeleteApplicationCommandsAsync().ConfigureAwait(false);
-            await _intService.RegisterCommandsGloballyAsync().ConfigureAwait(false);
+                await guild.DeleteApplicationCommandsAsync();
+            await _intService.RegisterCommandsGloballyAsync();
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
@@ -59,9 +61,9 @@ namespace SolarisBot.Discord.Services
         }
 
         /// <summary>
-        /// Handles an interaction
+        /// Handles an interaction being created and executes it
         /// </summary>
-        private async Task HandleInteraction(SocketInteraction interaction) //todo: [REFACTOR] Can this be used to catch exceptions better?
+        private async Task HandleInteractionCreated(SocketInteraction interaction) //todo: [REFACTOR] Can this be used to catch exceptions better?
         {
             var cmdName = "N/A";
             if (interaction is SocketCommandBase scb)
@@ -71,13 +73,40 @@ namespace SolarisBot.Discord.Services
             _logger.LogDebug("Executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
             var result = await _intService.ExecuteCommandAsync(context, _services);
 
+            //this will happen when the command cant be found
             if (!result.IsSuccess)
             {
-                _logger.LogDebug("Failed executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}, reason {reason}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.ErrorReason);
-                var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason); //todo: [REFACTOR] remove title, move?
+                _logger.LogError("Failed executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
+                var responseEmbed = DiscordUtils.EmbedError($"Error - {result.Error!}", result.ErrorReason); //todo: [REFACTOR] remove title, move?
                 await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
             }
-            _logger.LogInformation("Executed interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+        }
+
+        /// <summary>
+        /// Handles the result of an interaction
+        /// </summary>
+        private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
+        {
+            var paramInfo = string.Join(", ", cmdInfo.Parameters); //todo: [TEST] does this look decent?
+
+            if (result.IsSuccess)
+            {
+                _logger.LogInformation("Executed interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                return;
+            }
+
+            if (result is ExecuteResult exeResult)
+            {
+                _logger.LogError(exeResult.Exception, "Failed to execute interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                var responseEmbed = DiscordUtils.EmbedError($"Error - {exeResult.Exception.GetType().Name}", exeResult.Exception.Message);
+                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+            }
+            else
+            {
+                _logger.LogError("Failed to execute interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
+                var responseEmbed = DiscordUtils.EmbedError($"Error - {result.Error!}", result.ErrorReason);
+                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+            }
         }
     }
 }
