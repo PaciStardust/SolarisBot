@@ -63,17 +63,21 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task HandleInteraction(SocketInteraction interaction) //todo: [REFACTOR] Can this be used to catch exceptions better?
         {
+            var cmdName = "N/A";
+            if (interaction is SocketCommandBase scb)
+                cmdName = scb.CommandName;
+
             var context = new SocketInteractionContext(_client, interaction);
-            _logger.LogDebug("Executing command {interactionId} for user {user}", context.Interaction.Id, context.User.Log());
+            _logger.LogDebug("Executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
             var result = await _intService.ExecuteCommandAsync(context, _services);
 
             if (!result.IsSuccess)
             {
-                _logger.LogError("Failed to execute command {interactionId} for user {user} ({resultError})", context.Interaction.Id, context.User.Log(), result.Error);
-                var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason);
+                _logger.LogDebug("Failed executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}, reason {reason}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.ErrorReason);
+                var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason); //todo: [REFACTOR] remove title, move?
                 await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
             }
-            _logger.LogDebug("Executed command {interactionId} for user {user}", context.Interaction.Id, context.User.Log());
+            _logger.LogInformation("Executed interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
         }
     }
 }
