@@ -37,7 +37,7 @@ namespace SolarisBot.Discord.Services
         }
 
 #pragma warning disable IDE0051 // Remove unused private members
-        private async Task RegisterCommandsToMainAsync()
+        private async Task RegisterCommandsToMainAsync() //todo: [FEATURE] Log this
         {
             if (_client.Guilds.Any(x => x.Id == _config.MainGuild))
                 await _intService.RegisterCommandsToGuildAsync(_config.MainGuild).ConfigureAwait(false);
