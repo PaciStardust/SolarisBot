@@ -32,24 +32,32 @@ namespace SolarisBot.Discord.Services
             await _intService.AddModulesAsync(GetType().Assembly, _services);
 
 #if DEBUG
-            _client.Ready += RegisterCommandsToMainAsync;
+            _client.Ready += RegisterInteractionsToMainAsync;
 #else
             _client.Ready += RegisterCommandsGloballyAsync;
 #endif
         }
 
 #pragma warning disable IDE0051 // Remove unused private members
-        private async Task RegisterCommandsToMainAsync() //todo: [FEATURE] Log this
-        {
-            if (_client.Guilds.Any(x => x.Id == _config.MainGuild))
-                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
-        }
-
-        private async Task RegisterCommandsGloballyAsync()
+        private async Task RegisterInteractionsToMainAsync()
         {
             var guild = _client.GetGuild(_config.MainGuild);
-            if (guild is not null) //todo: [TEST] Does this maybe work on Globals???
-                await guild.DeleteApplicationCommandsAsync();
+            if (guild != null)
+            {
+                _logger.LogInformation("Registering interactions to guild {guild}", guild.Log());
+                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
+            }
+        }
+
+        private async Task RegisterInteractionsGloballyAsync()
+        {
+            var guild = _client.GetGuild(_config.MainGuild);
+            if (guild is not null)
+            {
+                _logger.LogInformation("Unregistering interactions to guild {guild}", guild.Log());
+                await guild.DeleteApplicationCommandsAsync(); //todo: [TEST] Does this maybe work on Globals???
+            }
+            _logger.LogInformation("Registering interactions globally");
             await _intService.RegisterCommandsGloballyAsync();
         }
 #pragma warning restore IDE0051 // Remove unused private members
