@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Discord
@@ -18,6 +19,16 @@ namespace SolarisBot.Discord
         /// Gets an interaction tag for logging
         /// </summary>
         protected string GetIntTag() => $"[Int {Context.Interaction.Id}]";
+
+        /// <summary>
+        /// Returns the user of the context as SGU
+        /// </summary>
+        protected SocketGuildUser? GetGuildUser()
+        {
+            if (Context.User is SocketGuildUser gUser)
+                return gUser;
+            return null;
+        }
 
         #region Embeds
         /// <summary>

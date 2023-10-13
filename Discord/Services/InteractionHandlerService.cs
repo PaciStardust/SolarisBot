@@ -1,11 +1,12 @@
-﻿using Discord.Interactions;
+﻿using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class InteractionHandlerService : IHostedService //todo: [FEATURE] How do other bots do this?
+    internal sealed class InteractionHandlerService : IHostedService
     {
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _intService;
@@ -26,29 +27,38 @@ namespace SolarisBot.Discord.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _client.InteractionCreated += HandleInteraction;
+            _client.InteractionCreated += HandleInteractionCreated;
+            _intService.InteractionExecuted += HandleInteractionExecuted;
             await _intService.AddModulesAsync(GetType().Assembly, _services);
 
 #if DEBUG
-            _client.Ready += RegisterCommandsToMainAsync;
+            _client.Ready += RegisterInteractionsToMainAsync;
 #else
             _client.Ready += RegisterCommandsGloballyAsync;
 #endif
         }
 
 #pragma warning disable IDE0051 // Remove unused private members
-        private async Task RegisterCommandsToMainAsync()
-        {
-            if (_client.Guilds.Any(x => x.Id == _config.MainGuild))
-                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild).ConfigureAwait(false);
-        }
-
-        private async Task RegisterCommandsGloballyAsync()
+        private async Task RegisterInteractionsToMainAsync()
         {
             var guild = _client.GetGuild(_config.MainGuild);
-            if (guild is not null) //todo: [TEST] Does this maybe work on Globals???
-                await guild.DeleteApplicationCommandsAsync().ConfigureAwait(false);
-            await _intService.RegisterCommandsGloballyAsync().ConfigureAwait(false);
+            if (guild != null)
+            {
+                _logger.LogInformation("Registering interactions to guild {guild}", guild.Log());
+                await _intService.RegisterCommandsToGuildAsync(_config.MainGuild);
+            }
+        }
+
+        private async Task RegisterInteractionsGloballyAsync()
+        {
+            var guild = _client.GetGuild(_config.MainGuild);
+            if (guild is not null)
+            {
+                _logger.LogInformation("Unregistering interactions to guild {guild}", guild.Log());
+                await guild.DeleteApplicationCommandsAsync(); //todo: [TEST] Does this maybe work on Globals???
+            }
+            _logger.LogInformation("Registering interactions globally");
+            await _intService.RegisterCommandsGloballyAsync();
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
@@ -59,21 +69,52 @@ namespace SolarisBot.Discord.Services
         }
 
         /// <summary>
-        /// Handles an interaction
+        /// Handles an interaction being created and executes it
         /// </summary>
-        private async Task HandleInteraction(SocketInteraction interaction) //todo: [REFACTOR] Can this be used to catch exceptions better?
+        private async Task HandleInteractionCreated(SocketInteraction interaction)
         {
+            var cmdName = "N/A";
+            if (interaction is SocketCommandBase scb)
+                cmdName = scb.CommandName;
+
             var context = new SocketInteractionContext(_client, interaction);
-            _logger.LogDebug("Executing command {interactionId} for user {user}", context.Interaction.Id, context.User.Log());
+            _logger.LogDebug("Executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
             var result = await _intService.ExecuteCommandAsync(context, _services);
 
+            //this will happen when the command cant be found
             if (!result.IsSuccess)
             {
-                _logger.LogError("Failed to execute command {interactionId} for user {user} ({resultError})", context.Interaction.Id, context.User.Log(), result.Error);
-                var responseEmbed = DiscordUtils.EmbedError("Interaction Error", result.ErrorReason);
+                _logger.LogError("Failed executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
+                var responseEmbed = DiscordUtils.EmbedError($"Error - {result.Error!}", result.ErrorReason); //todo: [REFACTOR] remove title, move?
                 await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
             }
-            _logger.LogDebug("Executed command {interactionId} for user {user}", context.Interaction.Id, context.User.Log());
+        }
+
+        /// <summary>
+        /// Handles the result of an interaction
+        /// </summary>
+        private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
+        {
+            var paramInfo = string.Join(", ", cmdInfo.Parameters);
+
+            if (result.IsSuccess)
+            {
+                _logger.LogInformation("Executed interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                return;
+            }
+
+            if (result is ExecuteResult exeResult)
+            {
+                _logger.LogError(exeResult.Exception, "Failed to execute interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                var responseEmbed = DiscordUtils.EmbedError($"Error - {exeResult.Exception.GetType().Name}", exeResult.Exception.Message);
+                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+            }
+            else
+            {
+                _logger.LogError("Failed to execute interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
+                var responseEmbed = DiscordUtils.EmbedError($"Error - {result.Error!}", result.ErrorReason);
+                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
 {
@@ -7,7 +6,6 @@ namespace SolarisBot.Database
     public class DbReminder
     {
         public ulong ReminderId { get; set; } = ulong.MinValue;
-        [ForeignKey(nameof(DbGuildSettings))]
         public ulong GuildId { get; set; } = ulong.MinValue;
         public ulong UserId { get; set; } = ulong.MinValue;
         public ulong ChannelId { get; set; } = ulong.MinValue;

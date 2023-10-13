@@ -28,13 +28,7 @@ namespace SolarisBot.Discord.Commands
             guild.RemindersOn = enabled;
 
             _logger.LogDebug("{intTag} Setting reminders to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to set reminders to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set reminders to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
             await RespondEmbedAsync("Reminders Configured", $"Reminders are currently **{(enabled ? "enabled" : "disabled")}**");
         }
@@ -55,13 +49,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Wiping {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
             _dbContext.Reminders.RemoveRange(reminders);
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to wipe {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Wiped {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
             await RespondEmbedAsync("Reminders Wiped", $"Wiped **{reminders.Length}** reminders from database");
         }
@@ -108,13 +96,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
             dbGuild.Reminders.Add(dbReminder);
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to create reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
 
             await RespondEmbedAsync($"Reminder #{dbReminder.ReminderId} Created", $"**{text}**\n*(Reminding <t:{reminderTime}:f>)*");
@@ -147,15 +129,8 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Deleting reminder {reminder} from user {user} in DB", GetIntTag(), reminder, Context.User.Log());
             _dbContext.Reminders.Remove(reminder);
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to delete reminder {reminder} from user {user} in DB", GetIntTag(), reminder, Context.User.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Deleted reminder {reminder} from user {user} in DB", GetIntTag(), reminder, Context.User.Log());
-
             await RespondEmbedAsync("Reminder Deleted", $"Deleted reminder: {reminder.Text}", isEphemeral: true);
         }
     }

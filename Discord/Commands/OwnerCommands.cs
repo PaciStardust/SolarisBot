@@ -32,17 +32,9 @@ namespace SolarisBot.Discord.Commands
             }
 
             var client = _services.GetRequiredService<DiscordSocketClient>();
-            try
-            {
-                await client.SetGameAsync(status);
-                _logger.LogInformation("{intTag} Set discord client status to {discordStatus}", GetIntTag(), status);
-                await RespondEmbedAsync("Status Set", $"Status set to \"{status}\"");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{intTag} Failed to set discord client status to {discordStatus}", GetIntTag(), status);
-                await RespondErrorEmbedAsync(ex);
-            }
+            await client.SetGameAsync(status);
+            _logger.LogInformation("{intTag} Set discord client status to {discordStatus}", GetIntTag(), status);
+            await RespondEmbedAsync("Status Set", $"Status set to \"{status}\"");
         }
     }
 }

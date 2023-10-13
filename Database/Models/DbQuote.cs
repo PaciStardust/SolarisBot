@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
 {
@@ -7,7 +6,6 @@ namespace SolarisBot.Database
     public class DbQuote
     {
         public ulong QuoteId { get; set; } = ulong.MinValue;
-        [ForeignKey(nameof(DbGuildSettings))]
         public ulong GuildId { get; set; } = ulong.MinValue;
         public string Text { get; set; } = string.Empty;
         public ulong AuthorId { get; set; } = ulong.MinValue;
