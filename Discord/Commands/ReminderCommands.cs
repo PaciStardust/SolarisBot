@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SolarisBot.Discord.Commands
 {
@@ -54,19 +55,19 @@ namespace SolarisBot.Discord.Commands
             await RespondEmbedAsync("Reminders Wiped", $"Wiped **{reminders.Length}** reminders from database");
         }
 
-        [SlashCommand("create", "Create a reminder")] //todo: [FEATURE] Creation w timestamp? DateTime Timezone?
-        public async Task CreateReminderAsync(string text, ulong days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
+        [SlashCommand("create-ts", "Create a reminder using a timestamp")] //todo: [FEATURE] better timestamping logic
+        private async Task CreateReminderAsync(string text, ulong timestamp)
         {
-            if (days == 0 && hours == 0 && minutes == 0)
+            if (timestamp < Utils.GetCurrentUnix())
             {
-                await RespondInvalidInputErrorEmbedAsync("Time values can not be zero");
+                await RespondErrorEmbedAsync("Timestamp too early", "Timestamp should not be in past");
                 return;
             }
 
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
             if (dbGuild is null || !dbGuild.RemindersOn)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden); //todo: [REFACTOR] These should not need a title, embedbuilder
                 return;
             }
 
@@ -82,14 +83,12 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var offset = DateTimeOffset.Now.AddDays(days).AddHours(hours).AddMinutes(minutes);
-            var reminderTime = Utils.LongToUlong(offset.AddSeconds(-offset.Second).ToUnixTimeSeconds(), _logger);
             var dbReminder = new DbReminder()
             {
                 ChannelId = Context.Channel.Id,
                 GuildId = Context.Guild.Id,
                 Text = text,
-                Time = reminderTime,
+                Time = timestamp,
                 UserId = Context.User.Id,
                 Created = Utils.GetCurrentUnix()
             };
@@ -99,7 +98,21 @@ namespace SolarisBot.Discord.Commands
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
 
-            await RespondEmbedAsync($"Reminder #{dbReminder.ReminderId} Created", $"**{text}**\n*(Reminding <t:{reminderTime}:f>)*");
+            await RespondEmbedAsync($"Reminder #{dbReminder.ReminderId} Created", $"**{text}**\n*(Reminding <t:{timestamp}:f>)*");
+        }
+
+        [SlashCommand("create-in", "Create a reminder in x time")] //todo: [FEATURE] Creation w timestamp? DateTime Timezone?
+        public async Task CreateReminderInAsync(string text, ulong days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
+        {
+            if (days == 0 && hours == 0 && minutes == 0)
+            {
+                await RespondInvalidInputErrorEmbedAsync("Time values can not be zero");
+                return;
+            }
+
+            var offset = DateTimeOffset.Now.AddDays(days).AddHours(hours).AddMinutes(minutes);
+            var reminderTime = Utils.LongToUlong(offset.AddSeconds(-offset.Second).ToUnixTimeSeconds(), _logger);
+            await CreateReminderAsync(text, reminderTime);
         }
 
         [SlashCommand("list", "List your reminders")]
