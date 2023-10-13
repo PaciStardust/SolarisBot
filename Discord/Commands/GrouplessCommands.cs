@@ -38,18 +38,10 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            try
-            {
-                _logger.LogDebug("{intTag} Giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", GetIntTag(), gTargetUser.Log(), dbGuild.VouchRoleId, Context.Guild.Log(), gUser.Log());
-                await gTargetUser.AddRoleAsync(dbGuild.VouchRoleId);
-                _logger.LogInformation("{intTag} Gave vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", GetIntTag(),gTargetUser.Log(), dbGuild.VouchRoleId, Context.Guild.Log(), gUser.Log());
-                await RespondEmbedAsync("Vouch Successful", $"Vouched for {gTargetUser.Mention}, welcome to the server!");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{intTag} Failed to give vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", GetIntTag(), gTargetUser.Log(), dbGuild.VouchRoleId, Context.Guild.Log(), gUser.Log());
-                await RespondErrorEmbedAsync(ex);
-            }
+            _logger.LogDebug("{intTag} Giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", GetIntTag(), gTargetUser.Log(), dbGuild.VouchRoleId, Context.Guild.Log(), gUser.Log());
+            await gTargetUser.AddRoleAsync(dbGuild.VouchRoleId);
+            _logger.LogInformation("{intTag} Gave vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", GetIntTag(),gTargetUser.Log(), dbGuild.VouchRoleId, Context.Guild.Log(), gUser.Log());
+            await RespondEmbedAsync("Vouch Successful", $"Vouched for {gTargetUser.Mention}, welcome to the server!");
         }
 
         [SlashCommand("magic", "Use magic"), RequireBotPermission(ChannelPermission.ManageRoles)]
@@ -70,35 +62,21 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            try
+            _logger.LogDebug("{intTag} Using Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
+            var faker = Utils.Faker;
+            var role = Context.Guild.GetRole(dbGuild.MagicRoleId);
+            var color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
+            await role.ModifyAsync(x =>
             {
-                _logger.LogDebug("{intTag} Using Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
-                var faker = Utils.Faker;
-                var role = Context.Guild.GetRole(dbGuild.MagicRoleId);
-                var color = new Color(faker.Random.Byte(), faker.Random.Byte(), faker.Random.Byte());
-                await role.ModifyAsync(x =>
-                {
-                    x.Name = dbGuild.MagicRoleRenameOn ? GenerateMagicName(faker) : x.Name;
-                    x.Color = color;
-                });
+                x.Name = dbGuild.MagicRoleRenameOn ? GenerateMagicName(faker) : x.Name;
+                x.Color = color;
+            });
 
-                dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
-                _dbContext.GuildSettings.Update(dbGuild);
-                var (_, err) = await _dbContext.TrySaveChangesAsync();
-                if (err is not null)
-                {
-                    _logger.LogError(err, "{intTag} Failed to use Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
-                    await RespondErrorEmbedAsync(err);
-                    return;
-                }
-                _logger.LogInformation("{intTag} Used Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
-                await RespondEmbedAsync("Magic Used", $"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now", color);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{intTag} Failed to use magic({magicRoleId} in guild {guild}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log());
-                await RespondErrorEmbedAsync(ex);
-            }
+            dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
+            _dbContext.GuildSettings.Update(dbGuild);
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("{intTag} Used Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
+            await RespondEmbedAsync("Magic Used", $"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now", color);
         }
 
         /// <summary>

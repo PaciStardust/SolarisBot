@@ -29,13 +29,7 @@ namespace SolarisBot.Discord.Commands
             guild.QuotesOn = enabled;
 
             _logger.LogDebug("{intTag} Setting quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
             await RespondEmbedAsync("Quotes Configured", $"Quotes are currently **{(enabled ? "enabled" : "disabled")}**");
         }
@@ -52,13 +46,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Wiping {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
             _dbContext.Quotes.RemoveRange(quotes);
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to wipe {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogDebug("{intTag} Wiped {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
             await RespondEmbedAsync("Quotes Wiped", $"Wiped **{quotes.Length}** quotes from database");
         }
@@ -109,13 +97,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Adding quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
             _dbContext.Quotes.Add(dbQuote);
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to add quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Added quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
             await RespondEmbedAsync(GetQuoteEmbed(dbQuote));
             return;
@@ -135,13 +117,7 @@ namespace SolarisBot.Discord.Commands
 
             _logger.LogDebug("{intTag} Removing quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
             _dbContext.Quotes.Remove(dbQuote);
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to remove quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Removed quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
             await RespondEmbedAsync("Quote Deleted", $"Quote with ID **{id}** has been deleted");
         }

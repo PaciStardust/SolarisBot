@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class InteractionHandlerService : IHostedService //todo: [FEATURE] How do other bots do this?
+    internal sealed class InteractionHandlerService : IHostedService
     {
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _intService;
@@ -63,7 +63,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles an interaction being created and executes it
         /// </summary>
-        private async Task HandleInteractionCreated(SocketInteraction interaction) //todo: [REFACTOR] Can this be used to catch exceptions better?
+        private async Task HandleInteractionCreated(SocketInteraction interaction)
         {
             var cmdName = "N/A";
             if (interaction is SocketCommandBase scb)
@@ -87,7 +87,7 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
         {
-            var paramInfo = string.Join(", ", cmdInfo.Parameters); //todo: [TEST] does this look decent?
+            var paramInfo = string.Join(", ", cmdInfo.Parameters);
 
             if (result.IsSuccess)
             {

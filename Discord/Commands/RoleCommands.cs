@@ -76,13 +76,7 @@ namespace SolarisBot.Discord.Commands
             _dbContext.RoleGroups.Update(roleGroup);
 
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to {verb}e role group {roleGroup} for guild {guild}", GetIntTag(), logVerb.ToLower(), roleGroup, Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             await RespondEmbedAsync($"Role Group {logVerb}ed", $"Identifier: **{roleGroup.Identifier}**\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
@@ -108,13 +102,7 @@ namespace SolarisBot.Discord.Commands
             _dbContext.RoleGroups.Remove(match);
 
             _logger.LogDebug("{intTag} Deleting role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to delete role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Deleted role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
             await RespondEmbedAsync("Role Group Deleted", $"The role group with the identifier **\"{identifierTrimmed}\"** has been deleted");
         }
@@ -172,13 +160,7 @@ namespace SolarisBot.Discord.Commands
             _dbContext.RoleSettings.Add(dbRole);
 
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to register role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Registered role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             await RespondEmbedAsync("Role Registered", $"Group: **{roleGroup.Identifier}**\nRole: **{role.Mention}**\nIdentifier: **{dbRole.Identifier}**\nDescription: **{(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}**");
         }
@@ -207,13 +189,7 @@ namespace SolarisBot.Discord.Commands
             _dbContext.RoleSettings.Remove(dbRole);
 
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), dbRole);
-            var (_, err) = await _dbContext.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "{intTag} Failed to unregister role {role} from groups", GetIntTag(), dbRole);
-                await RespondErrorEmbedAsync(err);
-                return;
-            }
+            await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Unregistered role {role} from groups", GetIntTag(), dbRole);
             await RespondEmbedAsync("Role Unegistered", $"A role with the identifier **\"{identifierSearch}\"** has been unregistered");
         }
@@ -326,15 +302,7 @@ namespace SolarisBot.Discord.Commands
 
             var compBuilder = new ComponentBuilder()
                 .WithSelectMenu(menuBuilder);
-            try
-            {
-                await RespondAsync($"Roles in group {dbGroup.Identifier}:", components: compBuilder.Build(), ephemeral: true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{intTag} Failed to respond to interaction", GetIntTag());
-                await RespondErrorEmbedAsync(ex);
-            }
+            await RespondAsync($"Roles in group {dbGroup.Identifier}:", components: compBuilder.Build(), ephemeral: true);
         }
 
         [ComponentInteraction("roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
@@ -401,64 +369,56 @@ namespace SolarisBot.Discord.Commands
                 }
             }
 
-            try
+            var groupFields = new List<EmbedFieldBuilder>();
+
+            if (rolesToAdd.Any())
             {
-                var groupFields = new List<EmbedFieldBuilder>();
-
-                if (rolesToAdd.Any())
+                var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
+                _logger.LogDebug("{intTag} Adding roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
+                await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
+                groupFields.Add(new EmbedFieldBuilder()
                 {
-                    var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
-                    _logger.LogDebug("{intTag} Adding roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
-                    await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
-                    groupFields.Add(new EmbedFieldBuilder()
-                    {
-                        IsInline = true,
-                        Name = "Roles Added",
-                        Value = rolesToAddText
-                    });
-                    _logger.LogInformation("{intTag} Added roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
-                }
-                if (rolesToRemove.Any())
-                {
-                    var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
-                    _logger.LogDebug("{intTag} Removing roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
-                    await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
-                    groupFields.Add(new EmbedFieldBuilder()
-                    {
-                        IsInline = true,
-                        Name = "Roles Removed",
-                        Value = rolesToRemoveText
-                    });
-                    _logger.LogInformation("{intTag} Removed roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
-                }
-                if (rolesInvalid.Any())
-                {
-                    var rolesInvalidText = string.Join(", ", rolesInvalid);
-                    groupFields.Add(new EmbedFieldBuilder()
-                    {
-                        IsInline = true,
-                        Name = "Invalid Roles",
-                        Value = rolesInvalidText
-                    });
-                    _logger.LogWarning("{intTag} Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", GetIntTag(), rolesInvalidText, roleGroup, gUser.Log());
-                }
-
-                if (!groupFields.Any())
-                {
-                    await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
-                    return;
-                }
-
-                var embedBuilder = DiscordUtils.EmbedBuilder("Roles Updated")
-                    .WithFields(groupFields);
-
-                await RespondEmbedAsync(embedBuilder.Build(), isEphemeral: true);
+                    IsInline = true,
+                    Name = "Roles Added",
+                    Value = rolesToAddText
+                });
+                _logger.LogInformation("{intTag} Added roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
             }
-            catch (Exception ex)
+            if (rolesToRemove.Any())
             {
-                _logger.LogError(ex, "{intTag} Failed responding to interaction", GetIntTag());
-                await RespondErrorEmbedAsync(ex);
+                var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
+                _logger.LogDebug("{intTag} Removing roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
+                await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
+                groupFields.Add(new EmbedFieldBuilder()
+                {
+                    IsInline = true,
+                    Name = "Roles Removed",
+                    Value = rolesToRemoveText
+                });
+                _logger.LogInformation("{intTag} Removed roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
             }
+            if (rolesInvalid.Any())
+            {
+                var rolesInvalidText = string.Join(", ", rolesInvalid);
+                groupFields.Add(new EmbedFieldBuilder()
+                {
+                    IsInline = true,
+                    Name = "Invalid Roles",
+                    Value = rolesInvalidText
+                });
+                _logger.LogWarning("{intTag} Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", GetIntTag(), rolesInvalidText, roleGroup, gUser.Log());
+            }
+
+            if (!groupFields.Any())
+            {
+                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                return;
+            }
+
+            var embedBuilder = DiscordUtils.EmbedBuilder("Roles Updated")
+                .WithFields(groupFields);
+
+            await RespondEmbedAsync(embedBuilder.Build(), isEphemeral: true);
         }
         #endregion
 
