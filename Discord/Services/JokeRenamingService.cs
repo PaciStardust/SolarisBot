@@ -5,6 +5,7 @@ using SolarisBot.Database;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using SolarisBot.Discord.Common;
 
 namespace SolarisBot.Discord.Services
 {

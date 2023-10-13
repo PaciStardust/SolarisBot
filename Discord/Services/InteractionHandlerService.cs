@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SolarisBot.Discord.Common;
 
 namespace SolarisBot.Discord.Services
 {
@@ -85,8 +86,7 @@ namespace SolarisBot.Discord.Services
             if (!result.IsSuccess)
             {
                 _logger.LogError("Failed executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
-                var responseEmbed = DiscordUtils.EmbedError($"Error - {result.Error!}", result.ErrorReason); //todo: [REFACTOR] remove title, move?
-                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+                await context.Interaction.ReplyErrorAsync($"{result.Error!}: {result.ErrorReason}");
             }
         }
 
@@ -95,25 +95,21 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
         {
-            var paramInfo = string.Join(", ", cmdInfo.Parameters);
-
             if (result.IsSuccess)
             {
-                _logger.LogInformation("Executed interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                _logger.LogInformation("Executed interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
                 return;
             }
 
             if (result is ExecuteResult exeResult)
             {
-                _logger.LogError(exeResult.Exception, "Failed to execute interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
-                var responseEmbed = DiscordUtils.EmbedError($"Error - {exeResult.Exception.GetType().Name}", exeResult.Exception.Message);
-                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+                _logger.LogError(exeResult.Exception, "Failed to execute interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                await context.Interaction.ReplyErrorAsync($"{exeResult.Exception.GetType().Name}: {exeResult.Exception.Message}");
             }
             else
             {
-                _logger.LogError("Failed to execute interaction \"{interactionModule}\"(Module {module}, Params {parameters}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo.Name, cmdInfo.Module, paramInfo, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
-                var responseEmbed = DiscordUtils.EmbedError($"Error - {result.Error!}", result.ErrorReason);
-                await context.Interaction.RespondAsync(embed: responseEmbed, ephemeral: true);
+                _logger.LogError("Failed to execute interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo.Name, cmdInfo.Module, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
+                await context.Interaction.ReplyErrorAsync($"{result.Error!}: {result.ErrorReason}");
             }
         }
     }

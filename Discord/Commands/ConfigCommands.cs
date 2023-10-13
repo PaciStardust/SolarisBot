@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using SolarisBot.Discord.Common;
 using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Commands
@@ -17,7 +18,6 @@ namespace SolarisBot.Discord.Commands
             _dbContext = dbctx;
             _logger = logger;
         }
-        protected override ILogger? GetLogger() => _logger;
 
         [SlashCommand("vouching", "Set up vouching (Not setting either disables vouching)")]
         public async Task ConfigVouchingAsync(IRole? permission, IRole? vouch)
@@ -30,7 +30,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
-            await RespondEmbedAsync("Vouching Configured", $"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**");
+            await Interaction.ReplyAsync($"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**");
         }
 
         [SlashCommand("magic", "Set up magic role (Not setting role disables it)")]
@@ -46,7 +46,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
-            await RespondEmbedAsync("Magic Configured", $"Magic is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
+            await Interaction.ReplyAsync($"Magic is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
         }
 
         [SlashCommand("joke-rename", "Set up joke renaming (Timeout in seconds)")]
@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, mintimeout, maxtimeout, Context.Guild.Log());
-            await RespondEmbedAsync("Joke Renaming Configured", $"Joke Renaming is currently **{(enabled ? "enabled" : "disabled")}**\n\nTime: **{mintimeout} - {maxtimeout} seconds**");
+            await Interaction.ReplyAsync($"Joke Renaming is currently **{(enabled ? "enabled" : "disabled")}**\n\nTime: **{mintimeout} - {maxtimeout} seconds**");
         }
 
         [SlashCommand("joke-rename-reset", "Reset joke rename cooldowns")]
@@ -71,9 +71,9 @@ namespace SolarisBot.Discord.Commands
             var deleted = await _dbContext.JokeTimeouts.Where(x => x.GuildId == Context.Guild.Id).ExecuteDeleteAsync();
             _logger.LogInformation("{intTag} Deleted all {delCount} joke timeout cooldowns for guild {guild}", GetIntTag(), deleted, Context.Guild.Log());
             if (deleted == 0)
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
             else
-                await RespondEmbedAsync("Joke Timeouts Deleted", $"Successfully deleted all **{deleted}** joke timeouts for this guild");
+                await Interaction.ReplyAsync($"Successfully deleted all **{deleted}** joke timeouts for this guild");
         }
 
         [SlashCommand("auto-role", "Set a join role")]
@@ -85,7 +85,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Setting auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await RespondEmbedAsync("Auto-Role Configured", $"Auto-Role is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+            await Interaction.ReplyAsync($"Auto-Role is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
 
         [SlashCommand("spellcheck", "Set a spellcheck role")]
@@ -97,7 +97,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Setting spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await RespondEmbedAsync("Spellcheck Configured", $"Spellcheck is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+            await Interaction.ReplyAsync($"Spellcheck is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using SolarisBot.Discord.Common;
 using System.Timers;
 
 namespace SolarisBot.Discord.Services
@@ -67,7 +68,7 @@ namespace SolarisBot.Discord.Services
                     if (channel is not null && channel is IMessageChannel msgChannel)
                     {
                         _logger.LogDebug("Reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
-                        var embed = DiscordUtils.Embed($"Reminder", $"**{reminder.Text}**\n*(Created <t:{reminder.Created}:f>)*");
+                        var embed = EmbedFactory.Default($"**{reminder.Text}**\n*(Created <t:{reminder.Created}:f>)*");
                         await msgChannel.SendMessageAsync($"Here is your reminder <@{reminder.UserId}>!", embed: embed);
                         _logger.LogInformation("Reminded user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                     }

@@ -1,9 +1,9 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using SolarisBot.Discord.Common;
 using System.Text;
 
 namespace SolarisBot.Discord.Commands
@@ -18,7 +18,6 @@ namespace SolarisBot.Discord.Commands
             _dbContext = dbctx;
             _logger = logger;
         }
-        protected override ILogger? GetLogger() => _logger;
 
         #region Admin
         [SlashCommand("view-all", "[MANAGE ROLES ONLY] View all roles and groups (Including empty ones)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
@@ -28,7 +27,7 @@ namespace SolarisBot.Discord.Commands
 
             if (roleGroups.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
@@ -43,7 +42,7 @@ namespace SolarisBot.Discord.Commands
                     return $"{title}\n{rolesText}";
                 });
 
-            await RespondEmbedAsync("List of Assignable Roles", string.Join("\n\n", strings));
+            await Interaction.ReplyAsync("List of Assignable Roles", string.Join("\n\n", strings));
         }
 
         [SlashCommand("group-create", "[MANAGE ROLES ONLY] Create role group"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
@@ -53,12 +52,12 @@ namespace SolarisBot.Discord.Commands
             var descriptionTrimmed = description.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierTrimmed))
             {
-                await RespondInvalidIdentifierErrorEmbedAsync(identifierTrimmed);
+                await ReplyInvalidIdentifierErrorEmbedAsync(identifierTrimmed);
                 return;
             }
             if (descriptionTrimmed.Length > 200)
             {
-                await RespondInvalidInputErrorEmbedAsync("Descriptions must be 200 characters or shorter");
+                await Interaction.ReplyErrorAsync("Descriptions must be 200 characters or shorter");
                 return;
             }
 
@@ -78,7 +77,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            await RespondEmbedAsync($"Role Group {logVerb}ed", $"Identifier: **{roleGroup.Identifier}**\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
+            await Interaction.ReplyAsync($"Role Group **\"{roleGroup.Identifier}\"** {logVerb}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
 
         [SlashCommand("group-delete", "[MANAGE ROLES ONLY] Delete a role group"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
@@ -87,7 +86,7 @@ namespace SolarisBot.Discord.Commands
             var identifierTrimmed = identifier.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierTrimmed))
             {
-                await RespondInvalidIdentifierErrorEmbedAsync(identifierTrimmed);
+                await ReplyInvalidIdentifierErrorEmbedAsync(identifierTrimmed);
                 return;
             }
 
@@ -95,7 +94,7 @@ namespace SolarisBot.Discord.Commands
             var match = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == identifierSearch);
             if (match is null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
@@ -104,7 +103,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Deleting role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Deleted role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
-            await RespondEmbedAsync("Role Group Deleted", $"The role group with the identifier **\"{identifierTrimmed}\"** has been deleted");
+            await Interaction.ReplyAsync("The role group with the identifier **\"{identifierTrimmed}\"** has been deleted");
         }
 
         [SlashCommand("role-register", "[MANAGE ROLES ONLY] Register role group"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
@@ -120,32 +119,32 @@ namespace SolarisBot.Discord.Commands
             var identifierValid = DiscordUtils.IsIdentifierValid(identifierTrimmed);
             if (!identifierValid || !DiscordUtils.IsIdentifierValid(groupSearch))
             {
-                await RespondInvalidIdentifierErrorEmbedAsync(identifierValid ? groupSearch : identifierTrimmed);
+                await ReplyInvalidIdentifierErrorEmbedAsync(identifierValid ? groupSearch : identifierTrimmed);
                 return;
             }
             if (descriptionTrimmed.Length > 200)
             {
-                await RespondInvalidInputErrorEmbedAsync("Descriptions must be 200 characters or shorter");
+                await Interaction.ReplyErrorAsync("Descriptions must be 200 characters or shorter");
                 return;
             }
 
             if (await _dbContext.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
             {
-                await RespondErrorEmbedAsync("Already Registered", "Role is already registered");
+                await Interaction.ReplyErrorAsync("Role is already registered");
                 return;
             }
 
             var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
             if (roleGroup is null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
             var lowerIdentifierName = identifierTrimmed.ToLower();
             if (roleGroup.Roles.FirstOrDefault(x => x.Identifier.ToLower() == lowerIdentifierName) is not null)
             {
-                await RespondErrorEmbedAsync("Already Registered", "A Role with that identifier is already registered");
+                await Interaction.ReplyErrorAsync("A Role with that identifier is already registered");
                 return;
             }
 
@@ -162,7 +161,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Registered role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
-            await RespondEmbedAsync("Role Registered", $"Group: **{roleGroup.Identifier}**\nRole: **{role.Mention}**\nIdentifier: **{dbRole.Identifier}**\nDescription: **{(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}**");
+            await Interaction.ReplyAsync($"Role **\"{dbRole.Identifier}\"** registered\n\nGroup: **{roleGroup.Identifier}**\nRole: **{role.Mention}**\nDescription: **{(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}**");
         }
 
         [SlashCommand("role-unregister", "[MANAGE ROLES ONLY] Unregister a role"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
@@ -174,7 +173,7 @@ namespace SolarisBot.Discord.Commands
             var groupValid = DiscordUtils.IsIdentifierValid(groupSearch);
             if (!groupValid || !DiscordUtils.IsIdentifierValid(identifierSearch))
             {
-                await RespondInvalidIdentifierErrorEmbedAsync(groupValid ? identifierSearch : groupSearch);
+                await ReplyInvalidIdentifierErrorEmbedAsync(groupValid ? identifierSearch : groupSearch);
                 return;
             }
 
@@ -182,7 +181,7 @@ namespace SolarisBot.Discord.Commands
             var dbRole = dbGroup?.Roles.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch);
             if (dbRole is null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
@@ -191,7 +190,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), dbRole);
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Unregistered role {role} from groups", GetIntTag(), dbRole);
-            await RespondEmbedAsync("Role Unegistered", $"A role with the identifier **\"{identifierSearch}\"** has been unregistered");
+            await Interaction.ReplyAsync($"A role with the identifier **\"{identifierSearch}\"** has been unregistered");
         }
         #endregion
 
@@ -203,7 +202,7 @@ namespace SolarisBot.Discord.Commands
 
             if (roleGroups.Length == 0)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
@@ -243,15 +242,16 @@ namespace SolarisBot.Discord.Commands
 
             if (!groupFields.Any())
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
-            var embedBuilder = DiscordUtils.EmbedBuilder("Self-Assignable Roles")
+            var embedBuilder = EmbedFactory.Builder()
+                .WithTitle("Self-Assignable Roles")
                 .WithFields(groupFields)
                 .WithFooter("Use \"/roles select\" to pick roles");
 
-            await RespondEmbedAsync(embedBuilder.Build());
+            await Interaction.ReplyAsync(embedBuilder.Build());
         }
 
         [SlashCommand("select", "Select roles from a group"), RequireBotPermission(ChannelPermission.ManageRoles)]
@@ -261,7 +261,7 @@ namespace SolarisBot.Discord.Commands
             var groupSearch = group.Trim().ToLower();
             if (!DiscordUtils.IsIdentifierValid(groupSearch))
             {
-                await RespondInvalidIdentifierErrorEmbedAsync(group);
+                await ReplyInvalidIdentifierErrorEmbedAsync(group);
                 return;
             }
 
@@ -269,13 +269,13 @@ namespace SolarisBot.Discord.Commands
             var roles = dbGroup?.Roles;
             if (roles is null || !roles.Any())
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
             if (dbGroup!.RequiredRoleId != ulong.MinValue && !gUser.Roles.Select(x => x.Id).Contains(dbGroup.RequiredRoleId))
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
+                await Interaction.ReplyErrorAsync(GenericError.Forbidden);
                 return;
             }
 
@@ -306,19 +306,19 @@ namespace SolarisBot.Discord.Commands
             var gUser = GetGuildUser()!;
             if (selections.Length == 0)
             {
-                await RespondInvalidInputErrorEmbedAsync("No selections have been made");
+                await Interaction.ReplyErrorAsync("No selections have been made");
                 return;
             }
             if (!ulong.TryParse(rgid, out var parsedGid))
             {
-                await RespondInvalidInputErrorEmbedAsync($"Could not parse RGId **{rgid}**");
+                await Interaction.ReplyErrorAsync($"Could not parse RGId **{rgid}**");
                 return;
             }
 
             var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid && x.GuildId == gUser.Guild.Id);
             if (roleGroup is null)
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
@@ -401,20 +401,21 @@ namespace SolarisBot.Discord.Commands
 
             if (!groupFields.Any())
             {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.NoResults);
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
-            var embedBuilder = DiscordUtils.EmbedBuilder("Roles Updated")
+            var embedBuilder = EmbedFactory.Builder()
+                .WithTitle("Roles Updated")
                 .WithFields(groupFields);
 
-            await RespondEmbedAsync(embedBuilder.Build(), isEphemeral: true);
+            await Interaction.ReplyAsync(embedBuilder.Build(), isEphemeral: true);
         }
         #endregion
 
         #region Utils
-        private async Task RespondInvalidIdentifierErrorEmbedAsync(string identifier) 
-            =>  await RespondInvalidInputErrorEmbedAsync($"Identifier **{identifier}** is invalid\n\nIdentifiers can only contain letters, numbers, and spaces and must be between 2 and 20 characters long");
+        private async Task ReplyInvalidIdentifierErrorEmbedAsync(string identifier) 
+            =>  await Interaction.ReplyErrorAsync($"Identifier **{identifier}** is invalid, identifiers can only contain letters, numbers, and spaces and must be between 2 and 20 characters long");
         #endregion
     }
 }
