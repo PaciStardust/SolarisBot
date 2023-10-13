@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Commands
         protected override ILogger? GetLogger() => _logger;
 
         #region Create
-        [SlashCommand("config", "[MANAGE ROLES ONLY] Set up custom color creation (Not setting disabled it)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
+        [SlashCommand("config", "[MANAGE ROLES ONLY] Set up custom color creation (Not setting disabled it)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)] //todo: [FEATURE] Move these perhaps
         public async Task ConfigureCustomColorAsync(IRole? creationrole = null)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);

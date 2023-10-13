@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Commands
 {
-    [Group("config", "[MANAGE GUILD ONLY] Configure other Solaris features"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)] //todo: [FEATURE] convert to better attibutes
+    [Group("config", "[MANAGE GUILD ONLY] Configure other Solaris features"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)]
     public sealed class ConfigCommands : SolarisInteractionModuleBase //todo: [FEATURE] How do other bots handle permission stuff?
     {
         private readonly ILogger<ConfigCommands> _logger;
