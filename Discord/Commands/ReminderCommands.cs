@@ -98,7 +98,7 @@ namespace SolarisBot.Discord.Commands
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
 
-            await Interaction.ReplyAsync($"Created reminder #{dbReminder.ReminderId}: **{text}**\n*(Reminding <t:{timestamp}:f>)*");
+            await Interaction.ReplyAsync($"Reminder #{dbReminder.ReminderId}: **{text}**\n*(Reminding <t:{timestamp}:f>)*");
         }
 
         [SlashCommand("create-in", "Create a reminder in x time")] //todo: [FEATURE] Creation w timestamp? DateTime Timezone?

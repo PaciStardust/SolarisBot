@@ -77,7 +77,7 @@ namespace SolarisBot.Discord.Commands
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Role Group **\"{roleGroup.Identifier}\"** {logVerb}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
+            await Interaction.ReplyAsync($"Role group **\"{roleGroup.Identifier}\"** {logVerb.ToLower()}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
 
         [SlashCommand("group-delete", "[MANAGE ROLES ONLY] Delete a role group"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]

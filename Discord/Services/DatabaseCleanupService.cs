@@ -45,7 +45,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles all OnUserLeft events
         /// </summary>
-        private async Task OnUserLeftHandleAsync(SocketGuild guild, SocketUser user) //todo: [TEST] Test new OnUserLeft
+        private async Task OnUserLeftHandleAsync(SocketGuild guild, SocketUser user)
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
 
@@ -96,7 +96,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Cleans up any role references in DB for deleted role
         /// </summary>
-        private async Task OnRoleDeletedHandleAsync(SocketRole role) //todo: [TEST] Test new OnRoleDeleted
+        private async Task OnRoleDeletedHandleAsync(SocketRole role)
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             
