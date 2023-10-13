@@ -23,8 +23,9 @@ namespace SolarisBot.Discord.Commands
         public async Task VouchUserAsync(IUser user)
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            var gUser = GetGuildUser();
 
-            if (Context.User is not SocketGuildUser gUser || user is not SocketGuildUser gTargetUser || dbGuild is null //Not a guild or no dbguild
+            if (gUser is null || user is not SocketGuildUser gTargetUser || dbGuild is null //Not a guild or no dbguild
                 || dbGuild.VouchPermissionRoleId == ulong.MinValue || dbGuild.VouchRoleId == ulong.MinValue //Vouching not set up
                 || gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) is null) //User can vouch
             {

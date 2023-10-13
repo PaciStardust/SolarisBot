@@ -54,12 +54,7 @@ namespace SolarisBot.Discord.Commands
 
         private async Task SetRoleColorAsync(Color color)
         {
-            if (Context.User is not SocketGuildUser gUser)
-            {
-                await RespondErrorEmbedAsync(EmbedGenericErrorType.Forbidden);
-                return;
-            }
-
+            var gUser = GetGuildUser()!;
             var roleName = DiscordUtils.GetCustomColorRoleName(gUser);
             var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
 

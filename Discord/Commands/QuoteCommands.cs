@@ -106,7 +106,8 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("delete", "Delete a quote by ID")]
         public async Task DeleteQuoteAsync(ulong id)
         {
-            bool isAdmin = Context.User is IGuildUser user && user.GuildPermissions.ManageMessages;
+            var user = GetGuildUser()!;
+            bool isAdmin = user?.GuildPermissions.ManageMessages ?? false;
 
             var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QuoteId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GuildId)));
             if (dbQuote is null)
