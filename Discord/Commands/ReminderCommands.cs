@@ -144,7 +144,7 @@ namespace SolarisBot.Discord.Commands
             _dbContext.Reminders.Remove(reminder);
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Deleted reminder {reminder} from user {user} in DB", GetIntTag(), reminder, Context.User.Log());
-            await Interaction.ReplyAsync($"Deleted reminder: {reminder.Text}", isEphemeral: true);
+            await Interaction.ReplyAsync($"Deleted reminder #{reminder.ReminderId}", isEphemeral: true);
         }
     }
 }
