@@ -93,7 +93,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles the result of an interaction
         /// </summary>
-        private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
+        private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result) //todo: [BUG] Module info missing
         {
             if (result.IsSuccess)
             {

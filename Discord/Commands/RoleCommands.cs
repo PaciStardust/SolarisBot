@@ -9,7 +9,7 @@ using System.Text;
 namespace SolarisBot.Discord.Commands
 {
     [Group("roles", "Role related commands"), RequireContext(ContextType.Guild)] //todo: [FEATURE] Color of the day Role, permanent role selectors?
-    public sealed class RoleCommands : SolarisInteractionModuleBase
+    public sealed class RoleCommands : SolarisInteractionModuleBase //todo: [BUG] Better tooltip for select
     {
         private readonly ILogger<RoleCommands> _logger;
         private readonly DatabaseContext _dbContext;
