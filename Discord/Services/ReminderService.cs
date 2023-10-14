@@ -17,7 +17,7 @@ namespace SolarisBot.Discord.Services
         private readonly IServiceProvider _provider;
         private readonly System.Timers.Timer _timer;
 
-        public ReminderService(ILogger<ReminderService> logger, DiscordSocketClient client, IServiceProvider provider)
+        public ReminderService(ILogger<ReminderService> logger, DiscordSocketClient client, IServiceProvider provider) //todo: [BUG] Reminder deletion text formatiing
         {
             _client = client;
             _provider = provider;
