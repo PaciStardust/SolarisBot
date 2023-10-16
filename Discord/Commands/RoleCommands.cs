@@ -9,7 +9,7 @@ using System.Text;
 namespace SolarisBot.Discord.Commands
 {
     [Group("roles", "Role related commands"), RequireContext(ContextType.Guild)] //todo: [FEATURE] Color of the day Role, permanent role selectors?
-    public sealed class RoleCommands : SolarisInteractionModuleBase //todo: [BUG] Better tooltip for select
+    public sealed class RoleCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RoleCommands> _logger;
         private readonly DatabaseContext _dbContext;
@@ -249,7 +249,7 @@ namespace SolarisBot.Discord.Commands
             var embedBuilder = EmbedFactory.Builder()
                 .WithTitle("Self-Assignable Roles")
                 .WithFields(groupFields)
-                .WithFooter("Use \"/roles select\" to pick roles");
+                .WithFooter("Use \"/roles select *[groupname]*\" to pick roles from a group");
 
             await Interaction.ReplyAsync(embedBuilder.Build());
         }
