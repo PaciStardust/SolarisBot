@@ -58,7 +58,7 @@ namespace SolarisBot.Discord.Services
 
             var timeOut = guild.JokeTimeouts.FirstOrDefault(x => x.UserId == gUser.Id);
             var currTime = Utils.GetCurrentUnix(_logger);
-            if (timeOut is not null && timeOut.NextUse > currTime) //todo: [FEATURE] Delete old timeout?
+            if (timeOut is not null && timeOut.NextUse > currTime)
                 return;
 
             timeOut ??= new()
