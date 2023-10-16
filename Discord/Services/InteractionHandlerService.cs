@@ -93,11 +93,11 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles the result of an interaction
         /// </summary>
-        private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result) //todo: [BUG] Module info missing
+        private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
         {
             if (result.IsSuccess)
             {
-                _logger.LogInformation("Executed interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                _logger.LogInformation("Executed interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo.Name, cmdInfo.Module.Name, context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
                 return;
             }
 
