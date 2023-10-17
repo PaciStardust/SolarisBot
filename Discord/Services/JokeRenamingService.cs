@@ -33,7 +33,7 @@ namespace SolarisBot.Discord.Services
             return Task.CompletedTask;
         }
 
-        private static readonly Regex _amVerification = new(@"\b(?:am|i'?m) +(.+)$", RegexOptions.IgnoreCase);
+        private static readonly Regex _amVerification = new(@"\b(?:am(?!\s+i)|i'?m)\s+(.+)$", RegexOptions.IgnoreCase);
         /// <summary>
         /// Automatically renames a user after saying "I am..." when enabled
         /// </summary>

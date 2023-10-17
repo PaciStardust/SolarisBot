@@ -49,7 +49,7 @@ namespace SolarisBot.Discord.Commands
             await Interaction.ReplyAsync($"Magic is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
         }
 
-        [SlashCommand("joke-rename", "Set up joke renaming (Timeout in seconds)")] //todo: [BUG] Faulty regex, always enabled for some reason, error on missing perms
+        [SlashCommand("joke-rename", "Set up joke renaming (Timeout in seconds)")]
         public async Task ConfigureJokeRenameAsync(bool enabled, [MinValue(ulong.MinValue), MaxValue(2.628e+6)] ulong mintimeout = 1800, [MinValue(ulong.MinValue), MaxValue(2.628e+6)] ulong maxtimeout = 86400)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
@@ -89,7 +89,7 @@ namespace SolarisBot.Discord.Commands
         }
 
         [SlashCommand("spellcheck", "Set a spellcheck role")]
-        public async Task SetSpellcheckRoleAsync(IRole? role = null)
+        public async Task SetSpellcheckRoleAsync(IRole? role = null) //todo: [FEATURE] Attach to user instead?
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
             guild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;
