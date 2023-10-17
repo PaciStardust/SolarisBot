@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Commands
 {
@@ -26,13 +27,16 @@ namespace SolarisBot.Discord.Commands
             var gUser = GetGuildUser();
 
             if (gUser is null || user is not SocketGuildUser gTargetUser || dbGuild is null //Not a guild or no dbguild
-                || dbGuild.VouchPermissionRoleId == ulong.MinValue || dbGuild.VouchRoleId == ulong.MinValue //Vouching not set up
-                || gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) is null) //User can vouch
+                || dbGuild.VouchPermissionRoleId == ulong.MinValue || dbGuild.VouchRoleId == ulong.MinValue) //Vouching not set up
             {
-                await Interaction.ReplyErrorAsync(GenericError.Forbidden);
+                await Interaction.ReplyErrorAsync("Vouching is not enabled in this guild");
                 return;
             }
-
+            if (gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) is null)
+            {
+                await Interaction.ReplyErrorAsync($"You do not have the required role <@&{dbGuild.VouchPermissionRoleId}>");
+                return;
+            }
             if (gTargetUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchRoleId) is not null)
             {
                 await Interaction.ReplyErrorAsync($"{gTargetUser.Mention} has already been vouched");
@@ -52,7 +56,7 @@ namespace SolarisBot.Discord.Commands
 
             if (dbGuild is null || dbGuild.MagicRoleId == ulong.MinValue)
             {
-                await Interaction.ReplyErrorAsync(GenericError.Forbidden);
+                await Interaction.ReplyErrorAsync("Magic is not enabled in this guild");
                 return;
             }
 

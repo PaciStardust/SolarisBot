@@ -275,7 +275,7 @@ namespace SolarisBot.Discord.Commands
 
             if (dbGroup!.RequiredRoleId != ulong.MinValue && !gUser.Roles.Select(x => x.Id).Contains(dbGroup.RequiredRoleId))
             {
-                await Interaction.ReplyErrorAsync(GenericError.Forbidden);
+                await Interaction.ReplyErrorAsync($"You do not have the required role <@&{dbGroup.RequiredRoleId}>");
                 return;
             }
 
@@ -319,6 +319,12 @@ namespace SolarisBot.Discord.Commands
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                return;
+            }
+
+            if (roleGroup.RequiredRoleId != ulong.MinValue && !gUser.Roles.Any(x => x.Id == roleGroup.RequiredRoleId))
+            {
+                await Interaction.ReplyErrorAsync($"You do not have the required role <@&{roleGroup.RequiredRoleId}>");
                 return;
             }
 

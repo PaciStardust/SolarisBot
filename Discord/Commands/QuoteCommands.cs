@@ -66,7 +66,7 @@ namespace SolarisBot.Discord.Commands
             var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
             if (guild is null || !guild.QuotesOn)
             {
-                await Interaction.ReplyErrorAsync(GenericError.Forbidden);
+                await Interaction.ReplyErrorAsync("Quotes are not enabled in this guild");
                 return;
             }
 

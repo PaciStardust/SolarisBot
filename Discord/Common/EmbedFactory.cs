@@ -70,7 +70,6 @@ namespace SolarisBot.Discord.Common
             var data = genericError switch
             {
                 GenericError.NoResults => "Request yielded no results",
-                GenericError.Forbidden => "You do not have access to this feature",
                 _ => "An unknown error occured"
             };
             return Error(data);
@@ -80,7 +79,6 @@ namespace SolarisBot.Discord.Common
 
     internal enum GenericError
     {
-        NoResults,
-        Forbidden
+        NoResults
     }
 }

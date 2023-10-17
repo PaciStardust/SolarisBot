@@ -55,37 +55,42 @@ namespace SolarisBot.Discord.Commands
         private async Task SetRoleColorAsync(Color color)
         {
             var gUser = GetGuildUser()!;
-            var roleName = DiscordUtils.GetCustomColorRoleName(gUser);
-            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name == roleName);
+            var generatedRoleName = DiscordUtils.GetCustomColorRoleName(gUser);
+            var customColorRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == generatedRoleName);
 
-            var requiredRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
-            if (role is null && (requiredRole is null || requiredRole == ulong.MinValue || gUser.Roles.FirstOrDefault(x => x.Id == requiredRole) is null))
+            if (customColorRole is null)
             {
-                await Interaction.ReplyErrorAsync(GenericError.Forbidden);
-                return;
-            }
+                var permissionRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
+                if (permissionRole is null || permissionRole == ulong.MinValue)
+                {
+                    await Interaction.ReplyErrorAsync("Custom color roles are not enabled in this guild");
+                    return;
+                }
+                if (gUser.Roles.FirstOrDefault(x => x.Id == permissionRole) is null)
+                {
+                    await Interaction.ReplyErrorAsync($"You do not have the required role <@&{permissionRole}>");
+                    return;
+                }
 
-            if (role is null)
-            {
-                _logger.LogDebug("{intTag} Creating custom color role {roleName} for user {user} in guild {guild}", GetIntTag(), roleName, gUser.Log(), Context.Guild.Log());
-                role = await Context.Guild.CreateRoleAsync(roleName, color: color, isMentionable: false);
-                _logger.LogInformation("{intTag} Created custom color role {role} for user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
+                _logger.LogDebug("{intTag} Creating custom color role {roleName} for user {user} in guild {guild}", GetIntTag(), generatedRoleName, gUser.Log(), Context.Guild.Log());
+                customColorRole = await Context.Guild.CreateRoleAsync(generatedRoleName, color: color, isMentionable: false);
+                _logger.LogInformation("{intTag} Created custom color role {role} for user {user} in guild {guild}", GetIntTag(), customColorRole.Log(), gUser.Log(), Context.Guild.Log());
             }
             else
             {
-                _logger.LogDebug("{intTag} Modifying custom color role {role} for user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
-                await role.ModifyAsync(x => x.Color = color);
-                _logger.LogInformation("{intTag} Modified custom color role {role} for user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
+                _logger.LogDebug("{intTag} Modifying custom color role {role} for user {user} in guild {guild}", GetIntTag(), customColorRole.Log(), gUser.Log(), Context.Guild.Log());
+                await customColorRole.ModifyAsync(x => x.Color = color);
+                _logger.LogInformation("{intTag} Modified custom color role {role} for user {user} in guild {guild}", GetIntTag(), customColorRole.Log(), gUser.Log(), Context.Guild.Log());
             }
 
-            if (!gUser.Roles.Contains(role))
+            if (!gUser.Roles.Contains(customColorRole))
             {
-                _logger.LogDebug("{intTag} Adding custom color role {role} to user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
-                await gUser.AddRoleAsync(role);
-                _logger.LogInformation("{intTag} Added custom color role {role} to user {user} in guild {guild}", GetIntTag(), role.Log(), gUser.Log(), Context.Guild.Log());
+                _logger.LogDebug("{intTag} Adding custom color role {role} to user {user} in guild {guild}", GetIntTag(), customColorRole.Log(), gUser.Log(), Context.Guild.Log());
+                await gUser.AddRoleAsync(customColorRole);
+                _logger.LogInformation("{intTag} Added custom color role {role} to user {user} in guild {guild}", GetIntTag(), customColorRole.Log(), gUser.Log(), Context.Guild.Log());
             }
             
-            await Interaction.ReplyAsync($"Custom color role has been set to {role.Mention}", color, isEphemeral: true);
+            await Interaction.ReplyAsync($"Custom color role has been set to {customColorRole.Mention}", color, isEphemeral: true);
         }
         #endregion
 
