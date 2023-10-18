@@ -8,7 +8,7 @@ namespace SolarisBot.Database
         private readonly ILogger<DatabaseContext> _logger;
         private static bool _hasMigrated = false;
 
-        public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options) //todo: [REFACTOR] Use code first, convert to service
+        public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options)
         {
             _logger = logger;
             TryMigrate();

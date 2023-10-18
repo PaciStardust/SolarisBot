@@ -89,7 +89,7 @@ namespace SolarisBot.Discord.Commands
         }
 
         [SlashCommand("spellcheck", "Set a spellcheck role")]
-        public async Task SetSpellcheckRoleAsync(IRole? role = null) //todo: [FEATURE] Attach to user instead?
+        public async Task SetSpellcheckRoleAsync(IRole? role = null)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
             guild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;
