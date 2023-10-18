@@ -281,7 +281,7 @@ namespace SolarisBot.Discord.Commands
 
             var menuBuilder = new SelectMenuBuilder()
             {
-                CustomId = $"roleselector.{dbGroup.RoleGroupId}",
+                CustomId = $"solaris_roleselector.{dbGroup.RoleGroupId}",
                 Placeholder = dbGroup.AllowOnlyOne ? "Select a role..." : "Select roles...",
                 MaxValues = dbGroup.AllowOnlyOne ? 1 : roles.Count,
                 Type = ComponentType.SelectMenu
@@ -300,7 +300,7 @@ namespace SolarisBot.Discord.Commands
             await RespondAsync($"Roles in group {dbGroup.Identifier}:", components: compBuilder.Build(), ephemeral: true);
         }
 
-        [ComponentInteraction("roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
+        [ComponentInteraction("solaris_roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SelectRoleResponseAsync(string rgid, string[] selections)
         {
             var gUser = GetGuildUser()!;
