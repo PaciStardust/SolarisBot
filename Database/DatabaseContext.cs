@@ -41,7 +41,7 @@ namespace SolarisBot.Database
         /// <summary>
         /// Compiled Query for GetGuildByIdAsyn
         /// </summary>
-        private static readonly Func<DatabaseContext, ulong, Task<DbGuildSettings?>> GetGuildByIdCompiled
+        private static readonly Func<DatabaseContext, ulong, Task<DbGuildSettings?>> GetGuildByIdCompiled //todo: [REFACTOR] Overhaul data requests, remove lazy loading
             = EF.CompileAsyncQuery((DatabaseContext ctx, ulong id) => ctx.GuildSettings.FirstOrDefault(x => x.GuildId == id));
 
         /// <summary>
