@@ -195,7 +195,7 @@ namespace SolarisBot.Discord.Commands
         #endregion
 
         #region User
-        [SlashCommand("view", "View all roles and groups")]
+        [SlashCommand("view", "View all roles and groups")] //todo: [FEATURE] Single select
         public async Task ViewRolesAsync()
         {
             var roleGroups = await _dbContext.RoleGroups.Where(x => x.GuildId == Context.Guild.Id).ToArrayAsync();
@@ -249,7 +249,7 @@ namespace SolarisBot.Discord.Commands
             var embedBuilder = EmbedFactory.Builder()
                 .WithTitle("Self-Assignable Roles")
                 .WithFields(groupFields)
-                .WithFooter("Use \"/roles select *[groupname]*\" to pick roles from a group");
+                .WithFooter($"Use \"/roles select *[{groupFields.First().Name}|...]*\" to pick roles from a group");
 
             await Interaction.ReplyAsync(embedBuilder.Build());
         }
