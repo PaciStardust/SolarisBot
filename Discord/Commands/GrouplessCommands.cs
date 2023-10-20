@@ -78,7 +78,7 @@ namespace SolarisBot.Discord.Commands
             });
 
             dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
-            _dbContext.GuildSettings.Update(dbGuild);
+            _dbContext.GuildConfigs.Update(dbGuild);
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Used Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
             await Interaction.ReplyAsync($"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now", color);

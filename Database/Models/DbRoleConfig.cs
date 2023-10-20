@@ -3,7 +3,7 @@
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(RoleId))]
-    public class DbRoleSettings
+    public class DbRoleConfig
     {
         public ulong RoleId { get; set; } = ulong.MinValue;
         public ulong RoleGroupId { get; set; } = ulong.MinValue;
@@ -12,7 +12,7 @@ namespace SolarisBot.Database
 
         public virtual DbRoleGroup RoleGroup { get; set; } = null!;
 
-        public DbRoleSettings() { }
+        public DbRoleConfig() { }
 
         public override string ToString()
             => $"{Identifier}(Group {RoleGroupId})";

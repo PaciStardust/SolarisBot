@@ -14,10 +14,10 @@ namespace SolarisBot.Database
             TryMigrate();
         }
 
-        public DbSet<DbGuildSettings> GuildSettings { get; set; }
+        public DbSet<DbGuildConfig> GuildConfigs { get; set; }
         public DbSet<DbJokeTimeout> JokeTimeouts { get; set; }
         public DbSet<DbQuote> Quotes { get; set; }
-        public DbSet<DbRoleSettings> RoleSettings { get; set; }
+        public DbSet<DbRoleConfig> RoleConfigs { get; set; }
         public DbSet<DbRoleGroup> RoleGroups { get; set; }
         public DbSet<DbReminder> Reminders { get; set; }
 
@@ -41,15 +41,15 @@ namespace SolarisBot.Database
         /// <summary>
         /// Compiled Query for GetGuildByIdAsyn
         /// </summary>
-        private static readonly Func<DatabaseContext, ulong, Task<DbGuildSettings?>> GetGuildByIdCompiled //todo: [REFACTOR] Overhaul data requests, remove lazy loading
-            = EF.CompileAsyncQuery((DatabaseContext ctx, ulong id) => ctx.GuildSettings.FirstOrDefault(x => x.GuildId == id));
+        private static readonly Func<DatabaseContext, ulong, Task<DbGuildConfig?>> GetGuildByIdCompiled //todo: [REFACTOR] Overhaul data requests, remove lazy loading
+            = EF.CompileAsyncQuery((DatabaseContext ctx, ulong id) => ctx.GuildConfigs.FirstOrDefault(x => x.GuildId == id));
 
         /// <summary>
         /// Get an untracked guild by Id
         /// </summary>
         /// <param name="id">Guild ID</param>
         /// <returns>Guild matching ID or null, if no match is found or an error occured</returns>
-        internal async Task<DbGuildSettings?> GetGuildByIdAsync(ulong id)
+        internal async Task<DbGuildConfig?> GetGuildByIdAsync(ulong id)
             => await GetGuildByIdCompiled(this, id);
 
         /// <summary>
@@ -57,13 +57,13 @@ namespace SolarisBot.Database
         /// </summary>
         /// <param name="id">Guild ID</param>
         /// <returns>Tracked guild matching id, or a new instance, automatically added to database, or null on error</returns>
-        internal async Task<DbGuildSettings> GetOrCreateTrackedGuildAsync(ulong id)
+        internal async Task<DbGuildConfig> GetOrCreateTrackedGuildAsync(ulong id)
         {
-            var guild = await GuildSettings.AsTracking().FirstOrDefaultAsync(x => x.GuildId == id);
+            var guild = await GuildConfigs.AsTracking().FirstOrDefaultAsync(x => x.GuildId == id);
             if (guild is null)
             {
                 guild = new() { GuildId = id };
-                GuildSettings.Add(guild);
+                GuildConfigs.Add(guild);
             }
             return guild;
         }
@@ -90,12 +90,12 @@ namespace SolarisBot.Database
                 {
                     var queries = new string[]{
                         "PRAGMA foreign_keys = ON",
-                        "CREATE TABLE GuildSettings(GuildId INTEGER PRIMARY KEY, VouchRoleId INTEGER NOT NULL DEFAULT 0, VouchPermissionRoleId INTEGER NOT NULL DEFAULT 0, CustomColorPermissionRoleId INTEGER NOT NULL DEFAULT 0, JokeRenameOn BOOL NOT NULL DEFAULT 0, JokeRenameTimeoutMin INTEGER NOT NULL DEFAULT 0, JokeRenameTimeoutMax INTEGER NOT NULL DEFAULT 0, MagicRoleId INTEGER NOT NULL DEFAULT 0, MagicRoleTimeout INTEGER NOT NULL DEFAULT 0, MagicRoleNextUse INTEGER NOT NULL DEFAULT 0, MagicRoleRenameOn BOOL NOT NULL DEFAULT 0, RemindersOn BOOL NOT NULL DEFAULT 0, QuotesOn BOOL NOT NULL DEFAULT 0, AutoRoleId INTEGER NOT NULL DEFAULT 0, SpellcheckRoleId INTEGER NOT NULL DEFAULT 0)",
-                        "CREATE TABLE RoleGroups(RoleGroupId INTEGER PRIMARY KEY AUTOINCREMENT, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", AllowOnlyOne BOOL NOT NULL DEFAULT 0, RequiredRoleId INTEGER NOT NULL DEFAULT 0, UNIQUE(GuildId, Identifier))",
-                        "CREATE TABLE RoleSettings(RoleId INTEGER PRIMARY KEY, RoleGroupId INTEGER REFERENCES RoleGroups(RoleGroupId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", UNIQUE(RoleGroupId, Identifier))",
-                        "CREATE TABLE Quotes(QuoteId INTEGER PRIMARY KEY, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, Text TEXT NOT NULL DEFAULT \"\", AuthorId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, CreatorId INTEGER NOT NULL DEFAULT 0, ChannelId INTEGER NOT NULL DEFAULT 0, MessageId INTEGER NOT NULL DEFAULT 0, UNIQUE(MessageId), UNIQUE(AuthorId, GuildId, Text))",
-                        "CREATE TABLE JokeTimeouts(JokeTimeoutId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, NextUse INTEGER NOT NULL DEFAULT 0, UNIQUE(GuildId, UserId))",
-                        "CREATE TABLE Reminders(ReminderId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GuildId INTEGER REFERENCES GuildSettings(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, ChannelId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, Created INTEGER NOT NULL DEFAULT 0, Text TEXT NOT NULL DEFAULT \"\", UNIQUE(GuildId, UserId, Text))"
+                        "CREATE TABLE GuildConfigs(GuildId INTEGER PRIMARY KEY, VouchRoleId INTEGER NOT NULL DEFAULT 0, VouchPermissionRoleId INTEGER NOT NULL DEFAULT 0, CustomColorPermissionRoleId INTEGER NOT NULL DEFAULT 0, JokeRenameOn BOOL NOT NULL DEFAULT 0, JokeRenameTimeoutMin INTEGER NOT NULL DEFAULT 0, JokeRenameTimeoutMax INTEGER NOT NULL DEFAULT 0, MagicRoleId INTEGER NOT NULL DEFAULT 0, MagicRoleTimeout INTEGER NOT NULL DEFAULT 0, MagicRoleNextUse INTEGER NOT NULL DEFAULT 0, MagicRoleRenameOn BOOL NOT NULL DEFAULT 0, RemindersOn BOOL NOT NULL DEFAULT 0, QuotesOn BOOL NOT NULL DEFAULT 0, AutoRoleId INTEGER NOT NULL DEFAULT 0, SpellcheckRoleId INTEGER NOT NULL DEFAULT 0)",
+                        "CREATE TABLE RoleGroups(RoleGroupId INTEGER PRIMARY KEY AUTOINCREMENT, GuildId INTEGER REFERENCES GuildConfigs(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", AllowOnlyOne BOOL NOT NULL DEFAULT 0, RequiredRoleId INTEGER NOT NULL DEFAULT 0, UNIQUE(GuildId, Identifier))",
+                        "CREATE TABLE RoleConfigs(RoleId INTEGER PRIMARY KEY, RoleGroupId INTEGER REFERENCES RoleGroups(RoleGroupId) ON DELETE CASCADE ON UPDATE CASCADE, Identifier TEXT NOT NULL DEFAULT \"\", Description TEXT NOT NULL DEFAULT \"\", UNIQUE(RoleGroupId, Identifier))",
+                        "CREATE TABLE Quotes(QuoteId INTEGER PRIMARY KEY, GuildId INTEGER REFERENCES GuildConfigs(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, Text TEXT NOT NULL DEFAULT \"\", AuthorId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, CreatorId INTEGER NOT NULL DEFAULT 0, ChannelId INTEGER NOT NULL DEFAULT 0, MessageId INTEGER NOT NULL DEFAULT 0, UNIQUE(MessageId), UNIQUE(AuthorId, GuildId, Text))",
+                        "CREATE TABLE JokeTimeouts(JokeTimeoutId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GuildId INTEGER REFERENCES GuildConfigs(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, NextUse INTEGER NOT NULL DEFAULT 0, UNIQUE(GuildId, UserId))",
+                        "CREATE TABLE Reminders(ReminderId INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL DEFAULT 0, GuildId INTEGER REFERENCES GuildConfigs(GuildId) ON DELETE CASCADE ON UPDATE CASCADE, ChannelId INTEGER NOT NULL DEFAULT 0, Time INTEGER NOT NULL DEFAULT 0, Created INTEGER NOT NULL DEFAULT 0, Text TEXT NOT NULL DEFAULT \"\", UNIQUE(GuildId, UserId, Text))"
                     };
 
                     foreach (var query in queries)

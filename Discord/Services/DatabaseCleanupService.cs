@@ -119,12 +119,12 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task<bool> OnRoleDeletedCleanRoleSettingsAsync(DatabaseContext dbCtx, SocketRole role)
         {
-            var dbRole = await dbCtx.RoleSettings.FirstOrDefaultAsync(x => x.RoleId == role.Id);
+            var dbRole = await dbCtx.RoleConfig.FirstOrDefaultAsync(x => x.RoleId == role.Id);
             if (dbRole is null)
                 return false;
 
             _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-            dbCtx.RoleSettings.Remove(dbRole);
+            dbCtx.RoleConfig.Remove(dbRole);
             return true;
         }
 
@@ -213,7 +213,7 @@ namespace SolarisBot.Discord.Services
                 return;
 
             _logger.LogDebug("Removing guild for deleted guild {guild}", guild.Log());
-            dbCtx.GuildSettings.Remove(dbGuild);
+            dbCtx.GuildConfigs.Remove(dbGuild);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
                 _logger.LogError(err, "Failed to remove guild for deleted guild {guild}", guild.Log());

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(GuildId))]
-    public class DbGuildSettings
+    public class DbGuildConfig
     {
         public ulong GuildId { get; set; } = ulong.MinValue;
         public ulong VouchRoleId { get; set; } = ulong.MinValue;
@@ -31,6 +31,6 @@ namespace SolarisBot.Database
         [ForeignKey(nameof(DbReminder.GuildId))]
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
 
-        public DbGuildSettings() { } //To avoid defaults not setting
+        public DbGuildConfig() { } //To avoid defaults not setting
     }
 }
