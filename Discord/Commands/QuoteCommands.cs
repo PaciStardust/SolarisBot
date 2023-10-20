@@ -96,7 +96,7 @@ namespace SolarisBot.Discord.Commands
             };
 
             _logger.LogDebug("{intTag} Adding quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
-            _dbContext.Quotes.Add(dbQuote);
+            guild.Quotes.Add(dbQuote);
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Added quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
             await Interaction.ReplyAsync(GetQuoteEmbed(dbQuote));
