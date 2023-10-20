@@ -87,7 +87,7 @@ namespace SolarisBot.Discord.Services
                 return false;
 
             _logger.LogDebug("Removing {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
-            var err = await RemoveRemindersAsync(reminders, dbCtx); //todo: [REFACTOR] Why is this unassigned?
+            var err = await RemoveRemindersAsync(reminders, dbCtx); //todo: [REFACTOR] Fix this logic
             return true;
         }
         #endregion
