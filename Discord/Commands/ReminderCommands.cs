@@ -37,7 +37,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("wipe", "[MANAGE MESSAGES ONLY] Wipe reminders"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(GuildPermission.ManageMessages)]
         public async Task WipeRemindersAsync(IChannel? channel = null)
         {
-            var query = _dbContext.Reminders.Where(x => x.GuildId == Context.Guild.Id);
+            var query = _dbContext.Reminders.ForGuild(Context.Guild.Id);
             if (channel is not null)
                 query.Where(x => x.ChannelId == channel.Id);
 
@@ -71,7 +71,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var userReminders = await _dbContext.Reminders.Where(x => x.UserId == Context.User.Id).ToListAsync();
+            var userReminders = await _dbContext.Reminders.ForUser(Context.User.Id).ToListAsync();
             if (userReminders.Count >= _botConfig.MaxRemindersPerUser)
             {
                 await Interaction.ReplyErrorAsync($"Reached maximum reminder count of **{_botConfig.MaxRemindersPerUser}**");
@@ -118,7 +118,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("list", "List your reminders")]
         public async Task ListRemindersAsync()
         {
-            var reminders = await _dbContext.Reminders.Where(x => x.UserId == Context.User.Id).ToArrayAsync();
+            var reminders = await _dbContext.Reminders.ForUser(Context.User.Id).ToArrayAsync();
 
             if (reminders.Length == 0)
             {
@@ -133,7 +133,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("delete", "Delete a reminder")]
         public async Task DeleteReminder(ulong id)
         {
-            var reminder = await _dbContext.Reminders.FirstOrDefaultAsync(x => x.ReminderId == id && x.UserId == Context.User.Id);
+            var reminder = await _dbContext.Reminders.ForUser(Context.User.Id).FirstOrDefaultAsync(x => x.ReminderId == id);
             if (reminder is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);

@@ -68,7 +68,7 @@ namespace SolarisBot.Discord.Commands
         public async Task JokeRenameResetCooldownsAsync()
         {
             _logger.LogDebug("{intTag} Deleting all joke timeout cooldowns for guild {guild}", GetIntTag(), Context.Guild.Log());
-            var deleted = await _dbContext.JokeTimeouts.Where(x => x.GuildId == Context.Guild.Id).ExecuteDeleteAsync();
+            var deleted = await _dbContext.JokeTimeouts.ForGuild(Context.Guild.Id).ExecuteDeleteAsync();
             _logger.LogInformation("{intTag} Deleted all {delCount} joke timeout cooldowns for guild {guild}", GetIntTag(), deleted, Context.Guild.Log());
             if (deleted == 0)
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);

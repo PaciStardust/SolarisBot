@@ -68,7 +68,7 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task<bool> OnUserLeftRemoveQuotesAsync(DatabaseContext dbCtx, SocketGuild guild, SocketUser user)
         {
-            var quotes = await dbCtx.Quotes.Where(x => x.GuildId == guild.Id && x.CreatorId == user.Id).ToArrayAsync();
+            var quotes = await dbCtx.Quotes.ForGuild(guild.Id).Where(x => x.CreatorId == user.Id).ToArrayAsync();
             if (quotes.Length == 0)
                 return false;
 
@@ -82,12 +82,12 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task<bool> OnUserLeftRemoveRemindersAsync(DatabaseContext dbCtx, SocketGuild guild, SocketUser user)
         {
-            var reminders = await dbCtx.Reminders.Where(x => x.GuildId == guild.Id && x.UserId == user.Id).ToArrayAsync();
+            var reminders = await dbCtx.Reminders.ForGuild(guild.Id).ForUser(user.Id).ToArrayAsync();
             if (reminders.Length == 0)
                 return false;
 
             _logger.LogDebug("Removing {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
-            var err = await RemoveRemindersAsync(reminders, dbCtx);
+            var err = await RemoveRemindersAsync(reminders, dbCtx); //todo: [REFACTOR] Why is this unassigned?
             return true;
         }
         #endregion

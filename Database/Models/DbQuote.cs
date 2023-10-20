@@ -23,4 +23,10 @@ namespace SolarisBot.Database
             return $"{QuoteId}: \"{text}\" - <@{AuthorId}>";
         }
     }
+
+    internal static class DbQuoteExtensions
+    {
+        internal static IQueryable<DbQuote> ForGuild(this IQueryable<DbQuote> query, ulong id)
+            => query.Where(x => x.GuildId == id);
+    }
 }

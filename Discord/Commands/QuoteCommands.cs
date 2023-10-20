@@ -155,7 +155,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("random", "Picks a random quote")]
         public async Task RandomQuoteAsync()
         {
-            var quotesQuery = _dbContext.Quotes.Where(x => x.GuildId == Context.Guild.Id);
+            var quotesQuery = _dbContext.Quotes.ForGuild(Context.Guild.Id);
 
             var quoteNum = await quotesQuery.CountAsync();
             if (quoteNum == 0)
@@ -175,7 +175,7 @@ namespace SolarisBot.Discord.Commands
 
             IQueryable<DbQuote> dbQuery = _dbContext.Quotes;
             if (!all)
-                dbQuery = dbQuery.Where(x => x.GuildId == Context.Guild.Id);
+                dbQuery = dbQuery.ForGuild(Context.Guild.Id);
 
             if (id is not null)
                 dbQuery = dbQuery.Where(x => x.QuoteId == id);
