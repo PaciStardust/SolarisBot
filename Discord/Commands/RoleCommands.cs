@@ -23,7 +23,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("view-all", "[MANAGE ROLES ONLY] View all roles and groups (Including empty ones)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
         public async Task ViewAllRolesAsync()
         {
-            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GuildId == Context.Guild.Id).ToArrayAsync();
+            var roleGroups = await _dbContext.RoleGroups.ForGuildWithConfigs(Context.Guild.Id).ToArrayAsync();
 
             if (roleGroups.Length == 0)
             {
@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id, x => x.Include(y => y.RoleGroups));
 
             var identifierSearch = identifierTrimmed.ToLower();
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
@@ -91,7 +91,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             var identifierSearch = identifierTrimmed.ToLower();
-            var match = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == identifierSearch);
+            var match = await _dbContext.RoleGroups.ForGuild(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierSearch);
             if (match is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -128,13 +128,13 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            if (await _dbContext.RoleConfig.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
+            if (await _dbContext.RoleConfigs.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
             {
                 await Interaction.ReplyErrorAsync("Role is already registered");
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
+            var roleGroup = await _dbContext.RoleGroups.ForGuildWithConfigs(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch);
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -156,7 +156,7 @@ namespace SolarisBot.Discord.Commands
                 Description = descriptionTrimmed
             };
 
-            _dbContext.RoleConfig.Add(dbRole);
+            _dbContext.RoleConfigs.Add(dbRole);
 
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
@@ -177,7 +177,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var dbGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
+            var dbGroup = await _dbContext.RoleGroups.ForGuildWithConfigs(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch);
             var dbRole = dbGroup?.RoleConfigs.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch);
             if (dbRole is null)
             {
@@ -185,7 +185,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            _dbContext.RoleConfig.Remove(dbRole);
+            _dbContext.RoleConfigs.Remove(dbRole);
 
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), dbRole);
             await _dbContext.SaveChangesAsync();
@@ -198,7 +198,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("view", "View all roles and groups")] //todo: [FEATURE] Single select
         public async Task ViewRolesAsync()
         {
-            var roleGroups = await _dbContext.RoleGroups.Where(x => x.GuildId == Context.Guild.Id).ToArrayAsync();
+            var roleGroups = await _dbContext.RoleGroups.ForGuildWithConfigs(Context.Guild.Id).ToArrayAsync();
 
             if (roleGroups.Length == 0)
             {
@@ -265,7 +265,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var dbGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
+            var dbGroup = await _dbContext.RoleGroups.ForGuildWithConfigs(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch);
             var roles = dbGroup?.RoleConfigs;
             if (roles is null || !roles.Any())
             {
@@ -315,7 +315,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid && x.GuildId == gUser.Guild.Id);
+            var roleGroup = await _dbContext.RoleGroups.ForGuildWithConfigs(gUser.Guild.Id).FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid);
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);

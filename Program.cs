@@ -52,7 +52,6 @@ namespace SolarisBot
                     services.AddDbContext<DatabaseContext>(options => options.UseSqlite
                     (
                         $"Data Source={Utils.PathDatabaseFile};Pooling=false")
-                        .UseLazyLoadingProxies()
                     );
 
                     services.AddSingleton(botConfig);

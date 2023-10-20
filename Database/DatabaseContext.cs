@@ -8,7 +8,7 @@ namespace SolarisBot.Database
         private readonly ILogger<DatabaseContext> _logger;
         private static bool _hasMigrated = false;
 
-        public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options)
+        public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options) //todo: [REFACTOR] Should this be used with service?
         {
             _logger = logger;
             TryMigrate();
@@ -36,38 +36,6 @@ namespace SolarisBot.Database
                 return (-1, ex);
             }
         }
-
-        #region Guilds
-        /// <summary>
-        /// Compiled Query for GetGuildByIdAsyn
-        /// </summary>
-        private static readonly Func<DatabaseContext, ulong, Task<DbGuildConfig?>> GetGuildByIdCompiled //todo: [REFACTOR] Overhaul data requests, remove lazy loading
-            = EF.CompileAsyncQuery((DatabaseContext ctx, ulong id) => ctx.GuildConfigs.FirstOrDefault(x => x.GuildId == id));
-
-        /// <summary>
-        /// Get an untracked guild by Id
-        /// </summary>
-        /// <param name="id">Guild ID</param>
-        /// <returns>Guild matching ID or null, if no match is found or an error occured</returns>
-        internal async Task<DbGuildConfig?> GetGuildByIdAsync(ulong id)
-            => await GetGuildByIdCompiled(this, id);
-
-        /// <summary>
-        /// Get a tracked guild by ID
-        /// </summary>
-        /// <param name="id">Guild ID</param>
-        /// <returns>Tracked guild matching id, or a new instance, automatically added to database, or null on error</returns>
-        internal async Task<DbGuildConfig> GetOrCreateTrackedGuildAsync(ulong id)
-        {
-            var guild = await GuildConfigs.AsTracking().FirstOrDefaultAsync(x => x.GuildId == id);
-            if (guild is null)
-            {
-                guild = new() { GuildId = id };
-                GuildConfigs.Add(guild);
-            }
-            return guild;
-        }
-        #endregion
 
         #region Migration
         /// <summary>

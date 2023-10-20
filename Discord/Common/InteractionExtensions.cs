@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SolarisBot.Discord.Common
 {
-    internal static class InteractionExtentions
+    internal static class InteractionExtensions
     {
         /// <summary>
         /// Respond with an embed

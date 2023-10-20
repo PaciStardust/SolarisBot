@@ -18,4 +18,13 @@ namespace SolarisBot.Database
         public override string ToString()
             => $"{Text}(Unix {Created}>{Time})";
     }
+
+    internal static class DbReminderExtensions
+    {
+        internal static IQueryable<DbReminder> ForGuild(this IQueryable<DbReminder> query, ulong id)
+            => query.Where(x => x.GuildId == id);
+
+        internal static IQueryable<DbReminder> ForUser(this IQueryable<DbReminder> query, ulong id)
+            => query.Where(x => x.UserId == id);
+    }
 }

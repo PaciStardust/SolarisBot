@@ -12,4 +12,13 @@ namespace SolarisBot.Database
 
         public DbJokeTimeout() { }
     }
+
+    internal static class DbJokeTimeoutExtensions
+    {
+        internal static IQueryable<DbJokeTimeout> ForGuild(this IQueryable<DbJokeTimeout> query, ulong id)
+            => query.Where(x => x.GuildId == id);
+
+        internal static IQueryable<DbJokeTimeout> ForUser(this IQueryable<DbJokeTimeout> query, ulong id)
+            => query.Where(x => x.UserId == id);
+    }
 }
