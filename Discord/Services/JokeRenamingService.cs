@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using SolarisBot.Discord.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace SolarisBot.Discord.Services
 {
@@ -52,7 +53,7 @@ namespace SolarisBot.Discord.Services
                 return;
 
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
+            var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId, x => x.Include(y => y.JokeTimeouts));
             if (guild is null || guild.JokeRenameOn == false)
                 return;
 

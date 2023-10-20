@@ -119,12 +119,12 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task<bool> OnRoleDeletedCleanRoleSettingsAsync(DatabaseContext dbCtx, SocketRole role)
         {
-            var dbRole = await dbCtx.RoleConfig.FirstOrDefaultAsync(x => x.RoleId == role.Id);
+            var dbRole = await dbCtx.RoleConfigs.FirstOrDefaultAsync(x => x.RoleId == role.Id);
             if (dbRole is null)
                 return false;
 
             _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
-            dbCtx.RoleConfig.Remove(dbRole);
+            dbCtx.RoleConfigs.Remove(dbRole);
             return true;
         }
 

@@ -63,7 +63,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id, x => x.Include(y => y.Quotes)); //todo: [TEST] Does include work?
             if (guild is null || !guild.QuotesOn)
             {
                 await Interaction.ReplyErrorAsync("Quotes are not enabled in this guild");

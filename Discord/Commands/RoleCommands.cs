@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id, x => x.Include(y => y.RoleGroups));
 
             var identifierSearch = identifierTrimmed.ToLower();
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
@@ -128,13 +128,13 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            if (await _dbContext.RoleConfig.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
+            if (await _dbContext.RoleConfigs.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
             {
                 await Interaction.ReplyErrorAsync("Role is already registered");
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
+            var roleGroup = await _dbContext.RoleGroups.Include(x => x.RoleConfigs).FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id && x.Identifier.ToLower() == groupSearch);
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -156,7 +156,7 @@ namespace SolarisBot.Discord.Commands
                 Description = descriptionTrimmed
             };
 
-            _dbContext.RoleConfig.Add(dbRole);
+            _dbContext.RoleConfigs.Add(dbRole);
 
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
@@ -185,7 +185,7 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            _dbContext.RoleConfig.Remove(dbRole);
+            _dbContext.RoleConfigs.Remove(dbRole);
 
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), dbRole);
             await _dbContext.SaveChangesAsync();

@@ -33,4 +33,38 @@ namespace SolarisBot.Database
 
         public DbGuildConfig() { } //To avoid defaults not setting
     }
+
+    internal static class DbGuildConfigExtensions
+    {
+        /// <summary>
+        /// Get an untracked guild by Id
+        /// </summary>
+        /// <returns>Guild matching ID or null, if no match is found or an error occured</returns>
+        internal static async Task<DbGuildConfig?> GetGuildByIdAsync(this DatabaseContext ctx, ulong id, Func<DbSet<DbGuildConfig>, IQueryable<DbGuildConfig>>? include = null)
+        {
+            if (include is null)
+                return await ctx.GuildConfigs.FirstOrDefaultAsync(x => x.GuildId == id);
+            return await include(ctx.GuildConfigs).FirstOrDefaultAsync(x => x.GuildId == id);
+        }
+
+        /// <summary>
+        /// Get a tracked guild by ID
+        /// </summary>
+        /// <returns>Tracked guild matching id, or a new instance, automatically added to database, or null on error</returns>
+        internal static async Task<DbGuildConfig> GetOrCreateTrackedGuildAsync(this DatabaseContext ctx, ulong id, Func<DbSet<DbGuildConfig>, IQueryable<DbGuildConfig>>? include = null)
+        {
+            DbGuildConfig? cfg;
+            if (include is null)
+                cfg = await ctx.GuildConfigs.AsTracking().FirstOrDefaultAsync(x => x.GuildId == id);
+            else
+                cfg = await include(ctx.GuildConfigs).AsTracking().FirstOrDefaultAsync(x => x.GuildId == id);
+
+            if (cfg is null)
+            {
+                cfg = new() { GuildId = id };
+                ctx.GuildConfigs.Add(cfg);
+            }
+            return cfg;
+        }
+    }
 }

@@ -94,7 +94,7 @@ namespace SolarisBot.Discord.Commands
             };
 
             _logger.LogDebug("{intTag} Creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
-            dbGuild.Reminders.Add(dbReminder);
+            _dbContext.Reminders.Add(dbReminder);
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
 
