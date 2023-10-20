@@ -56,7 +56,7 @@ namespace SolarisBot.Discord.Services
             if (guild is not null)
             {
                 _logger.LogInformation("Unregistering interactions to guild {guild}", guild.Log());
-                await guild.DeleteApplicationCommandsAsync(); //todo: [TEST] Does this maybe work on Globals???
+                await guild.DeleteApplicationCommandsAsync();
             }
             _logger.LogInformation("Registering interactions globally");
             await _intService.RegisterCommandsGloballyAsync();
