@@ -27,7 +27,7 @@ namespace SolarisBot.Database
         internal static IQueryable<DbRoleGroup> ForGuild(this IQueryable<DbRoleGroup> query, ulong guildId)
             => query.Where(x => x.GuildId == guildId);
 
-        internal static IQueryable<DbRoleGroup> ForGuildWithConfigs(this IQueryable<DbRoleGroup> query, ulong guildId)
+        internal static IQueryable<DbRoleGroup> ForGuildWithRoles(this IQueryable<DbRoleGroup> query, ulong guildId)
             => query.ForGuild(guildId).Include(x => x.RoleConfigs);
     }
 }
