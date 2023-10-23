@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SolarisBot.Discord.Commands
 {
@@ -21,6 +20,7 @@ namespace SolarisBot.Discord.Commands
             _botConfig = botConfig;
         }
 
+        #region Admin
         [SlashCommand("config", "[MANAGE GUILD ONLY] Enable reminders"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)]
         public async Task EnableRemindersAsync(bool enabled)
         {
@@ -54,13 +54,21 @@ namespace SolarisBot.Discord.Commands
             _logger.LogInformation("{intTag} Wiped {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
             await Interaction.ReplyAsync($"Wiped **{reminders.Length}** reminders from database");
         }
+        #endregion
 
+        #region User - Create
         [SlashCommand("create-ts", "Create a reminder using a timestamp")] //todo: [FEATURE] better timestamping logic
         private async Task CreateReminderAsync(string text, ulong timestamp)
         {
-            if (timestamp < Utils.GetCurrentUnix())
+            var currentUnix = Utils.GetCurrentUnix();
+            if (timestamp < currentUnix)
             {
                 await Interaction.ReplyErrorAsync("Timestamp should not be in past");
+                return;
+            }
+            if (timestamp > currentUnix + _botConfig.MaxReminderTimeOffset)
+            {
+                await Interaction.ReplyErrorAsync("Timestamp too far in the future");
                 return;
             }
 
@@ -79,7 +87,7 @@ namespace SolarisBot.Discord.Commands
             }
             else if (userReminders.Any(x => x.GuildId == Context.Guild.Id && x.Text == text))
             {
-                await Interaction.ReplyErrorAsync("Reminder with this name has already been created");
+                await Interaction.ReplyErrorAsync("Reminder with this text has already been created in this guild");
                 return;
             }
 
@@ -90,7 +98,7 @@ namespace SolarisBot.Discord.Commands
                 Text = text,
                 Time = timestamp,
                 UserId = Context.User.Id,
-                Created = Utils.GetCurrentUnix()
+                Created = currentUnix
             };
 
             _logger.LogDebug("{intTag} Creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
@@ -101,8 +109,8 @@ namespace SolarisBot.Discord.Commands
             await Interaction.ReplyAsync($"Reminder #{dbReminder.ReminderId}: **{text}**\n*(Reminding <t:{timestamp}:f>)*");
         }
 
-        [SlashCommand("create-in", "Create a reminder in x time")] //todo: [FEATURE] Creation w timestamp? DateTime Timezone?
-        public async Task CreateReminderInAsync(string text, ulong days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
+        [SlashCommand("create-in", "Create a reminder in x time")] //todo: [FEATURE] Creation w DateTime Timezone?
+        public async Task CreateReminderInAsync(string text, ushort days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
         {
             if (days == 0 && hours == 0 && minutes == 0)
             {
@@ -111,10 +119,12 @@ namespace SolarisBot.Discord.Commands
             }
 
             var offset = DateTimeOffset.Now.AddDays(days).AddHours(hours).AddMinutes(minutes);
-            var reminderTime = Utils.LongToUlong(offset.AddSeconds(-offset.Second).ToUnixTimeSeconds(), _logger);
+            var reminderTime = Utils.LongToUlong(offset.ToUnixTimeSeconds(), _logger);
             await CreateReminderAsync(text, reminderTime);
         }
+        #endregion
 
+        #region User - Other
         [SlashCommand("list", "List your reminders")]
         public async Task ListRemindersAsync()
         {
@@ -146,5 +156,6 @@ namespace SolarisBot.Discord.Commands
             _logger.LogInformation("{intTag} Deleted reminder {reminder} from user {user} in DB", GetIntTag(), reminder, Context.User.Log());
             await Interaction.ReplyAsync($"Deleted reminder #{reminder.ReminderId}", isEphemeral: true);
         }
+        #endregion
     }
 }

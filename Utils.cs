@@ -31,7 +31,7 @@ namespace SolarisBot
         /// </summary>
         /// <param name="value">Long to convert</param>
         /// <returns>ulong value or 0, if parsing fails</returns>
-        internal static ulong LongToUlong(this long value, ILogger? logger = null)
+        internal static ulong LongToUlong(this long value, ILogger? logger = null) //todo: [REFACTOR] This is honestly yucky
         {
             try
             {
