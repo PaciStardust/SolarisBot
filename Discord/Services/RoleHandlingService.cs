@@ -11,7 +11,7 @@ namespace SolarisBot.Discord.Services
     /// <summary>
     /// Service for handling removal and applying of roles
     /// </summary>
-    internal sealed class RoleHandlingService : IHostedService
+    internal sealed class RoleHandlingService : IHostedService, IAutoloadService
     {
         private readonly ILogger<RoleHandlingService> _logger;
         private readonly DiscordSocketClient _client;

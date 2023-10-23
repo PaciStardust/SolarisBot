@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class JokeRenamingService : IHostedService
+    internal sealed class JokeRenamingService : IHostedService, IAutoloadService
     {
         private readonly ILogger<JokeRenamingService> _logger;
         private readonly DiscordSocketClient _client;

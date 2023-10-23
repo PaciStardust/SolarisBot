@@ -8,6 +8,7 @@ using Discord.Interactions;
 using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 using SolarisBot.Discord.Services;
+using System.Reflection;
 
 namespace SolarisBot
 {
@@ -62,12 +63,12 @@ namespace SolarisBot
                     }));
                     services.AddSingleton<InteractionService>();
 
-                    services.AddHostedService<InteractionHandlerService>();
-                    services.AddHostedService<RoleHandlingService>();
-                    services.AddHostedService<JokeRenamingService>();
-                    services.AddHostedService<SpellcheckService>();
-                    services.AddHostedService<ReminderService>();
-                    services.AddHostedService<DatabaseCleanupService>();
+                    foreach(var type in Assembly.GetExecutingAssembly().GetTypes())
+                    {
+                        if (!typeof(IHostedService).IsAssignableFrom(type) || !typeof(IAutoloadService).IsAssignableFrom(type)) continue;
+                        logger.Debug("Adding HostedService {service}", type.FullName);
+                        services.AddTransient(typeof(IHostedService), type);
+                    }
                     services.AddHostedService<DiscordClientService>();
                 })
                 .UseSerilog(logger)

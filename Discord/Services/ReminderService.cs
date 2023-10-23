@@ -10,7 +10,7 @@ using System.Timers;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class ReminderService : IHostedService
+    internal sealed class ReminderService : IHostedService, IAutoloadService
     {
         private readonly ILogger<ReminderService> _logger;
         private readonly DiscordSocketClient _client;

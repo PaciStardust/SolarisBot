@@ -12,7 +12,7 @@ namespace SolarisBot.Discord.Services
     /// <summary>
     /// Handles DatabaseCleanup for some discord events
     /// </summary>
-    internal sealed class DatabaseCleanupService : IHostedService
+    internal sealed class DatabaseCleanupService : IHostedService, IAutoloadService
     {
         private readonly ILogger<DatabaseCleanupService> _logger;
         private readonly DiscordSocketClient _client;

@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class SpellcheckService : IHostedService
+    internal sealed class SpellcheckService : IHostedService, IAutoloadService
     {
         private readonly ILogger<SpellcheckService> _logger;
         private readonly DiscordSocketClient _client;

@@ -7,7 +7,7 @@ using SolarisBot.Discord.Common;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class InteractionHandlerService : IHostedService
+    internal sealed class InteractionHandlerService : IHostedService, IAutoloadService
     {
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _intService;
