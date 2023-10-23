@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
+using System.Reflection;
 
 namespace SolarisBot.Discord.Services
 {
@@ -30,7 +31,19 @@ namespace SolarisBot.Discord.Services
         {
             _client.InteractionCreated += HandleInteractionCreated;
             _intService.InteractionExecuted += HandleInteractionExecuted;
-            await _intService.AddModulesAsync(GetType().Assembly, _services);
+
+            foreach(var type in GetType().Assembly.GetTypes())
+            {
+                if (!type.IsSubclassOf(typeof(SolarisInteractionModuleBase))) continue;
+                var attribute = type.GetCustomAttribute<ModuleAttribute>();
+                if (attribute is not null && _config.DisabledModules.Contains(attribute.ModuleName))
+                {
+                    _logger.LogDebug("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, attribute.ModuleName);
+                    continue;
+                }
+                _logger.LogDebug("Adding InteractionModule {intModule} from module {module}", type.FullName, attribute?.ModuleName ?? "NONE");
+                await _intService.AddModuleAsync(type, _services);
+            }
 
 #if DEBUG
             _client.Ready += RegisterInteractionsToMainAsync;

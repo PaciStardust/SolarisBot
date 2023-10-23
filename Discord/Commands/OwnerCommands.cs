@@ -36,5 +36,11 @@ namespace SolarisBot.Discord.Commands
             _logger.LogInformation("{intTag} Set discord client status to {discordStatus}", GetIntTag(), status);
             await Interaction.ReplyAsync($"Status set to \"{status}\"");
         }
+
+        [SlashCommand("ping", "ping")]
+        public async Task PingAsync()
+        {
+            await Interaction.ReplyAsync("Pong", isEphemeral: true);
+        }
     }
 }
