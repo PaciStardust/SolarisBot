@@ -109,7 +109,7 @@ namespace SolarisBot.Discord.Commands
             await Interaction.ReplyAsync($"Reminder #{dbReminder.ReminderId}: **{text}**\n*(Reminding <t:{timestamp}:f>)*");
         }
 
-        [SlashCommand("create-in", "Create a reminder in x time")] //todo: [FEATURE] Creation w DateTime Timezone?
+        [SlashCommand("create-in", "Create a reminder in x time")]
         public async Task CreateReminderInAsync(string text, ushort days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
         {
             if (days == 0 && hours == 0 && minutes == 0)
