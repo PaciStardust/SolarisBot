@@ -57,7 +57,7 @@ namespace SolarisBot.Discord.Commands
         #endregion
 
         #region User - Create
-        [SlashCommand("create-ts", "Create a reminder using a timestamp")] //todo: [FEATURE] better timestamping logic
+        [SlashCommand("create-ts", "Create a reminder using a timestamp")]
         private async Task CreateReminderAsync(string text, ulong timestamp)
         {
             var currentUnix = Utils.GetCurrentUnix();
