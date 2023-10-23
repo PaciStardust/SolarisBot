@@ -87,7 +87,7 @@ namespace SolarisBot.Discord.Services
                 return false;
 
             _logger.LogDebug("Removing {reminders} related reminders for left user {user} in guild {guild}", reminders.Length, user.Log(), guild.Log());
-            var err = await RemoveRemindersAsync(reminders, dbCtx); //todo: [REFACTOR] Fix this logic
+            dbCtx.Reminders.RemoveRange(reminders);
             return true;
         }
         #endregion
@@ -195,7 +195,8 @@ namespace SolarisBot.Discord.Services
                 return;
 
             _logger.LogDebug("Removing {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
-            var err = await RemoveRemindersAsync(reminders, dbCtx);
+            dbCtx.Reminders.RemoveRange(reminders);
+            var (_,err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
                 _logger.LogError(err, "Failed to remove {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
             else
@@ -219,14 +220,6 @@ namespace SolarisBot.Discord.Services
                 _logger.LogError(err, "Failed to remove guild for deleted guild {guild}", guild.Log());
             else
                 _logger.LogDebug("Removed guild for deleted guild {guild}", guild.Log());
-        }
-        #endregion
-
-        #region Utils
-        private static async Task<Exception?> RemoveRemindersAsync(DbReminder[] reminders, DatabaseContext ctx)
-        {
-            ctx.Reminders.RemoveRange(reminders);
-            return (await ctx.TrySaveChangesAsync()).Item2;
         }
         #endregion
     }
