@@ -36,7 +36,7 @@ namespace SolarisBot.Discord.Services
             {
                 if (!type.IsSubclassOf(typeof(SolarisInteractionModuleBase))) continue;
                 var attribute = type.GetCustomAttribute<ModuleAttribute>();
-                if (attribute is not null && _config.DisabledModules.Contains(attribute.ModuleName))
+                if (attribute?.IsDisabled(_config.DisabledModules) ?? false)
                 {
                     _logger.LogDebug("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, attribute.ModuleName);
                     continue;

@@ -18,5 +18,8 @@ namespace SolarisBot.Discord.Common
         {
             ModuleName = moduleName.ToLower();
         }
+
+        internal bool IsDisabled(IEnumerable<string> disabledList)
+            => disabledList.Any(x => ModuleName.StartsWith(x.ToLower()));
     }
 }

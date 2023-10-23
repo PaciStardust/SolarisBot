@@ -68,7 +68,7 @@ namespace SolarisBot
                     {
                         if (!typeof(IHostedService).IsAssignableFrom(type) || !typeof(IAutoloadService).IsAssignableFrom(type)) continue;
                         var attribute = type.GetCustomAttribute<ModuleAttribute>();
-                        if (attribute is not null && botConfig.DisabledModules.Contains(attribute.ModuleName))
+                        if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
                         {
                             logger.Debug("Skipping adding HostedService {service} from disabled module {module}", type.FullName, attribute.ModuleName);
                             continue;
