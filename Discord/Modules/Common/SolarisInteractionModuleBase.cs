@@ -2,7 +2,7 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 
-namespace SolarisBot.Discord.Common
+namespace SolarisBot.Discord.Modules.Common
 {
     /// <summary>
     /// Extended InteractionModeuleBase with a few core functions

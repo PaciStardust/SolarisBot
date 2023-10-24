@@ -8,8 +8,9 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using System.Timers;
 
-namespace SolarisBot.Discord.Services
+namespace SolarisBot.Discord.Modules.Reminders
 {
+    [Module("reminders")]
     internal sealed class ReminderService : IHostedService, IAutoloadService
     {
         private readonly ILogger<ReminderService> _logger;
@@ -83,7 +84,7 @@ namespace SolarisBot.Discord.Services
             dbCtx.Reminders.RemoveRange(reminders);
 
             var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err is not null) 
+            if (err is not null)
                 _logger.LogError(err, "Failed to remove {reminders} reminders from DB", reminders.Length);
             else
                 _logger.LogInformation("Removed {reminders} reminders from DB", reminders.Length);

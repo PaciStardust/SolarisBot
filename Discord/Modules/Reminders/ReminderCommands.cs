@@ -4,10 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Modules.Common;
 
-namespace SolarisBot.Discord.Commands
+namespace SolarisBot.Discord.Modules.Reminders
 {
-    [Group("reminders", "Manage Reminders"), RequireContext(ContextType.Guild)]
+    [Module("reminders"), Group("reminders", "Manage Reminders"), RequireContext(ContextType.Guild)]
     public sealed class ReminderCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<ReminderCommands> _logger;
@@ -20,43 +21,7 @@ namespace SolarisBot.Discord.Commands
             _botConfig = botConfig;
         }
 
-        #region Admin
-        [SlashCommand("config", "[MANAGE GUILD ONLY] Enable reminders"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)]
-        public async Task EnableRemindersAsync(bool enabled)
-        {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-
-            guild.RemindersOn = enabled;
-
-            _logger.LogDebug("{intTag} Setting reminders to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set reminders to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Reminders are currently **{(enabled ? "enabled" : "disabled")}**");
-        }
-
-        [SlashCommand("wipe", "[MANAGE MESSAGES ONLY] Wipe reminders"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(GuildPermission.ManageMessages)]
-        public async Task WipeRemindersAsync(IChannel? channel = null)
-        {
-            var query = _dbContext.Reminders.ForGuild(Context.Guild.Id);
-            if (channel is not null)
-                query.Where(x => x.ChannelId == channel.Id);
-
-            var reminders = await query.ToArrayAsync();
-            if (reminders.Length == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            _logger.LogDebug("{intTag} Wiping {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
-            _dbContext.Reminders.RemoveRange(reminders);
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Wiped {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Wiped **{reminders.Length}** reminders from database");
-        }
-        #endregion
-
-        #region User - Create
+        #region Create
         [SlashCommand("create-ts", "Create a reminder using a timestamp")]
         private async Task CreateReminderAsync(string text, ulong timestamp)
         {
@@ -119,12 +84,12 @@ namespace SolarisBot.Discord.Commands
             }
 
             var offset = DateTimeOffset.Now.AddDays(days).AddHours(hours).AddMinutes(minutes);
-            var reminderTime = Utils.LongToUlong(offset.ToUnixTimeSeconds(), _logger);
+            var reminderTime = offset.ToUnixTimeSeconds().LongToUlong(_logger);
             await CreateReminderAsync(text, reminderTime);
         }
         #endregion
 
-        #region User - Other
+        #region Other
         [SlashCommand("list", "List your reminders")]
         public async Task ListRemindersAsync()
         {

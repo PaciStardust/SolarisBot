@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SolarisBot.Discord.Services
+﻿namespace SolarisBot.Discord.Common
 {
     /// <summary>
     /// Empty interface to enable automatic loading of service during startup via reflection

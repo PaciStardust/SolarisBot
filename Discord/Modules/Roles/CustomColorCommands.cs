@@ -1,15 +1,15 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Modules.Common;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace SolarisBot.Discord.Commands
+namespace SolarisBot.Discord.Modules.Roles
 {
-    [Group("custom-color", "Tweak your custom color (Requires permission role)"), RequireContext(ContextType.Guild)]
+    [Module("roles/customcolor"), Group("customcolor", "Tweak your custom color (Requires permission role)"), RequireContext(ContextType.Guild)]
     public sealed class CustomColorCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<CustomColorCommands> _logger;
@@ -21,19 +21,6 @@ namespace SolarisBot.Discord.Commands
         }
 
         #region Create
-        [SlashCommand("config", "[MANAGE ROLES ONLY] Set up custom color creation (Not setting disabled it)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)] //todo: [FEATURE] Move these perhaps
-        public async Task ConfigureCustomColorAsync(IRole? creationrole = null)
-        {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-
-            guild.CustomColorPermissionRoleId = creationrole?.Id ?? ulong.MinValue;
-
-            _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
-            await Interaction.ReplyAsync($"Custom color creation is currently **{(creationrole is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{creationrole?.Mention ?? "None"}**");
-        }
-
         [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SetRoleColorByRgb(byte red, byte green, byte blue)
             => await SetRoleColorAsync(new(red, green, blue));
@@ -44,7 +31,7 @@ namespace SolarisBot.Discord.Commands
         public async Task SetRoleColorByHex([MinLength(6), MaxLength(6)] string hex)
         {
             var upperHex = hex.ToUpper();
-            if (!_hexCodeValidator.IsMatch(upperHex) || !uint.TryParse(upperHex, System.Globalization.NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var colorNumber))
+            if (!_hexCodeValidator.IsMatch(upperHex) || !uint.TryParse(upperHex, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var colorNumber))
             {
                 await Interaction.ReplyErrorAsync($"Failed to convert **{upperHex}** to hex code");
                 return;
@@ -89,7 +76,7 @@ namespace SolarisBot.Discord.Commands
                 await gUser.AddRoleAsync(customColorRole);
                 _logger.LogInformation("{intTag} Added custom color role {role} to user {user} in guild {guild}", GetIntTag(), customColorRole.Log(), gUser.Log(), Context.Guild.Log());
             }
-            
+
             await Interaction.ReplyAsync($"Custom color role has been set to {customColorRole.Mention}", color, isEphemeral: true);
         }
         #endregion

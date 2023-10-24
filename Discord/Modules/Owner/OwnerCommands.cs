@@ -4,10 +4,11 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Modules.Common;
 
-namespace SolarisBot.Discord.Commands
+namespace SolarisBot.Discord.Modules.Owner
 {
-    [Group("owner", "[OWNER ONLY] Configure Solaris"), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
+    [Module("owner"), Group("owner", "[OWNER ONLY] Configure Solaris"), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
     public sealed class OwnerCommands : SolarisInteractionModuleBase
     {
         private readonly IServiceProvider _services;
@@ -35,12 +36,6 @@ namespace SolarisBot.Discord.Commands
             await client.SetGameAsync(status);
             _logger.LogInformation("{intTag} Set discord client status to {discordStatus}", GetIntTag(), status);
             await Interaction.ReplyAsync($"Status set to \"{status}\"");
-        }
-
-        [SlashCommand("ping", "ping")]
-        public async Task PingAsync()
-        {
-            await Interaction.ReplyAsync("Pong", isEphemeral: true);
         }
     }
 }

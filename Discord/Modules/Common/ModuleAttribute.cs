@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SolarisBot.Discord.Common
+﻿namespace SolarisBot.Discord.Modules.Common
 {
     /// <summary>
     /// Attribute for automatically loading modules
