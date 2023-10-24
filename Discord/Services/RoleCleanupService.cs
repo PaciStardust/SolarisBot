@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
 
-namespace SolarisBot.Discord.Modules.Roles
+namespace SolarisBot.Discord.Services
 {
     /// <summary>
     /// Service for handling removal and applying of roles
