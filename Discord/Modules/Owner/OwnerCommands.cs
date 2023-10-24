@@ -4,7 +4,6 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
-using SolarisBot.Discord.Modules.Common;
 
 namespace SolarisBot.Discord.Modules.Owner
 {

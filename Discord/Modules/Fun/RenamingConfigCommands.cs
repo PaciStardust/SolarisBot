@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using Microsoft.EntityFrameworkCore;
-using SolarisBot.Discord.Modules.Common;
 
 namespace SolarisBot.Discord.Modules.Fun
 {

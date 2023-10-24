@@ -1,4 +1,4 @@
-﻿namespace SolarisBot.Discord.Modules.Common
+﻿namespace SolarisBot.Discord.Common
 {
     /// <summary>
     /// Attribute for automatically loading modules

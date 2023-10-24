@@ -3,7 +3,6 @@ using Discord;
 using SolarisBot.Discord.Common;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
-using SolarisBot.Discord.Modules.Common;
 
 namespace SolarisBot.Discord.Modules.Roles
 {

@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using SolarisBot.Discord.Services;
 using System.Reflection;
 using SolarisBot.Discord.Common;
-using SolarisBot.Discord.Modules.Common;
 
 namespace SolarisBot
 {
