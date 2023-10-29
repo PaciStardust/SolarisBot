@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
 
-namespace SolarisBot.Discord.Commands
+namespace SolarisBot.Discord.Modules.Owner
 {
-    [Group("owner", "[OWNER ONLY] Configure Solaris"), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
+    [Module("owner"), Group("owner", "[OWNER ONLY] Configure Solaris"), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
     public sealed class OwnerCommands : SolarisInteractionModuleBase
     {
         private readonly IServiceProvider _services;

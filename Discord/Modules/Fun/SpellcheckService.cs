@@ -5,9 +5,11 @@ using SolarisBot.Database;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using SolarisBot.Discord.Common;
 
-namespace SolarisBot.Discord.Services
+namespace SolarisBot.Discord.Modules.Fun
 {
+    [Module("fun/spellcheck")]
     internal sealed class SpellcheckService : IHostedService, IAutoloadService
     {
         private readonly ILogger<SpellcheckService> _logger;
@@ -32,7 +34,7 @@ namespace SolarisBot.Discord.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed loading dictionary"); //todo: [FEATURE] Disable modules for whole bot?
+                _logger.LogError(ex, "Failed loading dictionary");
             }
 
             _client.MessageReceived += CheckForSpellErrors;
@@ -56,7 +58,7 @@ namespace SolarisBot.Discord.Services
 
             var cleaned = _specialFilter.Replace(message.Content, string.Empty);
             var words = _nonWordChecker.Split(cleaned);
-            
+
             var errors = new List<string>();
             foreach (var word in words)
             {

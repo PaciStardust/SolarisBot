@@ -8,15 +8,16 @@ using Microsoft.Extensions.DependencyInjection;
 using SolarisBot.Discord.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Discord.Services
+namespace SolarisBot.Discord.Modules.Fun
 {
-    internal sealed class JokeRenamingService : IHostedService, IAutoloadService
+    [Module("fun/renaming")]
+    internal sealed class RenamingService : IHostedService, IAutoloadService
     {
-        private readonly ILogger<JokeRenamingService> _logger;
+        private readonly ILogger<RenamingService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly IServiceProvider _provider;
 
-        public JokeRenamingService(ILogger<JokeRenamingService> logger, DiscordSocketClient client, IServiceProvider provider)
+        public RenamingService(ILogger<RenamingService> logger, DiscordSocketClient client, IServiceProvider provider)
         {
             _logger = logger;
             _client = client;
@@ -63,10 +64,10 @@ namespace SolarisBot.Discord.Services
                 return;
 
             timeOut ??= new()
-                {
-                    UserId = gUser.Id,
-                    GuildId = gUser.GuildId
-                };
+            {
+                UserId = gUser.Id,
+                GuildId = gUser.GuildId
+            };
 
             var cooldown = guild.JokeRenameTimeoutMin >= guild.JokeRenameTimeoutMax
                 ? guild.JokeRenameTimeoutMax
@@ -78,7 +79,7 @@ namespace SolarisBot.Discord.Services
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
-                _logger.LogError(err,"Failed to set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
+                _logger.LogError(err, "Failed to set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
                 return;
             }
             _logger.LogInformation("Set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);

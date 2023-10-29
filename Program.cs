@@ -9,6 +9,7 @@ using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 using SolarisBot.Discord.Services;
 using System.Reflection;
+using SolarisBot.Discord.Common;
 
 namespace SolarisBot
 {
@@ -66,7 +67,13 @@ namespace SolarisBot
                     foreach(var type in Assembly.GetExecutingAssembly().GetTypes())
                     {
                         if (!typeof(IHostedService).IsAssignableFrom(type) || !typeof(IAutoloadService).IsAssignableFrom(type)) continue;
-                        logger.Debug("Adding HostedService {service}", type.FullName);
+                        var attribute = type.GetCustomAttribute<ModuleAttribute>();
+                        if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
+                        {
+                            logger.Debug("Skipping adding HostedService {service} from disabled module {module}", type.FullName, attribute.ModuleName);
+                            continue;
+                        }
+                        logger.Debug("Adding HostedService {service} from module {module}", type.FullName, attribute?.ModuleName ?? "NONE");
                         services.AddTransient(typeof(IHostedService), type);
                     }
                     services.AddHostedService<DiscordClientService>();

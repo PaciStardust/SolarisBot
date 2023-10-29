@@ -5,9 +5,9 @@ using SolarisBot.Database;
 using Microsoft.EntityFrameworkCore;
 using SolarisBot.Discord.Common;
 
-namespace SolarisBot.Discord.Commands
+namespace SolarisBot.Discord.Modules.Quotes
 {
-    [Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
+    [Module("quotes"), Group("quotes", "Manage Quotes"), RequireContext(ContextType.Guild)]
     public sealed class QuoteCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuoteCommands> _logger;
@@ -20,39 +20,6 @@ namespace SolarisBot.Discord.Commands
             _botConfig = botConfig;
         }
 
-        #region Admin
-        [SlashCommand("config", "[MANAGE GUILD ONLY] Enable quotes"), DefaultMemberPermissions(GuildPermission.ManageGuild), RequireUserPermission(GuildPermission.ManageGuild)]
-        public async Task EnableQuotesAsync(bool enabled)
-        {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-
-            guild.QuotesOn = enabled;
-
-            _logger.LogDebug("{intTag} Setting quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Quotes are currently **{(enabled ? "enabled" : "disabled")}**");
-        }
-
-        [SlashCommand("wipe", "[MANAGE MESSAGES ONLY] Wipe quotes from guild, make sure to search"), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(ChannelPermission.ManageMessages)]
-        public async Task WipeQuotesAsync(IUser? author = null, IUser? creator = null, string? content = null, [MinValue(0)] int offset = 0, [MinValue(0)] int limit = 0)
-        {
-            var quotes = await GetQuotesAsync(author: author, creator: creator, content: content, offset: offset, limit: limit);
-            if (quotes.Length == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            _logger.LogDebug("{intTag} Wiping {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-            _dbContext.Quotes.RemoveRange(quotes);
-            await _dbContext.SaveChangesAsync();
-            _logger.LogDebug("{intTag} Wiped {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Wiped **{quotes.Length}** quotes from database");
-        }
-        #endregion
-
-        #region Users
         [MessageCommand("Create Quote")]
         public async Task CreateQuoteAsync(IMessage message)
         {
@@ -71,7 +38,7 @@ namespace SolarisBot.Discord.Commands
             }
 
             //Check for duplicates
-            if (guild.Quotes.Any(x => x.MessageId == message.Id || (x.AuthorId == message.Author.Id && x.Text == message.CleanContent && x.GuildId == Context.Guild.Id)))
+            if (guild.Quotes.Any(x => x.MessageId == message.Id || x.AuthorId == message.Author.Id && x.Text == message.CleanContent && x.GuildId == Context.Guild.Id))
             {
                 await Interaction.ReplyErrorAsync("Message has already been quoted");
                 return;
@@ -109,7 +76,7 @@ namespace SolarisBot.Discord.Commands
             var user = GetGuildUser()!;
             bool isAdmin = user?.GuildPermissions.ManageMessages ?? false;
 
-            var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QuoteId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || (isAdmin && Context.Guild.Id == x.GuildId)));
+            var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QuoteId == id && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || isAdmin && Context.Guild.Id == x.GuildId));
             if (dbQuote is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -126,7 +93,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("search", "Search (and view) quotes")]
         public async Task SearchAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool showfirst = false)
         {
-            var quotes = await GetQuotesAsync(author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
+            var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
             if (quotes.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -143,7 +110,7 @@ namespace SolarisBot.Discord.Commands
         [SlashCommand("search-self", "Search through own quotes, not limited by guild")]
         public async Task SearchSelfAsync(IUser? author = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0)
         {
-            var quotes = await GetQuotesAsync(author: author, id: id, content: content, offset: offset, all: true);
+            var quotes = await _dbContext.GetQuotesAsync(0, author: author, id: id, content: content, offset: offset);
             if (quotes.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -164,39 +131,9 @@ namespace SolarisBot.Discord.Commands
                 return;
             }
 
-            var quote = await quotesQuery.Skip(Utils.Faker.Random.Int(0, quoteNum-1)).FirstAsync();
+            var quote = await quotesQuery.Skip(Utils.Faker.Random.Int(0, quoteNum - 1)).FirstAsync();
             await Interaction.ReplyAsync(GetQuoteEmbed(quote));
         }
-
-        private async Task<DbQuote[]> GetQuotesAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, int offset = 0, int limit = 0, bool all = false)
-        {
-            if (author is null && creator is null && id is null && content is null && offset != 0)
-                return Array.Empty<DbQuote>();
-
-            IQueryable<DbQuote> dbQuery = _dbContext.Quotes;
-            if (!all)
-                dbQuery = dbQuery.ForGuild(Context.Guild.Id);
-
-            if (id is not null)
-                dbQuery = dbQuery.Where(x => x.QuoteId == id);
-            else
-            {
-                if (author is not null)
-                    dbQuery = dbQuery.Where(x => x.AuthorId == author.Id);
-                if (creator is not null)
-                    dbQuery = dbQuery.Where(x => x.CreatorId == creator.Id);
-                if (content is not null)
-                    dbQuery = dbQuery.Where(x => EF.Functions.Like(x.Text, $"%{content}%"));
-                if (offset > 0)
-                    dbQuery = dbQuery.Skip(offset);
-            }
-
-            if (limit > 0)
-                dbQuery = dbQuery.Take(limit);
-
-            return await dbQuery.ToArrayAsync();
-        }
-        #endregion
 
         #region Utils
         /// <summary>

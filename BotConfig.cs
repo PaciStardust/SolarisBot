@@ -54,6 +54,7 @@ namespace SolarisBot
         public short MaxQuoteCharacters { get; set; } = 500;
         public byte MaxQuotesPerUser { get; set; } = 32; //Per server
         public ulong MaxReminderTimeOffset { get; set; } = 60 * 60 * 24 * 366 * 4; //Roughly four years
+        public string[] DisabledModules { get; set; } = Array.Empty<string>();
         #endregion
     }
 }

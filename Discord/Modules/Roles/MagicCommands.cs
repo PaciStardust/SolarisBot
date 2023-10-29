@@ -1,52 +1,37 @@
-﻿using Bogus;
+﻿using Discord.Interactions;
 using Discord;
-using Discord.Interactions;
-using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
-using System.Text.RegularExpressions;
+using Bogus;
 
-namespace SolarisBot.Discord.Commands
+namespace SolarisBot.Discord.Modules.Roles
 {
-    [RequireContext(ContextType.Guild)]
-    public sealed class GrouplessCommands : SolarisInteractionModuleBase
+    [Module("roles/magic")]
+    public sealed class MagicCommands : SolarisInteractionModuleBase
     {
-        private readonly ILogger<GrouplessCommands> _logger;
+        private readonly ILogger<MagicCommands> _logger;
         private readonly DatabaseContext _dbContext;
-        internal GrouplessCommands(ILogger<GrouplessCommands> logger, DatabaseContext dbctx)
+        internal MagicCommands(ILogger<MagicCommands> logger, DatabaseContext dbctx)
         {
             _dbContext = dbctx;
             _logger = logger;
         }
 
-        [SlashCommand("vouch", "Vouch for a user"), RequireBotPermission(ChannelPermission.ManageRoles)]
-        public async Task VouchUserAsync(IUser user)
+        [SlashCommand("cfg-magic", "[MANAGE ROLES ONLY] Set up magic role"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
+        public async Task ConfigureMagicAsync(IRole? role = null, ulong timeoutsecs = 1800, bool renaming = false)
         {
-            var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
-            var gUser = GetGuildUser();
+            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            if (gUser is null || user is not SocketGuildUser gTargetUser || dbGuild is null //Not a guild or no dbguild
-                || dbGuild.VouchPermissionRoleId == ulong.MinValue || dbGuild.VouchRoleId == ulong.MinValue) //Vouching not set up
-            {
-                await Interaction.ReplyErrorAsync("Vouching is not enabled in this guild");
-                return;
-            }
-            if (gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) is null)
-            {
-                await Interaction.ReplyErrorAsync($"You do not have the required role <@&{dbGuild.VouchPermissionRoleId}>");
-                return;
-            }
-            if (gTargetUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchRoleId) is not null)
-            {
-                await Interaction.ReplyErrorAsync($"{gTargetUser.Mention} has already been vouched");
-                return;
-            }
+            guild.MagicRoleId = role?.Id ?? ulong.MinValue;
+            guild.MagicRoleNextUse = ulong.MinValue;
+            guild.MagicRoleTimeout = timeoutsecs >= ulong.MinValue ? timeoutsecs : ulong.MinValue;
+            guild.MagicRoleRenameOn = renaming;
 
-            _logger.LogDebug("{intTag} Giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", GetIntTag(), gTargetUser.Log(), dbGuild.VouchRoleId, Context.Guild.Log(), gUser.Log());
-            await gTargetUser.AddRoleAsync(dbGuild.VouchRoleId);
-            _logger.LogInformation("{intTag} Gave vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", GetIntTag(),gTargetUser.Log(), dbGuild.VouchRoleId, Context.Guild.Log(), gUser.Log());
-            await Interaction.ReplyAsync($"Vouched for {gTargetUser.Mention}, welcome to the server!");
+            _logger.LogDebug("{intTag} Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("{intTag} Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
+            await Interaction.ReplyAsync($"Magic is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
         }
 
         [SlashCommand("magic", "Use magic"), RequireBotPermission(ChannelPermission.ManageRoles)]
