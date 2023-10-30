@@ -4,11 +4,13 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
 using System.Reflection;
 
 namespace SolarisBot.Discord.Services
 {
-    internal sealed class InteractionHandlerService : IHostedService, IAutoloadService
+    [AutoLoad]
+    internal sealed class InteractionHandlerService : IHostedService
     {
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _intService;

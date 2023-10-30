@@ -1,9 +1,10 @@
-﻿using Discord.Interactions;
-using Discord;
+﻿using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
-using Discord.WebSocket;
+using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Roles
 {

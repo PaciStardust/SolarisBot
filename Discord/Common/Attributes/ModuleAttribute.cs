@@ -1,10 +1,10 @@
-﻿namespace SolarisBot.Discord.Common
+﻿namespace SolarisBot.Discord.Common.Attributes
 {
     /// <summary>
     /// Attribute for automatically loading modules
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    internal class ModuleAttribute : Attribute
+    internal sealed class ModuleAttribute : Attribute
     {
         internal string ModuleName { get; }
         internal ModuleAttribute(string moduleName)

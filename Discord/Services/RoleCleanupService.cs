@@ -3,13 +3,15 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Services
 {
     /// <summary>
     /// Service for handling removal and applying of roles
     /// </summary>
-    internal sealed class RoleCleanupService : IHostedService, IAutoloadService
+    [AutoLoad]
+    internal sealed class RoleCleanupService : IHostedService
     {
         private readonly ILogger<RoleCleanupService> _logger;
         private readonly DiscordSocketClient _client;

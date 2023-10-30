@@ -1,16 +1,17 @@
-﻿using Discord.WebSocket;
-using Discord;
-using Microsoft.Extensions.Hosting;
-using SolarisBot.Database;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
+﻿using Discord;
+using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
+using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Modules.Fun
 {
-    [Module("fun/spellcheck")]
-    internal sealed class SpellcheckService : IHostedService, IAutoloadService
+    [Module("fun/spellcheck"), AutoLoad]
+    internal sealed class SpellcheckService : IHostedService
     {
         private readonly ILogger<SpellcheckService> _logger;
         private readonly DiscordSocketClient _client;
