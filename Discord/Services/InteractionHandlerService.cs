@@ -29,7 +29,7 @@ namespace SolarisBot.Discord.Services
             _intService.Log += logMessage => logMessage.Log(_logger);
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken) //todo: fix loading of modules
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated += HandleInteractionCreated;
             _intService.InteractionExecuted += HandleInteractionExecuted;
