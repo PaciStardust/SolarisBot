@@ -65,7 +65,7 @@ namespace SolarisBot
                     services.AddSingleton<InteractionService>();
 
                     var autoLoadServices = Assembly.GetExecutingAssembly().GetTypes()
-                        .Where(x => x.GetCustomAttribute<AutoLoadAttribute>() != null && typeof(IHostedService).IsAssignableFrom(x));
+                        .Where(x => x.GetCustomAttribute<AutoLoadAttribute>() is not null && typeof(IHostedService).IsAssignableFrom(x));
                     foreach (var service in autoLoadServices)
                     {
                         var attribute = service.GetCustomAttribute<ModuleAttribute>();
