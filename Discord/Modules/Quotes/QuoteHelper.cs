@@ -6,7 +6,7 @@ namespace SolarisBot.Discord.Modules.Quotes
 {
     internal static class QuoteHelper
     {
-        internal static async Task<DbQuote[]> GetQuotesAsync(this DatabaseContext dbCtx, ulong guild, IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, int offset = 0, int limit = 0) //todo: [REFACTOR] Remove MinValue
+        internal static async Task<DbQuote[]> GetQuotesAsync(this DatabaseContext dbCtx, ulong guild, IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, int offset = 0, int limit = 0)
         {
             if (author is null && creator is null && id is null && content is null && offset != 0)
                 return Array.Empty<DbQuote>();
