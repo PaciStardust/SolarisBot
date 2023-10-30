@@ -84,7 +84,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             }
 
             var offset = DateTimeOffset.Now.AddDays(days).AddHours(hours).AddMinutes(minutes);
-            var reminderTime = offset.ToUnixTimeSeconds().LongToUlong(_logger);
+            var reminderTime = offset.ToUnixTimeSeconds().AsUlong(_logger);
             await CreateReminderAsync(text, reminderTime);
         }
         #endregion

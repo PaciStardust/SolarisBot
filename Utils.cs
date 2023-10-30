@@ -24,14 +24,14 @@ namespace SolarisBot
         /// </summary>
         /// <returns>Current Uunix Timestamp (seconds)</returns>
         internal static ulong GetCurrentUnix(ILogger? logger = null)
-            => LongToUlong(DateTimeOffset.Now.ToUnixTimeSeconds(), logger);
+            => DateTimeOffset.Now.ToUnixTimeSeconds().AsUlong(logger);
 
         /// <summary>
         /// Converts a long value to a ulong value
         /// </summary>
         /// <param name="value">Long to convert</param>
         /// <returns>ulong value or 0, if parsing fails</returns>
-        internal static ulong LongToUlong(this long value, ILogger? logger = null) //todo: [REFACTOR] This is honestly yucky
+        internal static ulong AsUlong(this long value, ILogger? logger = null)
         {
             try
             {
