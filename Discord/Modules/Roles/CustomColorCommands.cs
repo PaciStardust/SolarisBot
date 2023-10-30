@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
 using System.Globalization;
 using System.Text.RegularExpressions;
 

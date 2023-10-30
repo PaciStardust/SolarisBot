@@ -4,11 +4,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Roles
 {
-    [Module("roles/autorole")]
-    internal sealed class AutoRoleService : IHostedService, IAutoloadService
+    [Module("roles/autorole"), AutoLoad]
+    internal sealed class AutoRoleService : IHostedService
     {
         private readonly ILogger<AutoRoleService> _logger;
         private readonly DiscordSocketClient _client;

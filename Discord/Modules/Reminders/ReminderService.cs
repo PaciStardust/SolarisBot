@@ -6,12 +6,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
 using System.Timers;
 
 namespace SolarisBot.Discord.Modules.Reminders
 {
-    [Module("reminders")]
-    internal sealed class ReminderService : IHostedService, IAutoloadService
+    [Module("reminders"), AutoLoad]
+    internal sealed class ReminderService : IHostedService
     {
         private readonly ILogger<ReminderService> _logger;
         private readonly DiscordSocketClient _client;

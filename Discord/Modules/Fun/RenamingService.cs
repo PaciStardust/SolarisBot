@@ -1,17 +1,18 @@
-﻿using Discord.WebSocket;
-using Discord;
-using Microsoft.Extensions.Hosting;
-using SolarisBot.Database;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using SolarisBot.Discord.Common;
+﻿using Discord;
+using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using SolarisBot.Database;
+using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
+using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Modules.Fun
 {
-    [Module("fun/renaming")]
-    internal sealed class RenamingService : IHostedService, IAutoloadService
+    [Module("fun/renaming"), AutoLoad]
+    internal sealed class RenamingService : IHostedService
     {
         private readonly ILogger<RenamingService> _logger;
         private readonly DiscordSocketClient _client;

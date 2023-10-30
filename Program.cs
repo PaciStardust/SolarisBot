@@ -1,15 +1,15 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Serilog;
-using Discord.WebSocket;
-using Discord;
+﻿using Discord;
 using Discord.Interactions;
-using SolarisBot.Database;
+using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Serilog;
+using SolarisBot.Database;
+using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Services;
 using System.Reflection;
-using SolarisBot.Discord.Common;
 
 namespace SolarisBot
 {
@@ -64,17 +64,18 @@ namespace SolarisBot
                     }));
                     services.AddSingleton<InteractionService>();
 
-                    foreach(var type in Assembly.GetExecutingAssembly().GetTypes())
+                    var autoLoadServices = Assembly.GetExecutingAssembly().GetTypes()
+                        .Where(x => x.GetCustomAttribute<AutoLoadAttribute>() != null && typeof(IHostedService).IsAssignableFrom(x));
+                    foreach (var service in autoLoadServices)
                     {
-                        if (!typeof(IHostedService).IsAssignableFrom(type) || !typeof(IAutoloadService).IsAssignableFrom(type)) continue;
-                        var attribute = type.GetCustomAttribute<ModuleAttribute>();
+                        var attribute = service.GetCustomAttribute<ModuleAttribute>();
                         if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
                         {
-                            logger.Debug("Skipping adding HostedService {service} from disabled module {module}", type.FullName, attribute.ModuleName);
+                            logger.Debug("Skipping adding HostedService {service} from disabled module {module}", service.FullName, attribute.ModuleName);
                             continue;
                         }
-                        logger.Debug("Adding HostedService {service} from module {module}", type.FullName, attribute?.ModuleName ?? "NONE");
-                        services.AddTransient(typeof(IHostedService), type);
+                        logger.Debug("Adding HostedService {service} from module {module}", service.FullName, attribute?.ModuleName ?? "NONE");
+                        services.AddTransient(typeof(IHostedService), service);
                     }
                     services.AddHostedService<DiscordClientService>();
                 })

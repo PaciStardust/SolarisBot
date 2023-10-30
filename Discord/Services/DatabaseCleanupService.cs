@@ -6,13 +6,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
+using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Services
 {
     /// <summary>
     /// Handles DatabaseCleanup for some discord events
     /// </summary>
-    internal sealed class DatabaseCleanupService : IHostedService, IAutoloadService
+    [AutoLoad]
+    internal sealed class DatabaseCleanupService : IHostedService
     {
         private readonly ILogger<DatabaseCleanupService> _logger;
         private readonly DiscordSocketClient _client;
