@@ -29,10 +29,10 @@ namespace SolarisBot.Discord.Modules.Reminders
         }
 
         #region Start / Stop
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            await RemindUsersAsync();
             _timer.Start();
+            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
