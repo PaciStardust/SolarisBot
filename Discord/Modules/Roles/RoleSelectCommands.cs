@@ -20,7 +20,7 @@ namespace SolarisBot.Discord.Modules.Roles
             _logger = logger;
         }
 
-        [SlashCommand("view", "View all roles and groups")] //todo: [FEATURE] Single select
+        [SlashCommand("view", "View all roles and groups")] //todo: [FEATURE] Support for singular roles?
         public async Task ViewRolesAsync()
         {
             var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
@@ -74,41 +74,44 @@ namespace SolarisBot.Discord.Modules.Roles
             var embedBuilder = EmbedFactory.Builder()
                 .WithTitle("Self-Assignable Roles")
                 .WithFields(groupFields)
-                .WithFooter($"Use \"/roles select *[{groupFields.First().Name}|...]*\" to pick roles from a group");
+                .WithFooter($"Use \"/roles select *[groupname/rolename]*\" to pick roles from a group");
 
             await Interaction.ReplyAsync(embedBuilder.Build());
         }
 
         [SlashCommand("select", "Select roles from a group"), RequireBotPermission(ChannelPermission.ManageRoles)]
-        public async Task SelectRolesAsync([MinLength(2), MaxLength(20)] string group)
+        public async Task SelectRolesAsync([MinLength(2), MaxLength(20)] string identifier)
         {
             var gUser = GetGuildUser()!;
-            var groupSearch = group.Trim().ToLower();
-            if (!DiscordUtils.IsIdentifierValid(groupSearch))
+            var identifierSearch = identifier.Trim().ToLower();
+            if (!DiscordUtils.IsIdentifierValid(identifierSearch))
             {
-                await Interaction.RespondInvalidIdentifierErrorEmbedAsync(group);
+                await Interaction.RespondInvalidIdentifierErrorEmbedAsync(identifier);
                 return;
             }
 
-            var dbGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch);
-            var roles = dbGroup?.RoleConfigs;
+            var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
+            var roleGroupMatch = roleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
+                ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.ToLower() == identifierSearch));
+
+            var roles = roleGroupMatch?.RoleConfigs;
             if (roles is null || !roles.Any())
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
-            if (dbGroup!.RequiredRoleId != ulong.MinValue && !gUser.Roles.Select(x => x.Id).Contains(dbGroup.RequiredRoleId))
+            if (roleGroupMatch!.RequiredRoleId != ulong.MinValue && !gUser.Roles.Select(x => x.Id).Contains(roleGroupMatch.RequiredRoleId))
             {
-                await Interaction.ReplyErrorAsync($"You do not have the required role <@&{dbGroup.RequiredRoleId}>");
+                await Interaction.ReplyErrorAsync($"You do not have the required role <@&{roleGroupMatch.RequiredRoleId}>");
                 return;
             }
 
             var menuBuilder = new SelectMenuBuilder()
             {
-                CustomId = $"solaris_roleselector.{dbGroup.RoleGroupId}",
-                Placeholder = dbGroup.AllowOnlyOne ? "Select a role..." : "Select roles...",
-                MaxValues = dbGroup.AllowOnlyOne ? 1 : roles.Count,
+                CustomId = $"solaris_roleselector.{roleGroupMatch.RoleGroupId}",
+                Placeholder = roleGroupMatch.AllowOnlyOne ? "Select a role..." : "Select roles...",
+                MaxValues = roleGroupMatch.AllowOnlyOne ? 1 : roles.Count,
                 Type = ComponentType.SelectMenu
             };
 
@@ -122,7 +125,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             var compBuilder = new ComponentBuilder()
                 .WithSelectMenu(menuBuilder);
-            await RespondAsync($"Roles in group {dbGroup.Identifier}:", components: compBuilder.Build(), ephemeral: true);
+            await RespondAsync($"Roles in group {roleGroupMatch.Identifier}:", components: compBuilder.Build(), ephemeral: true);
         }
 
         [ComponentInteraction("solaris_roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
