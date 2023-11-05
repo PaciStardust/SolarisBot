@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
@@ -20,7 +21,7 @@ namespace SolarisBot.Discord.Modules.Roles
             _logger = logger;
         }
 
-        [SlashCommand("view", "View all roles and groups")] //todo: [FEATURE] Support for singular roles?
+        [SlashCommand("view", "View all roles and groups")]
         public async Task ViewRolesAsync()
         {
             var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
@@ -94,8 +95,8 @@ namespace SolarisBot.Discord.Modules.Roles
             var roleGroupMatch = roleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
                 ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.ToLower() == identifierSearch));
 
-            var roles = roleGroupMatch?.RoleConfigs;
-            if (roles is null || !roles.Any())
+            var roleCount = roleGroupMatch?.RoleConfigs.Count ?? 0;
+            if (roleCount == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
@@ -107,11 +108,27 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
+            if (roleCount == 1)
+            {
+                var resultEmbed = await AssignRolesToUser(gUser, roleGroupMatch.RoleConfigs.ToArray());
+                await Interaction.ReplyAsync(resultEmbed, isEphemeral: true);
+                return;
+            }
+
+            var component = GenerateRoleGroupSelector(roleGroupMatch);
+            //todo: [REFACTOR] Avoid usage of Respond functions, use reply instead to avoid potential issues
+            await RespondAsync($"Roles in group {roleGroupMatch.Identifier}:", components: component, ephemeral: true);
+        }
+
+        private static MessageComponent GenerateRoleGroupSelector(DbRoleGroup roleGroup)
+        {
+            var roles = roleGroup.RoleConfigs;
+
             var menuBuilder = new SelectMenuBuilder()
             {
-                CustomId = $"solaris_roleselector.{roleGroupMatch.RoleGroupId}",
-                Placeholder = roleGroupMatch.AllowOnlyOne ? "Select a role..." : "Select roles...",
-                MaxValues = roleGroupMatch.AllowOnlyOne ? 1 : roles.Count,
+                CustomId = $"solaris_roleselector.{roleGroup.RoleGroupId}",
+                Placeholder = roleGroup.AllowOnlyOne ? "Select a role..." : "Select roles...",
+                MaxValues = roleGroup.AllowOnlyOne ? 1 : roles.Count,
                 Type = ComponentType.SelectMenu
             };
 
@@ -120,12 +137,12 @@ namespace SolarisBot.Discord.Modules.Roles
                 var desc = role.Description;
                 if (string.IsNullOrWhiteSpace(desc))
                     desc = role.Identifier;
-                menuBuilder.AddOption(role.Identifier, role.Identifier, desc);
+                menuBuilder.AddOption(role.Identifier, role.Identifier, desc); //todo: [REFACTOR] should value be an ID?
             }
 
-            var compBuilder = new ComponentBuilder()
-                .WithSelectMenu(menuBuilder);
-            await RespondAsync($"Roles in group {roleGroupMatch.Identifier}:", components: compBuilder.Build(), ephemeral: true);
+            return new ComponentBuilder()
+                .WithSelectMenu(menuBuilder)
+                .Build();
         }
 
         [ComponentInteraction("solaris_roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
@@ -157,40 +174,35 @@ namespace SolarisBot.Discord.Modules.Roles
             }
 
             var dbRoles = roleGroup.RoleConfigs;
+            var invalidRoles = new List<string>();
+            var selectedRoles = new List<DbRoleConfig>();
+            if (roleGroup.AllowOnlyOne)
+                selections = selections[0..1]; //remove all but first
+            foreach (var selection in selections)
+            {
+                var match = dbRoles.FirstOrDefault(x => x.Identifier == selection);
+                if (match is null)
+                    invalidRoles.Add(selection);
+                else
+                    selectedRoles.Add(match);
+            }
+
+            var resultEmbed = await AssignRolesToUser(gUser, selectedRoles.ToArray());
+            await Interaction.ReplyAsync(resultEmbed, isEphemeral: true);
+        }
+
+        private async Task<Embed> AssignRolesToUser(SocketGuildUser gUser, params DbRoleConfig[] roleConfigs)
+        {
             var userRoleIds = gUser.Roles.Select(x => x.Id);
             var rolesToAdd = new List<DbRoleConfig>();
             var rolesToRemove = new List<DbRoleConfig>();
-            var rolesInvalid = new List<string>();
 
-            if (roleGroup.AllowOnlyOne)
+            foreach (var roleConfig in roleConfigs)
             {
-                var dbRole = dbRoles.FirstOrDefault(x => x.Identifier == selections[0]);
-                if (dbRole is not null)
-                {
-                    var alreadyPossesedRoles = dbRoles.Where(x => userRoleIds.Contains(x.RoleId));
-                    rolesToRemove.AddRange(alreadyPossesedRoles);
-                    if (!rolesToRemove.Contains(dbRole))
-                        rolesToAdd.Add(dbRole);
-                }
+                if (userRoleIds.Contains(roleConfig.RoleId))
+                    rolesToRemove.Add(roleConfig);
                 else
-                    rolesInvalid.Add(selections[0]);
-            }
-            else
-            {
-                foreach (var selection in selections)
-                {
-                    var dbRole = dbRoles.FirstOrDefault(x => x.Identifier == selection);
-                    if (dbRole is null)
-                    {
-                        rolesInvalid.Add(selection);
-                        continue;
-                    }
-
-                    if (userRoleIds.Contains(dbRole.RoleId))
-                        rolesToRemove.Add(dbRole);
-                    else
-                        rolesToAdd.Add(dbRole);
-                }
+                    rolesToAdd.Add(roleConfig);
             }
 
             var groupFields = new List<EmbedFieldBuilder>();
@@ -221,29 +233,27 @@ namespace SolarisBot.Discord.Modules.Roles
                 });
                 _logger.LogInformation("{intTag} Removed roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
             }
-            if (rolesInvalid.Any())
-            {
-                var rolesInvalidText = string.Join(", ", rolesInvalid);
-                groupFields.Add(new EmbedFieldBuilder()
-                {
-                    IsInline = true,
-                    Name = "Invalid Roles",
-                    Value = rolesInvalidText
-                });
-                _logger.LogWarning("{intTag} Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", GetIntTag(), rolesInvalidText, roleGroup, gUser.Log());
-            }
+            //todo: [FEATURE] Reimplement invalid roles?
+            //if (rolesInvalid?.Any() ?? false)
+            //{
+            //    var rolesInvalidText = string.Join(", ", rolesInvalid);
+            //    groupFields.Add(new EmbedFieldBuilder()
+            //    {
+            //        IsInline = true,
+            //        Name = "Invalid Roles",
+            //        Value = rolesInvalidText
+            //    });
+            //    _logger.LogWarning("{intTag} Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", GetIntTag(), rolesInvalidText, roleGroup, gUser.Log());
+            //}
 
             if (!groupFields.Any())
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
+                return EmbedFactory.Error(GenericError.NoResults);
 
             var embedBuilder = EmbedFactory.Builder()
                 .WithTitle("Roles Updated")
                 .WithFields(groupFields);
 
-            await Interaction.ReplyAsync(embedBuilder.Build(), isEphemeral: true);
+            return embedBuilder.Build();
         }
     }
 }
