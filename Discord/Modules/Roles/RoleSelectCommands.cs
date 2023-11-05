@@ -136,7 +136,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 var desc = role.Description;
                 if (string.IsNullOrWhiteSpace(desc))
                     desc = role.Identifier;
-                menuBuilder.AddOption(role.Identifier, role.Identifier, desc); //todo: [REFACTOR] should value be an ID?
+                menuBuilder.AddOption(role.Identifier, role.Identifier, desc);
             }
 
             return new ComponentBuilder()
