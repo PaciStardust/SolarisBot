@@ -116,8 +116,7 @@ namespace SolarisBot.Discord.Modules.Roles
             }
 
             var component = GenerateRoleGroupSelector(roleGroupMatch);
-            //todo: [REFACTOR] Avoid usage of Respond functions, use reply instead to avoid potential issues
-            await RespondAsync($"Roles in group {roleGroupMatch.Identifier}:", components: component, ephemeral: true);
+            await Interaction.ReplyComponentAsync(component, $"Roles in group {roleGroupMatch.Identifier}:", true);
         }
 
         private static MessageComponent GenerateRoleGroupSelector(DbRoleGroup roleGroup)

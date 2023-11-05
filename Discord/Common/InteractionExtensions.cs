@@ -68,5 +68,13 @@ namespace SolarisBot.Discord.Common
             var embed = EmbedFactory.Error(genericError);
             await interaction.ReplyAsync(embed, true);
         }
+
+        internal static async Task ReplyComponentAsync(this IDiscordInteraction interaction, MessageComponent component, string text = "", bool isEphemeral = false)
+        {
+            if (interaction.HasResponded)
+                await interaction.FollowupAsync(text, components: component, ephemeral: isEphemeral);
+            else
+                await interaction.RespondAsync(text, components: component, ephemeral: isEphemeral);
+        }
     }
 }
