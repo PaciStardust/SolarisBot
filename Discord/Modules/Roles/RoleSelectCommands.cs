@@ -110,7 +110,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             if (roleCount == 1)
             {
-                var resultEmbed = await AssignRolesToUser(gUser, roleGroupMatch.RoleConfigs.ToArray());
+                var resultEmbed = await AssignRolesToUser(gUser, roleGroupMatch.RoleConfigs);
                 await Interaction.ReplyAsync(resultEmbed, isEphemeral: true);
                 return;
             }
@@ -186,64 +186,67 @@ namespace SolarisBot.Discord.Modules.Roles
                     selectedRoles.Add(match);
             }
 
-            var resultEmbed = await AssignRolesToUser(gUser, selectedRoles.ToArray());
+            var resultEmbed = await AssignRolesToUser(gUser, selectedRoles, invalidRoles);
             await Interaction.ReplyAsync(resultEmbed, isEphemeral: true);
         }
 
-        private async Task<Embed> AssignRolesToUser(SocketGuildUser gUser, params DbRoleConfig[] roleConfigs)
+        private async Task<Embed> AssignRolesToUser(SocketGuildUser gUser, IEnumerable<DbRoleConfig>? roleConfigs = null, IEnumerable<string>? rolesInvalid = null)
         {
-            var userRoleIds = gUser.Roles.Select(x => x.Id);
-            var rolesToAdd = new List<DbRoleConfig>();
-            var rolesToRemove = new List<DbRoleConfig>();
-
-            foreach (var roleConfig in roleConfigs)
-            {
-                if (userRoleIds.Contains(roleConfig.RoleId))
-                    rolesToRemove.Add(roleConfig);
-                else
-                    rolesToAdd.Add(roleConfig);
-            }
-
             var groupFields = new List<EmbedFieldBuilder>();
 
-            if (rolesToAdd.Any())
+            if (roleConfigs?.Any() ?? false)
             {
-                var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
-                _logger.LogDebug("{intTag} Adding roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
-                await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
+                var userRoleIds = gUser.Roles.Select(x => x.Id);
+                var rolesToAdd = new List<DbRoleConfig>();
+                var rolesToRemove = new List<DbRoleConfig>();
+
+                foreach (var roleConfig in roleConfigs)
+                {
+                    if (userRoleIds.Contains(roleConfig.RoleId))
+                        rolesToRemove.Add(roleConfig);
+                    else
+                        rolesToAdd.Add(roleConfig);
+                }
+
+                if (rolesToAdd.Any())
+                {
+                    var rolesToAddText = string.Join(", ", rolesToAdd.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
+                    _logger.LogDebug("{intTag} Adding roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
+                    await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
+                    groupFields.Add(new EmbedFieldBuilder()
+                    {
+                        IsInline = true,
+                        Name = "Roles Added",
+                        Value = rolesToAddText
+                    });
+                    _logger.LogInformation("{intTag} Added roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
+                }
+                if (rolesToRemove.Any())
+                {
+                    var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
+                    _logger.LogDebug("{intTag} Removing roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
+                    await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
+                    groupFields.Add(new EmbedFieldBuilder()
+                    {
+                        IsInline = true,
+                        Name = "Roles Removed",
+                        Value = rolesToRemoveText
+                    });
+                    _logger.LogInformation("{intTag} Removed roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
+                }
+            }
+
+            if (rolesInvalid?.Any() ?? false)
+            {
+                var rolesInvalidText = string.Join(", ", rolesInvalid);
                 groupFields.Add(new EmbedFieldBuilder()
                 {
                     IsInline = true,
-                    Name = "Roles Added",
-                    Value = rolesToAddText
+                    Name = "Invalid Roles",
+                    Value = rolesInvalidText
                 });
-                _logger.LogInformation("{intTag} Added roles {addedRoles} to user {userData} in guild {guild}", GetIntTag(), rolesToAddText, gUser.Log(), Context.Guild.Log());
+                _logger.LogWarning("{intTag} Failed to find roles {invalidRoles} role list, could not apply to user {userData}", GetIntTag(), rolesInvalidText, gUser.Log());
             }
-            if (rolesToRemove.Any())
-            {
-                var rolesToRemoveText = string.Join(", ", rolesToRemove.Select(x => $"{x.Identifier}(<@&{x.RoleId}>)"));
-                _logger.LogDebug("{intTag} Removing roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
-                await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
-                groupFields.Add(new EmbedFieldBuilder()
-                {
-                    IsInline = true,
-                    Name = "Roles Removed",
-                    Value = rolesToRemoveText
-                });
-                _logger.LogInformation("{intTag} Removed roles {removedRoles} from user {userData} in guild {guild}", GetIntTag(), rolesToRemoveText, gUser.Log(), Context.Guild.Log());
-            }
-            //todo: [FEATURE] Reimplement invalid roles?
-            //if (rolesInvalid?.Any() ?? false)
-            //{
-            //    var rolesInvalidText = string.Join(", ", rolesInvalid);
-            //    groupFields.Add(new EmbedFieldBuilder()
-            //    {
-            //        IsInline = true,
-            //        Name = "Invalid Roles",
-            //        Value = rolesInvalidText
-            //    });
-            //    _logger.LogWarning("{intTag} Failed to find roles {invalidRoles} in group {roleGroup}, could not apply to user {userData}", GetIntTag(), rolesInvalidText, roleGroup, gUser.Log());
-            //}
 
             if (!groupFields.Any())
                 return EmbedFactory.Error(GenericError.NoResults);
