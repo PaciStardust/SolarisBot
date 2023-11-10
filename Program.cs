@@ -65,17 +65,23 @@ namespace SolarisBot
                     services.AddSingleton<InteractionService>();
 
                     var autoLoadServices = Assembly.GetExecutingAssembly().GetTypes()
-                        .Where(x => x.GetCustomAttribute<AutoLoadAttribute>() is not null && typeof(IHostedService).IsAssignableFrom(x));
+                        .Where(x => x.GetCustomAttribute<AutoLoadAttribute>() is not null);
                     foreach (var service in autoLoadServices)
                     {
+                        bool isHosted = typeof(IHostedService).IsAssignableFrom(service);
+
                         var attribute = service.GetCustomAttribute<ModuleAttribute>();
                         if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
                         {
-                            logger.Debug("Skipping adding HostedService {service} from disabled module {module}", service.FullName, attribute.ModuleName);
+                            logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, attribute.ModuleName);
                             continue;
                         }
-                        logger.Debug("Adding HostedService {service} from module {module}", service.FullName, attribute?.ModuleName ?? "NONE");
-                        services.AddTransient(typeof(IHostedService), service);
+                        logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, attribute?.ModuleName ?? "NONE");
+
+                        if (isHosted)
+                            services.AddSingleton(typeof(IHostedService), service);
+                        else
+                            services.AddSingleton(service);
                     }
                     services.AddHostedService<DiscordClientService>();
                 })
