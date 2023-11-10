@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Modules.Fun
 {
-    [Module("fun/renaming"), AutoLoad]
+    [Module("fun/renaming"), AutoLoadService]
     internal sealed class RenamingService : IHostedService
     {
         private readonly ILogger<RenamingService> _logger;

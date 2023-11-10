@@ -11,7 +11,7 @@ using System.Timers;
 
 namespace SolarisBot.Discord.Modules.Reminders
 {
-    [Module("reminders"), AutoLoad]
+    [Module("reminders"), AutoLoadService]
     internal sealed class ReminderService : IHostedService
     {
         private readonly ILogger<ReminderService> _logger;
@@ -46,7 +46,7 @@ namespace SolarisBot.Discord.Modules.Reminders
         private async void RemindUsersAsync(object? source, ElapsedEventArgs args)
             => await RemindUsersAsync();
 
-        private async Task RemindUsersAsync()
+        private async Task RemindUsersAsync() //todo: [REFACTOR] Find a better way to query reminders
         {
             if (_client.LoginState != LoginState.LoggedIn)
                 return;

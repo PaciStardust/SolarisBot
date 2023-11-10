@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Modules.Fun
 {
-    [Module("fun/spellcheck"), AutoLoad]
+    [Module("fun/spellcheck"), AutoLoadService]
     internal sealed class SpellcheckService : IHostedService
     {
         private readonly ILogger<SpellcheckService> _logger;

@@ -8,7 +8,7 @@ using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Roles
 {
-    [Module("roles/autorole"), AutoLoad]
+    [Module("roles/autorole"), AutoLoadService]
     internal sealed class AutoRoleService : IHostedService
     {
         private readonly ILogger<AutoRoleService> _logger;
