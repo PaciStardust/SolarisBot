@@ -34,7 +34,7 @@ namespace SolarisBot.Discord.Modules.Fun
         }
 
         [UserCommand("Steal Nickname"), SlashCommand("stealnick", "Steal a persons nick"), RequireBotPermission(GuildPermission.ManageNicknames)]
-        public async Task StealNicknameUserAsync(IUser user)
+        public async Task StealNicknameUserAsync(IUser user) //todo: [LOGGING] Log?, test
         {
             if (Context.User.Id == user.Id)
             {
@@ -84,14 +84,14 @@ namespace SolarisBot.Discord.Modules.Fun
             var stealIndex = Utils.Faker.Random.Int(0, gTargetName.Length - 1);
             var stolenLetter = gTargetName[stealIndex];
             var gTargetNameNew = gTargetName.Remove(stealIndex, 1);
-            var insertIndex = Utils.Faker.Random.Int(0, gTargetName.Length);
-            var gNameNew = insertIndex == gTargetName.Length ? gUserName + stolenLetter
+            var insertIndex = Utils.Faker.Random.Int(0, gUserName.Length);
+            var gNameNew = insertIndex == gUserName.Length ? gUserName + stolenLetter
                 : gUserName.Insert(insertIndex, stolenLetter.ToString());
 
             await gUser.ModifyAsync(x => x.Nickname = gNameNew);
             await gTargetUser.ModifyAsync(x => x.Nickname = gTargetNameNew);
 
-            await Interaction.ReplyAsync($"{gUser.Mention} stole the letter \"{stolenLetter}\" from {gTargetUser.Mention}");
+            await Interaction.ReplyAsync($"**{gUserName}***({gUser.Mention})* stole the letter **{stolenLetter}** from **{gTargetName}***({gTargetUser.Mention})*");
         }
     }
 }
