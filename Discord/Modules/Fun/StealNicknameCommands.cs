@@ -58,21 +58,35 @@ namespace SolarisBot.Discord.Modules.Fun
             }
 
             var gUser = GetGuildUser(Context.User);
+            var gUserName = gUser.DisplayName;
+            if (gUserName.Length >= 32) //Max length for nicknames
+            {
+                await Interaction.ReplyErrorAsync("Your name is too long for stealing");
+                return;
+            }
+
             var gTargetUser = GetGuildUser(user);
+            var gTargetName = gTargetUser.DisplayName;
+            if (gTargetName.Length <= 1)
+            {
+                await Interaction.ReplyErrorAsync("Target name is too short for stealing");
+                return;
+            }
 
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
 
             if (!dbGuild?.StealNicknameOn ?? true)
             {
-                await Interaction.ReplyErrorAsync("Magic is not enabled in this guild");
+                await Interaction.ReplyErrorAsync("Nickname stealing is not enabled in this guild");
                 return;
             }
 
-            var stealIndex = Utils.Faker.Random.Int(0, gTargetUser.DisplayName.Length - 1);
-            var stolenLetter = gTargetUser.DisplayName[stealIndex];
-            var gTargetNameNew = gTargetUser.DisplayName.Remove(stealIndex, 1);
-            var insertIndex = Utils.Faker.Random.Int(0, gTargetUser.DisplayName.Length);
-            var gNameNew = gUser.DisplayName.Insert(insertIndex, stolenLetter.ToString());
+            var stealIndex = Utils.Faker.Random.Int(0, gTargetName.Length - 1);
+            var stolenLetter = gTargetName[stealIndex];
+            var gTargetNameNew = gTargetName.Remove(stealIndex, 1);
+            var insertIndex = Utils.Faker.Random.Int(0, gTargetName.Length);
+            var gNameNew = insertIndex == gTargetName.Length ? gUserName + stolenLetter
+                : gUserName.Insert(insertIndex, stolenLetter.ToString());
 
             await gUser.ModifyAsync(x => x.Nickname = gNameNew);
             await gTargetUser.ModifyAsync(x => x.Nickname = gTargetNameNew);
