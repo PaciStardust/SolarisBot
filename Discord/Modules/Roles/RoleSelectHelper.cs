@@ -4,7 +4,7 @@ using SolarisBot.Discord.Common;
 
 namespace SolarisBot.Discord.Modules.Roles
 {
-    internal static class RoleSelectHelper //todo: [REFACTOR] change how helpers work?
+    internal static class RoleSelectHelper
     {
         internal static async Task RespondInvalidIdentifierErrorEmbedAsync(this IDiscordInteraction interaction, string identifier)
             => await interaction.ReplyErrorAsync($"Identifier **{identifier}** is invalid, identifiers can only contain letters, numbers, and spaces and must be between 2 and 20 characters long");
@@ -33,5 +33,9 @@ namespace SolarisBot.Discord.Modules.Roles
                 .WithSelectMenu(menuBuilder)
                 .Build();
         }
+
+        internal static DbRoleGroup? FindRoleGroupForIdentifier(IEnumerable<DbRoleGroup> roleGroups, string identifierSearch)
+            => roleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
+                ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.ToLower() == identifierSearch));
     }
 }

@@ -71,10 +71,12 @@ namespace SolarisBot.Discord.Common
 
         internal static async Task ReplyComponentAsync(this IDiscordInteraction interaction, MessageComponent component, string text = "", bool isEphemeral = false)
         {
+            Embed? embed = string.IsNullOrWhiteSpace(text) ? null : EmbedFactory.Default(text);
+
             if (interaction.HasResponded)
-                await interaction.FollowupAsync(text, components: component, ephemeral: isEphemeral);
+                await interaction.FollowupAsync(embed: embed, components: component, ephemeral: isEphemeral);
             else
-                await interaction.RespondAsync(text, components: component, ephemeral: isEphemeral);
+                await interaction.RespondAsync(embed: embed, components: component, ephemeral: isEphemeral);
         }
     }
 }

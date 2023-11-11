@@ -192,5 +192,32 @@ namespace SolarisBot.Discord.Modules.Roles
             _logger.LogInformation("{intTag} Unregistered role {role} from groups", GetIntTag(), dbRole);
             await Interaction.ReplyAsync($"A role with the identifier **\"{identifierSearch}\"** has been unregistered");
         }
+
+        [SlashCommand("spawn-permaselect", "Spawns a permanent role selector"), RequireBotPermission(ChannelPermission.ManageRoles)]
+        public async Task SpawnPermaselectAsync([MinLength(2), MaxLength(20)] string identifier)
+        {
+            var identifierSearch = identifier.Trim().ToLower();
+            if (!DiscordUtils.IsIdentifierValid(identifierSearch))
+            {
+                await Interaction.RespondInvalidIdentifierErrorEmbedAsync(identifier);
+                return;
+            }
+
+            var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
+            var roleGroupMatch = RoleSelectHelper.FindRoleGroupForIdentifier(roleGroups, identifier);
+
+            var roleCount = roleGroupMatch?.RoleConfigs.Count ?? 0;
+            if (roleCount == 0)
+            {
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                return;
+            }
+
+            var component = RoleSelectHelper.GenerateRoleGroupSelector(roleGroupMatch!);
+            var title = $"Roles in group {roleGroupMatch!.Identifier}";
+            if (roleGroupMatch.RequiredRoleId != 0)
+                title += $" *(<@&{roleGroupMatch.RequiredRoleId}> only)*";
+            await Interaction.ReplyComponentAsync(component, $"{title}:");
+        }
     }
 }

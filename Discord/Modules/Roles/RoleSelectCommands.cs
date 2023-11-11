@@ -10,7 +10,7 @@ using System.Text;
 
 namespace SolarisBot.Discord.Modules.Roles
 {
-    [Module("roles/roleselect"), Group("roleselect", "Role select related commands"), RequireContext(ContextType.Guild)] //todo: [FEATURE] Color of the day Role, permanent role selectors?
+    [Module("roles/roleselect"), Group("roleselect", "Role select related commands"), RequireContext(ContextType.Guild)]
     public sealed class RoleSelectCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RoleSelectCommands> _logger;
@@ -92,8 +92,7 @@ namespace SolarisBot.Discord.Modules.Roles
             }
 
             var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
-            var roleGroupMatch = roleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
-                ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.ToLower() == identifierSearch));
+            var roleGroupMatch = RoleSelectHelper.FindRoleGroupForIdentifier(roleGroups, identifier);
 
             var roleCount = roleGroupMatch?.RoleConfigs.Count ?? 0;
             if (roleCount == 0)
