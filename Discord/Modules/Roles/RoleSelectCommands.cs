@@ -115,33 +115,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var component = GenerateRoleGroupSelector(roleGroupMatch);
+            var component = RoleSelectHelper.GenerateRoleGroupSelector(roleGroupMatch);
             await Interaction.ReplyComponentAsync(component, $"Roles in group {roleGroupMatch.Identifier}:", true);
-        }
-
-        private static MessageComponent GenerateRoleGroupSelector(DbRoleGroup roleGroup)
-        {
-            var roles = roleGroup.RoleConfigs;
-
-            var menuBuilder = new SelectMenuBuilder()
-            {
-                CustomId = $"solaris_roleselector.{roleGroup.RoleGroupId}",
-                Placeholder = roleGroup.AllowOnlyOne ? "Select a role..." : "Select roles...",
-                MaxValues = roleGroup.AllowOnlyOne ? 1 : roles.Count,
-                Type = ComponentType.SelectMenu
-            };
-
-            foreach (var role in roles)
-            {
-                var desc = role.Description;
-                if (string.IsNullOrWhiteSpace(desc))
-                    desc = role.Identifier;
-                menuBuilder.AddOption(role.Identifier, role.Identifier, desc);
-            }
-
-            return new ComponentBuilder()
-                .WithSelectMenu(menuBuilder)
-                .Build();
         }
 
         [ComponentInteraction("solaris_roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
