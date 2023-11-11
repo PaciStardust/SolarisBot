@@ -41,7 +41,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
         private async Task SetRoleColorAsync(Color color)
         {
-            var gUser = GetGuildUser()!;
+            var gUser = GetGuildUser(Context.User);
             var generatedRoleName = DiscordUtils.GetCustomColorRoleName(gUser);
             var customColorRole = Context.Guild.Roles.FirstOrDefault(x => x.Name == generatedRoleName);
 

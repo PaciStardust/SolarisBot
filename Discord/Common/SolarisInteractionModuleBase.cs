@@ -10,13 +10,16 @@ namespace SolarisBot.Discord.Common
     public abstract class SolarisInteractionModuleBase : InteractionModuleBase
     {
         /// <summary>
-        /// Returns the user of the context as SGU
+        /// Converts user to SGU
         /// </summary>
-        protected SocketGuildUser? GetGuildUser()
+        /// <param name="user">User to convert</param>
+        /// <returns>Converted user</returns>
+        /// <exception cref="ArgumentException">Thows an argumentexception if proviced user is not from guild</exception>
+        protected static SocketGuildUser GetGuildUser(IUser user)
         {
-            if (Context.User is SocketGuildUser gUser)
+            if (user is SocketGuildUser gUser)
                 return gUser;
-            return null;
+            throw new ArgumentException("Unable to convert user go guilduser");
         }
 
         /// <summary>

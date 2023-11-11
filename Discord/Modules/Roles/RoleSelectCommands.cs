@@ -83,7 +83,7 @@ namespace SolarisBot.Discord.Modules.Roles
         [SlashCommand("select", "Select roles from a group"), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SelectRolesAsync([MinLength(2), MaxLength(20)] string identifier)
         {
-            var gUser = GetGuildUser()!;
+            var gUser = GetGuildUser(Context.User);
             var identifierSearch = identifier.Trim().ToLower();
             if (!DiscordUtils.IsIdentifierValid(identifierSearch))
             {
@@ -121,7 +121,7 @@ namespace SolarisBot.Discord.Modules.Roles
         [ComponentInteraction("solaris_roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
         public async Task SelectRoleResponseAsync(string rgid, string[] selections)
         {
-            var gUser = GetGuildUser()!;
+            var gUser = GetGuildUser(Context.User);
             if (selections.Length == 0)
             {
                 await Interaction.ReplyErrorAsync("No selections have been made");
