@@ -34,7 +34,7 @@ namespace SolarisBot.Discord.Modules.Fun
         }
 
         [UserCommand("Steal Nickname"), SlashCommand("stealnick", "Steal a persons nick"), RequireBotPermission(GuildPermission.ManageNicknames)]
-        public async Task StealNicknameUserAsync(IUser user) //todo: [LOGGING] Log?, test
+        public async Task StealNicknameUserAsync(IUser user) //todo: [TESTING] Does renaming still error?
         {
             if (Context.User.Id == user.Id)
             {
@@ -88,8 +88,10 @@ namespace SolarisBot.Discord.Modules.Fun
             var gNameNew = insertIndex == gUserName.Length ? gUserName + stolenLetter
                 : gUserName.Insert(insertIndex, stolenLetter.ToString());
 
+            _logger.LogDebug("{intTag} Renaming user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", GetIntTag(), gUser.Log(), gNameNew, gTargetUser.Log(), gTargetNameNew);
             await gUser.ModifyAsync(x => x.Nickname = gNameNew);
             await gTargetUser.ModifyAsync(x => x.Nickname = gTargetNameNew);
+            _logger.LogInformation("{intTag} Renamed user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", GetIntTag(), gUser.Log(), gNameNew, gTargetUser.Log(), gTargetNameNew);
 
             await Interaction.ReplyAsync($"**{gUserName}***({gUser.Mention})* stole the letter **{stolenLetter}** from **{gTargetName}***({gTargetUser.Mention})*");
         }
