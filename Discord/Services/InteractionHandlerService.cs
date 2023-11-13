@@ -17,14 +17,16 @@ namespace SolarisBot.Discord.Services
         private readonly BotConfig _config;
         private readonly ILogger<InteractionHandlerService> _logger;
         private readonly IServiceProvider _services;
+        private readonly StatisticsService _stats;
 
-        public InteractionHandlerService(DiscordSocketClient client, InteractionService interactions, BotConfig config, ILogger<InteractionHandlerService> logger, IServiceProvider services)
+        public InteractionHandlerService(DiscordSocketClient client, InteractionService interactions, BotConfig config, ILogger<InteractionHandlerService> logger, IServiceProvider services, StatisticsService stats)
         {
             _client = client;
             _intService = interactions;
             _config = config;
             _services = services;
             _logger = logger;
+            _stats = stats;
 
             _intService.Log += logMessage => logMessage.Log(_logger);
         }
@@ -113,6 +115,7 @@ namespace SolarisBot.Discord.Services
             if (result.IsSuccess)
             {
                 _logger.LogInformation("Executed interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                _stats.IncreaseCommandsExecuted();
                 return;
             }
 
@@ -126,6 +129,7 @@ namespace SolarisBot.Discord.Services
                 _logger.LogError("Failed to execute interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
                 await context.Interaction.ReplyErrorAsync($"{result.Error!}: {result.ErrorReason}");
             }
+            _stats.IncreaseCommandsFailed();
         }
     }
 }
