@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Color = Discord.Color;
 
 namespace SolarisBot.Discord.Common
 {
@@ -77,6 +78,14 @@ namespace SolarisBot.Discord.Common
                 await interaction.FollowupAsync(embed: embed, components: component, ephemeral: isEphemeral);
             else
                 await interaction.RespondAsync(embed: embed, components: component, ephemeral: isEphemeral);
+        }
+
+        internal static async Task ReplyAttachmentAsync(this IDiscordInteraction interaction, FileAttachment attachment, bool isEphemeral = false)
+        {
+            if (interaction.HasResponded)
+                await interaction.FollowupWithFileAsync(attachment, ephemeral: isEphemeral);
+            else
+                await interaction.RespondWithFileAsync(attachment, ephemeral: isEphemeral);
         }
     }
 }

@@ -56,6 +56,8 @@ namespace SolarisBot
                         $"Data Source={Utils.PathDatabaseFile};Pooling=false")
                     );
 
+                    services.AddHttpClient();
+
                     services.AddSingleton(botConfig);
                     services.AddSingleton(new DiscordSocketClient(new()
                     {

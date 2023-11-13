@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Color = Discord.Color;
 
 namespace SolarisBot.Discord.Common
 {

@@ -6,6 +6,7 @@ using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Color = Discord.Color;
 
 namespace SolarisBot.Discord.Modules.Roles
 {

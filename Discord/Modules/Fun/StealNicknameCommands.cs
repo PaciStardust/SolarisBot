@@ -4,8 +4,6 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Common;
-using Bogus;
-using Discord.Net;
 
 namespace SolarisBot.Discord.Modules.Fun
 {
@@ -20,7 +18,7 @@ namespace SolarisBot.Discord.Modules.Fun
             _logger = logger;
         }
 
-        [SlashCommand("cfg-stealnick", "[MANAGE ROLES ONLY] Set up nickname stealing"), RequireBotPermission(GuildPermission.ManageNicknames), RequireUserPermission(GuildPermission.ManageNicknames)]
+        [SlashCommand("cfg-stealnick", "[MANAGE NICKS ONLY] Set up nickname stealing"), RequireBotPermission(GuildPermission.ManageNicknames), RequireUserPermission(GuildPermission.ManageNicknames)]
         public async Task ConfigureMagicAsync(bool stealing = false)
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);

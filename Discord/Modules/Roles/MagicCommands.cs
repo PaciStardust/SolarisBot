@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
+using Color = Discord.Color;
 
 namespace SolarisBot.Discord.Modules.Roles
 {

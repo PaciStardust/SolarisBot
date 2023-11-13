@@ -22,6 +22,7 @@ namespace SolarisBot.Database
         public ulong AutoRoleId { get; set; } = ulong.MinValue;
         public ulong SpellcheckRoleId { get; set; } = ulong.MinValue;
         public bool StealNicknameOn { get; set; } = false;
+        public bool GififyOn { get; set; } = false;
 
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
