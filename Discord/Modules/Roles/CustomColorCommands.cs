@@ -23,13 +23,21 @@ namespace SolarisBot.Discord.Modules.Roles
 
         #region Create
         [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)"), RequireBotPermission(ChannelPermission.ManageRoles)]
-        public async Task SetRoleColorByRgb(byte red, byte green, byte blue)
+        public async Task SetRoleColorByRgb
+        (
+            [Summary(description: "Red amount")] byte red, 
+            [Summary(description: "Green amount")] byte green, 
+            [Summary(description: "Blue amount")] byte blue
+        )
             => await SetRoleColorAsync(new(red, green, blue));
 
         private static readonly Regex _hexCodeValidator = new(@"[A-F0-9]{6}");
 
         [SlashCommand("set-color-hex", "Set your custom role color via Hex (Requires permission role)"), RequireBotPermission(ChannelPermission.ManageRoles)]
-        public async Task SetRoleColorByHex([MinLength(6), MaxLength(6)] string hex)
+        public async Task SetRoleColorByHex
+        (
+            [Summary(description: "Hex color code (without #)"), MinLength(6), MaxLength(6)] string hex
+        )
         {
             var upperHex = hex.ToUpper();
             if (!_hexCodeValidator.IsMatch(upperHex) || !uint.TryParse(upperHex, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var colorNumber))

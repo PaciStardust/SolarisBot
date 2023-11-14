@@ -81,7 +81,10 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("select", "Select roles from a group"), RequireBotPermission(ChannelPermission.ManageRoles)]
-        public async Task SelectRolesAsync([MinLength(2), MaxLength(20)] string identifier)
+        public async Task SelectRolesAsync
+        (
+            [Summary(description: "Identifier of group or role"), MinLength(2), MaxLength(20)] string identifier
+        )
         {
             var gUser = GetGuildUser(Context.User);
             var identifierSearch = identifier.Trim().ToLower();

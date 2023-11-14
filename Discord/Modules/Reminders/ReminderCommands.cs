@@ -23,7 +23,11 @@ namespace SolarisBot.Discord.Modules.Reminders
 
         #region Create
         [SlashCommand("create-ts", "Create a reminder using a timestamp")]
-        private async Task CreateReminderAsync(string text, ulong timestamp)
+        private async Task CreateReminderAsync
+        (
+            [Summary(description: "Reminder text")] string text,
+            [Summary(description: "Hammertime/Unix timestamp for reminder")] ulong timestamp
+        )
         {
             var currentUnix = Utils.GetCurrentUnix();
             if (timestamp < currentUnix)
@@ -75,7 +79,13 @@ namespace SolarisBot.Discord.Modules.Reminders
         }
 
         [SlashCommand("create-in", "Create a reminder in x time")]
-        public async Task CreateReminderInAsync(string text, ushort days = 0, [MaxValue(23)] byte hours = 0, [MaxValue(59)] byte minutes = 0)
+        public async Task CreateReminderInAsync
+        (
+            [Summary(description: "Reminder text")] string text, 
+            [Summary(description: "[Optional] Days to remind in")] ushort days = 0, 
+            [Summary(description: "[Optional] Hours to remind in"), MaxValue(23)] byte hours = 0,
+            [Summary(description: "[Optional] Minutes to remind in"), MaxValue(59)] byte minutes = 0
+        )
         {
             if (days == 0 && hours == 0 && minutes == 0)
             {
@@ -106,7 +116,10 @@ namespace SolarisBot.Discord.Modules.Reminders
         }
 
         [SlashCommand("delete", "Delete a reminder")]
-        public async Task DeleteReminder(ulong id)
+        public async Task DeleteReminder
+        (
+            [Summary(description: "Id of reminder")] ulong id
+        )
         {
             var reminder = await _dbContext.Reminders.ForUser(Context.User.Id).FirstOrDefaultAsync(x => x.ReminderId == id);
             if (reminder is null)

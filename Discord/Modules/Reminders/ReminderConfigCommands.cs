@@ -21,7 +21,10 @@ namespace SolarisBot.Discord.Modules.Reminders
         }
 
         [SlashCommand("config", "Enable reminders")]
-        public async Task EnableRemindersAsync(bool enabled)
+        public async Task EnableRemindersAsync
+        (
+            [Summary(description: "Is feature enabled?")] bool enabled
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
@@ -34,7 +37,10 @@ namespace SolarisBot.Discord.Modules.Reminders
         }
 
         [SlashCommand("wipe", "Wipe reminders")]
-        public async Task WipeRemindersAsync(IChannel? channel = null)
+        public async Task WipeRemindersAsync
+        (
+            [Summary(description: "[Optional] Channel to wipe reminders from")] IChannel? channel = null
+        )
         {
             var query = _dbContext.Reminders.ForGuild(Context.Guild.Id);
             if (channel is not null)

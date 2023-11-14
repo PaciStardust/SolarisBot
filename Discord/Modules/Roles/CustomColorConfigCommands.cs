@@ -18,17 +18,20 @@ namespace SolarisBot.Discord.Modules.Roles
             _logger = logger;
         }
 
-        [SlashCommand("cfg-customcolor", "[MANAGE ROLES ONLY] Set up custom color creation (Not setting disabled it)"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
-        public async Task ConfigureCustomColorAsync(IRole? creationrole = null)
+        [SlashCommand("cfg-customcolor", "[MANAGE ROLES ONLY] Set up custom color creation"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
+        public async Task ConfigureCustomColorAsync
+        (
+            [Summary(description: "Required role (none to disable)")] IRole? role = null
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.CustomColorPermissionRoleId = creationrole?.Id ?? ulong.MinValue;
+            guild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
 
-            _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
+            _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), creationrole?.Log() ?? "0", Context.Guild.Log());
-            await Interaction.ReplyAsync($"Custom color creation is currently **{(creationrole is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{creationrole?.Mention ?? "None"}**");
+            _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
+            await Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**");
         }
     }
 }

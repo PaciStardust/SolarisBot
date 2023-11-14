@@ -25,7 +25,10 @@ namespace SolarisBot.Discord.Modules.Owner
         }
 
         [SlashCommand("set-status", "Set the status of the bot")]
-        public async Task SetStatusAsync(string status)
+        public async Task SetStatusAsync
+        (
+            [Summary(description: "New bot status")] string status
+        )
         {
             _logger.LogDebug("{intTag} Setting discord client status to {discordStatus}", GetIntTag(), status);
             var config = _services.GetRequiredService<BotConfig>();
@@ -43,7 +46,7 @@ namespace SolarisBot.Discord.Modules.Owner
             await Interaction.ReplyAsync($"Status set to \"{status}\"");
         }
 
-        [SlashCommand("stats", "List some statistics")]
+        [SlashCommand("stats", "List runtime and command count")]
         public async Task StatsAsync()
         {
             var commandsTotal = _stats.CommandsFailed + _stats.CommandsExecuted;

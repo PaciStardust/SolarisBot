@@ -72,7 +72,10 @@ namespace SolarisBot.Discord.Modules.Quotes
         }
 
         [SlashCommand("delete", "Delete a quote by ID")]
-        public async Task DeleteQuoteAsync(ulong id)
+        public async Task DeleteQuoteAsync
+        (
+            [Summary(description: "ID of quote")] ulong id
+        )
         {
             var user = GetGuildUser(Context.User);
             bool isAdmin = user?.GuildPermissions.ManageMessages ?? false;
@@ -92,15 +95,23 @@ namespace SolarisBot.Discord.Modules.Quotes
         }
 
         [SlashCommand("search", "Search (and view) quotes")]
-        public async Task SearchAsync(IUser? author = null, IUser? creator = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0, bool showfirst = false)
+        public async Task SearchAsync
+        (
+            [Summary(description: "[Optional] User that was quoted")] IUser? author = null,
+            [Summary(description: "[Optional] User that created the quote")] IUser? creator = null,
+            [Summary(description: "[Optional] Id of quote")] ulong? id = null,
+            [Summary(description: "[Optional] Text contained in quote")] string? content = null, 
+            [Summary(description: "[Optional] Search offset"), MinValue(0)] int offset = 0,
+            [Summary(description: "[Optional] Show first result directly?")] bool showFirst = false
+        )
         {
-            var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, author: author, creator: creator, id: id, content: content, offset: offset, limit: showfirst ? 1 : 10);
+            var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, author: author, creator: creator, id: id, content: content, offset: offset, limit: showFirst ? 1 : 10);
             if (quotes.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
-            else if (showfirst)
+            else if (showFirst)
             {
                 await Interaction.ReplyAsync(GetQuoteEmbed(quotes[0]));
                 return;
@@ -109,7 +120,13 @@ namespace SolarisBot.Discord.Modules.Quotes
         }
 
         [SlashCommand("search-self", "Search through own quotes, not limited by guild")]
-        public async Task SearchSelfAsync(IUser? author = null, ulong? id = null, string? content = null, [MinValue(0)] int offset = 0)
+        public async Task SearchSelfAsync
+        (
+            [Summary(description: "[Optional] User that was quoted")] IUser? author = null,
+            [Summary(description: "[Optional] Id of quote")] ulong? id = null,
+            [Summary(description: "[Optional] Text contained in quote")] string? content = null,
+            [Summary(description: "[Optional] Search offset"), MinValue(0)] int offset = 0
+        )
         {
             var quotes = await _dbContext.GetQuotesAsync(0, author: author, id: id, content: content, offset: offset);
             if (quotes.Length == 0)

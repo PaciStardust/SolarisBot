@@ -19,7 +19,10 @@ namespace SolarisBot.Discord.Modules.Fun
         }
 
         [SlashCommand("cfg-spellcheck", "[MANAGE ROLES ONLY] Set a spellcheck role"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
-        public async Task SetSpellcheckRoleAsync(IRole? role = null)
+        public async Task SetSpellcheckRoleAsync
+        (
+            [Summary(description: "Role to be spellchecked (none to disable)")] IRole? role = null
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
             guild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;

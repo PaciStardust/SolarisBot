@@ -21,13 +21,18 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("cfg-magic", "[MANAGE ROLES ONLY] Set up magic role"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
-        public async Task ConfigureMagicAsync(IRole? role = null, ulong timeoutsecs = 1800, bool renaming = false)
+        public async Task ConfigureMagicAsync
+        (
+            [Summary(description: "Magic role (none to disable)")] IRole? role = null,
+            [Summary(description: "[Optional] Command cooldown (in sec)")] ulong timeout = 1800, 
+            [Summary(description: "[Optional] Automatically rename role?")] bool renaming = false
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.MagicRoleId = role?.Id ?? ulong.MinValue;
             guild.MagicRoleNextUse = ulong.MinValue;
-            guild.MagicRoleTimeout = timeoutsecs >= ulong.MinValue ? timeoutsecs : ulong.MinValue;
+            guild.MagicRoleTimeout = timeout >= ulong.MinValue ? timeout : ulong.MinValue;
             guild.MagicRoleRenameOn = renaming;
 
             _logger.LogDebug("{intTag} Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());

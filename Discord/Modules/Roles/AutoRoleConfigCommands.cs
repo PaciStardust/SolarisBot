@@ -19,7 +19,10 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("cfg-autorole", "[MANAGE ROLES ONLY] Set an automatic join role"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
-        public async Task SetAutoRoleAsync(IRole? role = null)
+        public async Task SetAutoRoleAsync
+        (
+            [Summary(description: "Join role (none to disable)")] IRole? role = null
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
             guild.AutoRoleId = role?.Id ?? ulong.MinValue;

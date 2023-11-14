@@ -19,11 +19,14 @@ namespace SolarisBot.Discord.Modules.Fun
         }
 
         [SlashCommand("cfg-stealnick", "[MANAGE NICKS ONLY] Set up nickname stealing"), RequireBotPermission(GuildPermission.ManageNicknames), RequireUserPermission(GuildPermission.ManageNicknames)]
-        public async Task ConfigureMagicAsync(bool stealing = false)
+        public async Task ConfigureMagicAsync
+        (
+            [Summary(description: "Is feature enabled?")] bool enabled
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.StealNicknameOn = stealing;
+            guild.StealNicknameOn = enabled;
 
             _logger.LogDebug("{intTag} Setting nickname stealing to {enabled} in guild {guild}", GetIntTag(), guild.StealNicknameOn, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();

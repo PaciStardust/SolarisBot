@@ -24,11 +24,14 @@ namespace SolarisBot.Discord.Modules.Utility
         }
 
         [SlashCommand("cfg-gifify", "[MANAGE MSGS ONLY] Set up gif conversion"), RequireUserPermission(GuildPermission.ManageMessages)]
-        public async Task ConfigureGifify(bool gifconvert = false)
+        public async Task ConfigureGifify
+        (
+            [Summary(description: "Is feature enabled?")] bool enabled
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.GififyOn = gifconvert;
+            guild.GififyOn = enabled;
 
             _logger.LogDebug("{intTag} Setting gif conversion to {enabled} in guild {guild}", GetIntTag(), guild.GififyOn, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
@@ -53,7 +56,11 @@ namespace SolarisBot.Discord.Modules.Utility
         }
 
         [SlashCommand("gifify", "Convert image to gif")]
-        public async Task GififySlashAsync(IAttachment image, bool isPrivate = false)
+        public async Task GififySlashAsync
+        (
+            [Summary(description: "Image to convert to gif")] IAttachment image,
+            [Summary(description: "[Optional] Only visible locally?")] bool isPrivate = false
+        )
         {
             if (!IsValidImage(image))
             {

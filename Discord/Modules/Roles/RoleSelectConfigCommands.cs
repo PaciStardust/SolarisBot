@@ -46,7 +46,13 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("group-create", "Create role group")]
-        public async Task CreateRoleGroupAsync([MinLength(2), MaxLength(20)] string identifier, [MaxLength(200)] string description = "", bool oneof = true, IRole? requiredRole = null)
+        public async Task CreateRoleGroupAsync
+        (
+            [Summary(description: "Identifier of group"), MinLength(2), MaxLength(20)] string identifier,
+            [Summary(description: "[Optional] Description of group?"), MaxLength(200)] string description = "",
+            [Summary(description: "[Optional] Can only have one role from group?")] bool oneOf = true,
+            [Summary(description: "[Optional] Required role?")] IRole? requiredrole = null
+        )
         {
             var identifierTrimmed = identifier.Trim();
             var descriptionTrimmed = description.Trim();
@@ -68,9 +74,9 @@ namespace SolarisBot.Discord.Modules.Roles
                 ?? new() { GuildId = Context.Guild.Id, Identifier = identifierTrimmed };
 
             var logVerb = roleGroup.RoleGroupId == ulong.MinValue ? "Creat" : "Updat";
-            roleGroup.AllowOnlyOne = oneof;
+            roleGroup.AllowOnlyOne = oneOf;
             roleGroup.Description = descriptionTrimmed;
-            roleGroup.RequiredRoleId = requiredRole?.Id ?? ulong.MinValue;
+            roleGroup.RequiredRoleId = requiredrole?.Id ?? ulong.MinValue;
 
             _dbContext.RoleGroups.Update(roleGroup);
 
@@ -81,7 +87,10 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("group-delete", "Delete a role group")]
-        public async Task DeleteRoleGroupAsync([MinLength(2), MaxLength(20)] string identifier)
+        public async Task DeleteRoleGroupAsync
+        (
+            [Summary(description: "Identifier of group"), MinLength(2), MaxLength(20)] string identifier
+        )
         {
             var identifierTrimmed = identifier.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierTrimmed))
@@ -107,7 +116,13 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("role-register", "Register role group")]
-        public async Task RegisterRoleAsync(IRole role, string group, [MinLength(2), MaxLength(20)] string identifier = "", [MaxLength(200)] string description = "")
+        public async Task RegisterRoleAsync
+        (
+            [Summary(description: "Role to register")] IRole role,
+            [Summary(description: "Group to register to")] string group,
+            [Summary(description: "[Optional] Identifier of role"), MinLength(2), MaxLength(20)] string identifier = "",
+            [Summary(description: "[Optional] Description of role"), MaxLength(200)] string description = ""
+        )
         {
             if (string.IsNullOrWhiteSpace(identifier))
                 identifier = role.Name;
@@ -165,7 +180,11 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("role-unregister", "Unregister a role")]
-        public async Task UnregisterRoleAsync([MinLength(2), MaxLength(20)] string group, [MinLength(2), MaxLength(20)] string identifier)
+        public async Task UnregisterRoleAsync
+        (
+            [Summary(description: "Identifier of group"), MinLength(2), MaxLength(20)] string group,
+            [Summary(description: "Identifier of role"), MinLength(2), MaxLength(20)] string identifier
+        )
         {
             var groupSearch = group.Trim().ToLower();
             var identifierSearch = identifier.Trim().ToLower();
@@ -194,7 +213,10 @@ namespace SolarisBot.Discord.Modules.Roles
         }
 
         [SlashCommand("spawn-permaselect", "Spawns a permanent role selector"), RequireBotPermission(ChannelPermission.ManageRoles)]
-        public async Task SpawnPermaselectAsync([MinLength(2), MaxLength(20)] string identifier)
+        public async Task SpawnPermaselectAsync
+        (
+            [Summary(description: "Identifier of group"), MinLength(2), MaxLength(20)] string identifier
+        )
         {
             var identifierSearch = identifier.Trim().ToLower();
             if (!DiscordUtils.IsIdentifierValid(identifierSearch))

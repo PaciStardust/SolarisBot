@@ -20,7 +20,10 @@ namespace SolarisBot.Discord.Modules.Quotes
         }
 
         [SlashCommand("config", "Enable quotes")]
-        public async Task EnableQuotesAsync(bool enabled)
+        public async Task EnableQuotesAsync
+        (
+            [Summary(description: "Is feature enabled?")] bool enabled
+        )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
@@ -33,7 +36,14 @@ namespace SolarisBot.Discord.Modules.Quotes
         }
 
         [SlashCommand("wipe", "Wipe quotes from guild, make sure to search")]
-        public async Task WipeQuotesAsync(IUser? author = null, IUser? creator = null, string? content = null, [MinValue(0)] int offset = 0, [MinValue(0)] int limit = 0)
+        public async Task WipeQuotesAsync
+        (
+            [Summary(description: "[Optional] User that was quoted")] IUser? author = null,
+            [Summary(description: "[Optional] User that created the quote")] IUser? creator = null,
+            [Summary(description: "[Optional] Text contained in quote")] string? content = null,
+            [Summary(description: "[Optional] Search offset"), MinValue(0)] int offset = 0,
+            [Summary(description: "[Optional] Search limit"), MinValue(0)] int limit = 0
+        )
         {
             var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, author: author, creator: creator, content: content, offset: offset, limit: limit);
             if (quotes.Length == 0)
