@@ -10,16 +10,19 @@ using SolarisBot.Discord.Modules.Roles;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
-    [Module("bridges"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Cleanup, Per server limit
+    [Module("bridges"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Cleanup
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)]
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<BridgeConfigCommands> _logger;
         private readonly DatabaseContext _dbContext;
-        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DatabaseContext dbctx)
+        private readonly BotConfig _config;
+
+        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DatabaseContext dbctx, BotConfig config)
         {
             _dbContext = dbctx;
             _logger = logger;
+            _config = config;
         }
 
         [SlashCommand("list", "List all bridges")]
@@ -64,6 +67,20 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
+            var bridgesHere = await _dbContext.Bridges.ForGuild(Context.Guild.Id).CountAsync();
+            if (bridgesHere > _config.MaxBridgesPerGuild)
+            {
+                await Interaction.ReplyErrorAsync($"This guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
+                return;
+            }
+
+            var bridgesThere = await _dbContext.Bridges.ForGuild(channelId).CountAsync();
+            if (bridgesThere > _config.MaxBridgesPerGuild)
+            {
+                await Interaction.ReplyErrorAsync($"Target guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
+                return;
+            }
+
             var duplicate = await _dbContext.Bridges.ForGuild(guildId).ForGuild(Context.Guild.Id).FirstOrDefaultAsync();
             if (duplicate is not null)
             {
@@ -88,7 +105,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             var user = await otherGuild.GetUserAsync(Context.User.Id);
             if (user is null)
             {
-                await Interaction.ReplyErrorAsync("You are not in the other guild");
+                await Interaction.ReplyErrorAsync("You are not in the target guild");
                 return;
             }
             if (!user.GetPermissions(otherChannel).ManageChannel)

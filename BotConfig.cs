@@ -56,6 +56,7 @@ namespace SolarisBot
         public ulong MaxReminderTimeOffset { get; set; } = 60 * 60 * 24 * 366 * 4; //Roughly four years
         public string[] DisabledModules { get; set; } = Array.Empty<string>();
         public byte MaxImageSizeInBytes { get; set; } = 8;
+        public byte MaxBridgesPerGuild { get; set; } = 8;
         #endregion
     }
 }
