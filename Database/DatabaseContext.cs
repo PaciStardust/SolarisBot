@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SolarisBot.Database.Models;
 
 namespace SolarisBot.Database
 {
@@ -20,6 +21,7 @@ namespace SolarisBot.Database
         public DbSet<DbRoleConfig> RoleConfigs { get; set; }
         public DbSet<DbRoleGroup> RoleGroups { get; set; }
         public DbSet<DbReminder> Reminders { get; set; }
+        public DbSet<DbBridge> Bridges { get; set; }
 
         /// <summary>
         /// Attempts to save changes to the database
