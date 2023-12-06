@@ -6,6 +6,7 @@ using SolarisBot.Database;
 using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
+using SolarisBot.Discord.Modules.Roles;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
@@ -22,9 +23,12 @@ namespace SolarisBot.Discord.Modules.Bridges
         }
 
         [SlashCommand("list", "List all bridges")]
-        public async Task ListBridgesAsync(bool serverwide = false) //todo: [TESTING] Does listing work?
+        public async Task ListBridgesAsync
+        (
+            [Summary(description: "[Optional] List guild bridges")] bool guild = false
+        ) //todo: [TESTING] Does listing work?
         {
-            var query = serverwide
+            var query = guild
                 ? _dbContext.Bridges.ForGuild(Context.Guild.Id)
                 : _dbContext.Bridges.ForChannel(Context.Channel.Id);
 
@@ -36,12 +40,24 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
 
             string bridgeText = string.Join("\n", bridges.Select(x => $"- {x.BridgeId}: {x.Name} {(Context.Channel.Id == x.ChannelAId ? x.ChannelBId : x.ChannelAId)} in {(Context.Guild.Id == x.GuildAId ? x.GuildBId : x.GuildAId)}"));
-            await Interaction.ReplyAsync($"**Bridges for {(serverwide ? "guild" : "channel")}", bridgeText);
+            await Interaction.ReplyAsync($"**Bridges for {(guild ? "guild" : "channel")}", bridgeText);
         }
 
         [SlashCommand("create", "Create a bridge")]
-        public async Task CreateBridgeAsync(string name, ulong guildId, ulong channelId) //todo: [TESTING] Does bridge creation work, name limit
+        public async Task CreateBridgeAsync
+        (
+            [MinLength(2), MaxLength(20), Summary(description: "Bridge name")] string name,
+            [Summary(description: "Id of target guild")] ulong guildId,
+            [Summary(description: "Id of target channel")] ulong channelId
+        ) //todo: [TESTING] Does bridge creation work
         {
+            var nameTrimmed = name.Trim();
+            if (!DiscordUtils.IsIdentifierValid(nameTrimmed))
+            {
+                await Interaction.RespondInvalidIdentifierErrorEmbedAsync(nameTrimmed);
+                return;
+            }
+
             if (channelId == Context.Channel.Id)
             {
                 await Interaction.ReplyErrorAsync("Can not create a bridge to same channel");
@@ -95,7 +111,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var dbBridge = new DbBridge()
             {
-                Name = name, //todo: Name limit, format
+                Name = nameTrimmed,
                 GuildAId = Context.Guild.Id,
                 ChannelAId = Context.Channel.Id,
                 GuildBId = otherGuild.Id,
