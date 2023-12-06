@@ -82,6 +82,10 @@ namespace SolarisBot.Discord.Services
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _client.InteractionCreated -= HandleInteractionCreated;
+            _intService.InteractionExecuted -= HandleInteractionExecuted;
+            _client.Ready -= RegisterInteractionsToMainAsync;
+
             _intService.Dispose();
             return Task.CompletedTask;
         }

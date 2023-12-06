@@ -39,6 +39,10 @@ namespace SolarisBot.Discord.Services
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _client.RoleDeleted -= OnRoleDeletedHandleAsync;
+            _client.ChannelDestroyed -= OnChannelDestroyedRemoveRemindersAsync;
+            _client.UserLeft -= OnUserLeftHandleAsync;
+            _client.LeftGuild -= OnLeftGuildRemoveGuildAsync;
             return Task.CompletedTask;
         }
         #endregion

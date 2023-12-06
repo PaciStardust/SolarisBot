@@ -30,6 +30,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _client.UserJoined -= ApplyAutoRoleAsync;
             return Task.CompletedTask;
         }
 

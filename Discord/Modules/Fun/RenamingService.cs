@@ -33,6 +33,7 @@ namespace SolarisBot.Discord.Modules.Fun
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _client.MessageReceived -= CheckForAutoRename;
             return Task.CompletedTask;
         }
 

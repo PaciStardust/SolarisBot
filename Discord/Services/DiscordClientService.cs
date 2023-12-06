@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Services
 
         public async Task StartAsync(CancellationToken cToken)
         {
-            _client.Log += logMessage => logMessage.Log(_logger);
+            _client.Log += OnLog;
             _client.Ready += OnReadyAsync;
 
             await _client.LoginAsync(TokenType.Bot, _config.Token);
@@ -30,9 +30,15 @@ namespace SolarisBot.Discord.Services
 
         public async Task StopAsync(CancellationToken cToken)
         {
+            _client.Log -= OnLog;
+            _client.Ready -= OnReadyAsync;
+
             await _client.LogoutAsync();
             await _client.StopAsync();
         }
+
+        private Task OnLog(LogMessage logMessage)
+            => logMessage.Log(_logger);
 
         private async Task OnReadyAsync()
         {

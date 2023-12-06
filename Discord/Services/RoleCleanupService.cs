@@ -31,6 +31,8 @@ namespace SolarisBot.Discord.Services
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _client.GuildMemberUpdated -= CheckForLeftoverCustomColorRoleOnRemovalAsync;
+            _client.UserLeft -= CheckForLeftoverCustomColorRoleOnLeftAsync;
             return Task.CompletedTask;
         }
 
