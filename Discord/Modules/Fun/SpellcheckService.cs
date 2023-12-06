@@ -38,13 +38,13 @@ namespace SolarisBot.Discord.Modules.Fun
                 _logger.LogError(ex, "Failed loading dictionary");
             }
 
-            _client.MessageReceived += CheckForSpellErrors;
+            _client.MessageReceived += CheckForSpellErrorsAsync;
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _client.MessageReceived -= CheckForSpellErrors;
+            _client.MessageReceived -= CheckForSpellErrorsAsync;
             return Task.CompletedTask;
         }
 
@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Modules.Fun
         /// <summary>
         /// Annoys user for spelling mistakes lol
         /// </summary>
-        private async Task CheckForSpellErrors(SocketMessage message)
+        private async Task CheckForSpellErrorsAsync(SocketMessage message)
         {
             if (message is not IUserMessage userMessage || message.Author.IsWebhook || message.Author.IsBot || message.Author is not IGuildUser gUser)
                 return;

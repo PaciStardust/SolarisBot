@@ -6,6 +6,7 @@ namespace SolarisBot.Database.Models
     internal class DbBridge
     {
         public ulong BridgeId { get; set; } = ulong.MinValue;
+        public string Name { get; set; } = string.Empty;
         public ulong GuildAId { get; set; } = ulong.MinValue;
         public ulong ChannelAId { get; set; } = ulong.MinValue;
         public ulong GuildBId { get; set; } = ulong.MinValue;
@@ -14,7 +15,7 @@ namespace SolarisBot.Database.Models
         public DbBridge() { }
 
         public override string ToString()
-            => $"{BridgeId}: {ChannelAId}({GuildAId}) <-> {ChannelBId}({GuildBId})";
+            => $"{BridgeId}: {Name} {ChannelAId}({GuildAId}) <-> {ChannelBId}({GuildBId})";
     }
 
     internal static class DbBridgeExtensions

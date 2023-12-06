@@ -9,7 +9,7 @@ using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
-    [Module("bridges"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Cleanup, Service
+    [Module("bridges"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Cleanup, Service, Per server limit
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)]
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
@@ -35,12 +35,12 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            string bridgeText = string.Join("\n", bridges.Select(x => $"- {x.BridgeId}: {(Context.Channel.Id == x.ChannelAId ? x.ChannelBId : x.ChannelAId)} in {(Context.Guild.Id == x.GuildAId ? x.GuildBId : x.GuildAId)}"));
+            string bridgeText = string.Join("\n", bridges.Select(x => $"- {x.BridgeId}: {x.Name} {(Context.Channel.Id == x.ChannelAId ? x.ChannelBId : x.ChannelAId)} in {(Context.Guild.Id == x.GuildAId ? x.GuildBId : x.GuildAId)}"));
             await Interaction.ReplyAsync($"**Bridges for {(serverwide ? "guild" : "channel")}", bridgeText);
         }
 
         [SlashCommand("create", "Create a bridge")]
-        public async Task CreateBridgeAsync(ulong guildId, ulong channelId) //todo: [TESTING] Does bridge creation work?
+        public async Task CreateBridgeAsync(string name, ulong guildId, ulong channelId) //todo: [TESTING] Does bridge creation work, name limit
         {
             if (channelId == Context.Channel.Id)
             {
@@ -95,6 +95,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var dbBridge = new DbBridge()
             {
+                Name = name, //todo: Name limit, format
                 GuildAId = Context.Guild.Id,
                 ChannelAId = Context.Channel.Id,
                 GuildBId = otherGuild.Id,
