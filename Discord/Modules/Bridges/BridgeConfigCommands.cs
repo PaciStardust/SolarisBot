@@ -9,7 +9,7 @@ using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
-    [Module("bridges"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Cleanup, Service, Per server limit
+    [Module("bridges"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Cleanup, Per server limit
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)]
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
