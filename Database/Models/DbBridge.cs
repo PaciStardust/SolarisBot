@@ -6,7 +6,9 @@ namespace SolarisBot.Database.Models
     internal class DbBridge
     {
         public ulong BridgeId { get; set; } = ulong.MinValue;
+        public ulong GuildAId { get; set; } = ulong.MinValue;
         public ulong ChannelAId { get; set; } = ulong.MinValue;
+        public ulong GuildBId { get; set; } = ulong.MinValue;
         public ulong ChannelBId { get; set; } = ulong.MinValue;
 
         public DbBridge() { }
@@ -19,5 +21,8 @@ namespace SolarisBot.Database.Models
     {
         internal static IQueryable<DbBridge> ForChannel(this IQueryable<DbBridge> query, ulong id)
             => query.Where(x => x.ChannelBId == id || x.ChannelAId == id);
+
+        internal static IQueryable<DbBridge> ForGuild(this IQueryable<DbBridge> query, ulong id)
+            => query.Where(x => x.GuildBId == id || x.GuildAId == id);
     }
 }
