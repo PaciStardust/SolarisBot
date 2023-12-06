@@ -9,7 +9,7 @@ using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
-    [Module("fun/renaming"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Deletion, Cleanup, Service
+    [Module("bridges"), Group("cfg-bridges", "[MANAGE CHANNELS ONLY] Bridge config commands")] //todo: Cleanup, Service
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)]
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
@@ -22,7 +22,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         }
 
         [SlashCommand("list", "List all bridges")]
-        public async Task ListBridges(bool serverwide = false) //todo: [TESTING] Does listing work?
+        public async Task ListBridgesAsync(bool serverwide = false) //todo: [TESTING] Does listing work?
         {
             var query = serverwide
                 ? _dbContext.Bridges.ForGuild(Context.Guild.Id)
@@ -40,7 +40,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         }
 
         [SlashCommand("create", "Create a bridge")]
-        public async Task CreateBridge(ulong guildId, ulong channelId) //todo: [TESTING] Does bridge creation work?
+        public async Task CreateBridgeAsync(ulong guildId, ulong channelId) //todo: [TESTING] Does bridge creation work?
         {
             if (channelId == Context.Channel.Id)
             {
@@ -101,11 +101,35 @@ namespace SolarisBot.Discord.Modules.Bridges
                 ChannelBId = otherChannel.Id
             };
             _dbContext.Bridges.Add(dbBridge);
-            _logger.LogDebug("{intTag} Adding bridge {bridge} created by user {user}", GetIntTag(), dbBridge, Context.User.Log());
+            _logger.LogDebug("{intTag} Adding bridge {bridge} to channel {channel} in guild {guild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Added bridge {bridge} created by user {user}", GetIntTag(), dbBridge, Context.User.Log());
+            _logger.LogInformation("{intTag} Added bridge {bridge} to channel {channel} in guild {guild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log());
             await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge to channel {Context.Channel.Id} in guild {Context.Guild.Id} with id {dbBridge.BridgeId}"));
             await Interaction.ReplyAsync($"Created bridge to channel {otherChannel.Id} in guild {otherGuild.Id} with id {dbBridge.BridgeId}");
+        }
+
+        [SlashCommand("remove", "Remove bridges from channel")]
+        public async Task RemoveBridgeAsync //todo: [TESTING] Does removal work?
+        (
+            [Summary(description: "[Optional] Bridge Id")] ulong bridgeId = 0
+        )
+        {
+            var query = bridgeId == 0
+                ? _dbContext.Bridges.ForChannel(Context.Channel.Id)
+                : _dbContext.Bridges.Where(x => x.BridgeId == bridgeId);
+
+            var bridges = await query.ToListAsync();
+            if (bridges.Count == 0)
+            {
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                return;
+            }
+
+            _dbContext.Bridges.RemoveRange(bridges);
+            _logger.LogDebug("{intTag} Removing {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log());
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("{intTag} Removed {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log());
+            await Interaction.ReplyAsync($"Removed {bridges.Count} bridges");
         }
     }
 }
