@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -31,7 +32,7 @@ namespace SolarisBot.Discord.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _client.RoleDeleted += OnRoleDeletedHandleAsync;
-            _client.ChannelDestroyed += OnChannelDestroyedRemoveRemindersAsync;
+            _client.ChannelDestroyed += OnChannelDestroyedHandleAsync;
             _client.UserLeft += OnUserLeftHandleAsync;
             _client.LeftGuild += OnLeftGuildRemoveGuildAsync;
             return Task.CompletedTask;
@@ -40,7 +41,7 @@ namespace SolarisBot.Discord.Services
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _client.RoleDeleted -= OnRoleDeletedHandleAsync;
-            _client.ChannelDestroyed -= OnChannelDestroyedRemoveRemindersAsync;
+            _client.ChannelDestroyed -= OnChannelDestroyedHandleAsync;
             _client.UserLeft -= OnUserLeftHandleAsync;
             _client.LeftGuild -= OnLeftGuildRemoveGuildAsync;
             return Task.CompletedTask;
@@ -186,29 +187,61 @@ namespace SolarisBot.Discord.Services
         }
         #endregion
 
-        #region Events - Other
+        #region Events - OnChannelDestroyed
         /// <summary>
-        /// Removes all DbReminders associated with a destroyed channel
+        /// Handles all OnChannelDestroyed events
         /// </summary>
-        private async Task OnChannelDestroyedRemoveRemindersAsync(SocketChannel channel)
+        private async Task OnChannelDestroyedHandleAsync(SocketChannel channel)
         {
             if (channel is not IGuildChannel gChannel)
                 return;
 
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
-            var reminders = await dbCtx.Reminders.Where(x => x.ChannelId == channel.Id).ToArrayAsync();
-            if (reminders.Length == 0)
+
+            var changes = await OnChannelDestroyedRemoveBridgesAsync(gChannel, dbCtx);
+            changes = changes || await OnChannelDestroyedRemoveRemindersAsync(gChannel, dbCtx);
+
+            if (!changes)
                 return;
+
+            _logger.LogDebug("Deleting references to channel {channel} in guild {guild} from DB", gChannel.Log(), gChannel.Guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+                _logger.LogError(err, "Failed to delete references to channel {channel} in guild {guild} from DB", gChannel.Log(), gChannel.Guild.Log());
+            else
+                _logger.LogInformation("Deleted references to channel {channel} in guild {guild} from DB", gChannel.Log(), gChannel.Guild.Log());
+        }
+
+        /// <summary>
+        /// Removes all DbReminders associated with a destroyed channel
+        /// </summary>
+        private async Task<bool> OnChannelDestroyedRemoveRemindersAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
+        {
+            var reminders = await dbCtx.Reminders.Where(x => x.ChannelId == gChannel.Id).ToArrayAsync();
+            if (reminders.Length == 0)
+                return false;
 
             _logger.LogDebug("Removing {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
             dbCtx.Reminders.RemoveRange(reminders);
-            var (_,err) = await dbCtx.TrySaveChangesAsync();
-            if (err is not null)
-                _logger.LogError(err, "Failed to remove {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
-            else
-                _logger.LogInformation("Removed {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
+            return true;
         }
 
+        /// <summary>
+        /// Removes all DbBridges connected with a destroyed channel
+        /// </summary>
+        private async Task<bool> OnChannelDestroyedRemoveBridgesAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
+        {
+            var bridges = await dbCtx.Bridges.ForChannel(gChannel.Id).ToArrayAsync();
+            if (bridges.Length == 0)
+                return false;
+
+            _logger.LogDebug("Removing {bridges} bridges for deleted channel {channel} in guild {guild}", bridges, gChannel.Log(), gChannel.Guild.Log());
+            dbCtx.Bridges.RemoveRange(bridges);
+            return true;
+        }
+        #endregion
+
+        #region Events - Other
         /// <summary>
         /// Removes DbGuild when leaving a guild
         /// </summary>
