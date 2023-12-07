@@ -34,7 +34,7 @@ namespace SolarisBot.Discord.Services
             _client.RoleDeleted += OnRoleDeletedHandleAsync;
             _client.ChannelDestroyed += OnChannelDestroyedHandleAsync;
             _client.UserLeft += OnUserLeftHandleAsync;
-            _client.LeftGuild += OnLeftGuildRemoveGuildAsync;
+            _client.LeftGuild += OnLeftGuildHandleAsync;
             return Task.CompletedTask;
         }
 
@@ -43,7 +43,7 @@ namespace SolarisBot.Discord.Services
             _client.RoleDeleted -= OnRoleDeletedHandleAsync;
             _client.ChannelDestroyed -= OnChannelDestroyedHandleAsync;
             _client.UserLeft -= OnUserLeftHandleAsync;
-            _client.LeftGuild -= OnLeftGuildRemoveGuildAsync;
+            _client.LeftGuild -= OnLeftGuildHandleAsync;
             return Task.CompletedTask;
         }
         #endregion
@@ -191,7 +191,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles all OnChannelDestroyed events
         /// </summary>
-        private async Task OnChannelDestroyedHandleAsync(SocketChannel channel)
+        private async Task OnChannelDestroyedHandleAsync(SocketChannel channel) //todo: [TESTING] Does channel deletion get handled correctly?
         {
             if (channel is not IGuildChannel gChannel)
                 return;
@@ -241,24 +241,54 @@ namespace SolarisBot.Discord.Services
         }
         #endregion
 
-        #region Events - Other
+        #region Events - OnLeftGuild
+        /// <summary>
+        /// Handles all OnLeftGuild events
+        /// </summary>
+        private async Task OnLeftGuildHandleAsync(SocketGuild guild) //todo: [TESTING] Does guild deletion get handled correctly?
+        {
+            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+
+            var changes = await OnLeftGuildRemoveBridgesAsync(guild, dbCtx);
+            changes = changes || await OnLeftGuildRemoveGuildAsync(guild, dbCtx);
+
+            if (!changes)
+                return;
+
+            _logger.LogDebug("Deleting references to guild {guild} from DB", guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+                _logger.LogError(err, "Failed to delete references to guild {guild} from DB", guild.Log());
+            else
+                _logger.LogInformation("Deleted references to guild {guild} from DB", guild.Log());
+        }
+
         /// <summary>
         /// Removes DbGuild when leaving a guild
         /// </summary>
-        private async Task OnLeftGuildRemoveGuildAsync(SocketGuild guild)
+        private async Task<bool> OnLeftGuildRemoveGuildAsync(SocketGuild guild, DatabaseContext dbCtx)
         {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
             if (dbGuild is null)
-                return;
+                return false;
 
             _logger.LogDebug("Removing guild for deleted guild {guild}", guild.Log());
             dbCtx.GuildConfigs.Remove(dbGuild);
-            var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err is not null)
-                _logger.LogError(err, "Failed to remove guild for deleted guild {guild}", guild.Log());
-            else
-                _logger.LogDebug("Removed guild for deleted guild {guild}", guild.Log());
+            return true;
+        }
+
+        /// <summary>
+        /// Removes bridges when leaving a guild
+        /// </summary>
+        private async Task<bool> OnLeftGuildRemoveBridgesAsync(SocketGuild guild, DatabaseContext dbCtx)
+        {
+            var bridges = await dbCtx.Bridges.ForGuild(guild.Id).ToArrayAsync();
+            if (bridges.Length == 0)
+                return false;
+
+            _logger.LogDebug("Removing {bridges} bridges for deleted guild {guild}", bridges.Length, guild.Log());
+            dbCtx.Bridges.RemoveRange(bridges);
+            return true;
         }
         #endregion
     }
