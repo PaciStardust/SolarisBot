@@ -8,7 +8,7 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace SolarisBot.Discord.Modules.Utility
 {
-    [Module("fun/gifify")]
+    [Module("utils/gifify")]
     internal class GififyCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<GififyCommands> _logger;
