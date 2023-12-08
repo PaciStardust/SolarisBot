@@ -52,7 +52,7 @@ namespace SolarisBot.Discord.Services
 #if DEBUG
             _client.Ready += RegisterInteractionsToMainAsync;
 #else
-            _client.Ready += RegisterCommandsGloballyAsync;
+            _client.Ready += RegisterInteractionsGloballyAsync;
 #endif
         }
 
