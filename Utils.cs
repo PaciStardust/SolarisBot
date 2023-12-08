@@ -14,7 +14,7 @@ namespace SolarisBot
         {
             var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
 
-            PathConfigFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "config.json"));
+            PathConfigFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "config.json")); //todo: account for docker
             PathDatabaseFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "database.db"));
             PathDictionaryFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "dictionary.txt"));
         }

@@ -41,7 +41,7 @@ namespace SolarisBot
         private static IConfiguration CreateConfiguration()
             => new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", true, true)
+                .AddJsonFile("appsettings.json", true, true) //todo: how would this work with docker?
                 .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"}.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
