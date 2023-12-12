@@ -1,6 +1,6 @@
 ﻿namespace SolarisBot.Discord.Modules.UserAnalysis
 {
-    internal abstract class CredibilityRule
+    internal class CredibilityRule
     {
         public string Name { get; init; }
         public int Score { get; init; }
