@@ -9,14 +9,15 @@ namespace SolarisBot
         internal static string PathConfigFile { get; private set; }
         internal static string PathDictionaryFile { get; private set; }
         internal static string PathDatabaseFile { get; private set; }
+        internal static string PathConfigDirectory { get; private set; }
 
         static Utils()
         {
             var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
-
-            PathConfigFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "config.json")); //todo: account for docker
-            PathDatabaseFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "database.db"));
-            PathDictionaryFile = Path.GetFullPath(Path.Combine(assemblyDirectory, "dictionary.txt"));
+            PathConfigDirectory = Path.Combine(assemblyDirectory, "cfg");
+            PathConfigFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "config.json"));
+            PathDatabaseFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "database.db"));
+            PathDictionaryFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "dictionary.txt"));
         }
 
         /// <summary>
