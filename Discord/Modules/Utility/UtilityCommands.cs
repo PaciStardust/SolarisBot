@@ -10,7 +10,7 @@ namespace SolarisBot.Discord.Modules.Utility
         //So far we need no constructor here as this has no dependencies
 
         [SlashCommand("get-pfp", "Get a users PFP"), UserCommand("Get PFP")]
-        public async Task GetUserPfp(IUser user) //todo: [TESTING] Does this format correctly?
+        public async Task GetUserPfpAsync(IUser user) //todo: [TESTING] Does this format correctly?
         {
             var gUser = GetGuildUser(user);
 
@@ -32,6 +32,17 @@ namespace SolarisBot.Discord.Modules.Utility
 
             var response = string.Join("\n\n", strings);
             await Interaction.ReplyAsync(response);
+        }
+
+        [SlashCommand("gen-embed", "Generate an embed from JSON")]
+        public async Task GenerateEmbedAsync(string json)
+        {
+            if (!EmbedBuilder.TryParse(json, out var embed))
+            {
+                await Interaction.ReplyErrorAsync("Failed to generate embed from supplied JSON");
+                return;
+            }
+            await Interaction.ReplyAsync(embed.Build());
         }
     }
 }
