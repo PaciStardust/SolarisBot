@@ -4,7 +4,7 @@ using SolarisBot.Database.Models;
 
 namespace SolarisBot.Database
 {
-    internal sealed class DatabaseContext : DbContext //todo: [UPCOMING] bdays, temp channels, get pfp commands, docker support, light control, hydro reminders, user analysis, discord sink, embed gen, wiki search?
+    internal sealed class DatabaseContext : DbContext //todo: [UPCOMING] bdays, temp channels, light control, hydro reminders, user analysis, discord sink, embed gen, wiki search?
     {
         private readonly ILogger<DatabaseContext> _logger;
         private static bool _hasMigrated = false;
