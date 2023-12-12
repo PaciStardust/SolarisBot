@@ -10,5 +10,8 @@
             Name = name;
             Score = score;
         }
+
+        public override string ToString()
+            => $"{Name}({Score})";
     }
 }
