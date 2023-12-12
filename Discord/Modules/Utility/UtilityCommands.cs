@@ -34,7 +34,7 @@ namespace SolarisBot.Discord.Modules.Utility
             await Interaction.ReplyAsync(response);
         }
 
-        [SlashCommand("gen-embed", "Generate an embed from JSON")]
+        [SlashCommand("gen-embed", "Generate an embed from JSON")] //todo: [TESTING] Does this allow users to use everyone/here pings?
         public async Task GenerateEmbedAsync(string json)
         {
             if (!EmbedBuilder.TryParse(json, out var embed))
