@@ -26,6 +26,7 @@ namespace SolarisBot
 
             logger.Information("Loading BotConfig from {cfgPath}", Utils.PathConfigFile);
             var botConfig = GetConfig();
+            botConfig.Update();
             if (!botConfig.SaveAt(Utils.PathConfigFile))
                 logger.Warning("Failed to save BotConfig");
             logger.Information("Successfully loaded BotConfig");
