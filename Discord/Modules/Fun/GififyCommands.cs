@@ -6,9 +6,9 @@ using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using Image = SixLabors.ImageSharp.Image;
 
-namespace SolarisBot.Discord.Modules.Utility
+namespace SolarisBot.Discord.Modules.Fun
 {
-    [Module("utils/gifify")]
+    [Module("fun/gifify")]
     internal class GififyCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<GififyCommands> _logger;

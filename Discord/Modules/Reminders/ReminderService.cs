@@ -46,7 +46,7 @@ namespace SolarisBot.Discord.Modules.Reminders
         private async void RemindUsersAsync(object? source, ElapsedEventArgs args)
             => await RemindUsersAsync();
 
-        private async Task RemindUsersAsync() //todo: [REFACTOR] Find a better way to query reminders
+        private async Task RemindUsersAsync()
         {
             if (_client.LoginState != LoginState.LoggedIn)
                 return;
