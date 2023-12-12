@@ -9,7 +9,7 @@
             MinimumAge = minimumAge;
         }
 
-        internal bool IsCredible(DateTime dateTime)
-            => DateTime.Now - dateTime >= MinimumAge;
+        internal bool IsCredible(TimeSpan age)
+            => age >= MinimumAge;
     }
 }
