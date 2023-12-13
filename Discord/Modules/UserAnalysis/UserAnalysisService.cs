@@ -4,12 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common.Attributes;
-using SolarisBot.Discord.Modules.Roles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SolarisBot.Discord.Modules.UserAnalysis
 {
@@ -43,7 +37,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
         //todo: autoban, warn, ignore at x point level, role at x, kick at x
         //todo: ban button
-        //todo: /report command
         //todo: logging
 
         private static readonly UserProperties _userBadgeFlags = UserProperties.Staff | UserProperties.Partner | UserProperties.HypeSquadEvents | UserProperties.BugHunterLevel1
