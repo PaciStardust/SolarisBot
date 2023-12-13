@@ -11,7 +11,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Bridges
 {
     [Module("bridges"), AutoLoadService]
-    internal class BridgeService : IHostedService //todo: [TESTING] Do everyone/here pings get filtered out?
+    internal class BridgeService : IHostedService
     {
         private readonly DatabaseContext _dbCtx;
         private readonly ILogger<BridgeService> _logger;
