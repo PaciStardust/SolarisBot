@@ -42,7 +42,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         }
 
         [UserCommand("Analyze"), SlashCommand("analyze", "Analyze a user")]
-        public async Task AnalyzeUserAsync(IUser user) //todo: does analysis work?
+        public async Task AnalyzeUserAsync(IUser user)
         {
             var gUser = GetGuildUser(user);
             var embed = UserAnalysis.ForUser(gUser, _config).GenerateSummaryEmbed();

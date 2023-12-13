@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Database.Models;
+using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Bridges
@@ -67,9 +68,9 @@ namespace SolarisBot.Discord.Modules.Bridges
 
                 try
                 {
-                    _logger.LogDebug("Sending message via bridge {bridge}", bridge);
-                    await ((IMessageChannel)channel).SendMessageAsync($"**{message.Author.GlobalName} via {bridge.Name}:** {message.CleanContent}");
-                    _logger.LogInformation("Sent message via bridge {bridge}", bridge);
+                    _logger.LogDebug("Sending message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
+                    await ((IMessageChannel)channel).SendMessageAsync($"**[{bridge.Name}]{message.Author.GlobalName}:** {message.CleanContent}");
+                    _logger.LogInformation("Sent message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
                 }
                 catch (Exception ex)
                 {
