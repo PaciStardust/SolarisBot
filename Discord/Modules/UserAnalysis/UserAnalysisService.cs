@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
@@ -14,13 +15,15 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         private readonly DiscordSocketClient _client;
         private readonly DatabaseContext _dbCtx;
         private readonly BotConfig _config;
+        private readonly IServiceProvider _services;
 
-        internal UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, DatabaseContext dbCtx, BotConfig config)
+        internal UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, DatabaseContext dbCtx, BotConfig config, IServiceProvider services)
         {
             _logger = logger;
             _client = client;
             _dbCtx = dbCtx;
             _config = config;
+            _services = services;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -39,10 +42,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         //todo: ban button
         //todo: logging
 
-        private static readonly UserProperties _userBadgeFlags = UserProperties.Staff | UserProperties.Partner | UserProperties.HypeSquadEvents | UserProperties.BugHunterLevel1
-            | UserProperties.HypeSquadBalance | UserProperties.HypeSquadBravery | UserProperties.HypeSquadBrilliance | UserProperties.EarlySupporter | UserProperties.BugHunterLevel2
-            | UserProperties.EarlyVerifiedBotDeveloper | UserProperties.DiscordCertifiedModerator | UserProperties.ActiveDeveloper; //All important badges as a flag for AND with user flags
-
         private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
         {
             if (user.IsWebhook || user.IsBot)
@@ -54,9 +53,20 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
             var analysis = UserAnalysis.ForUser(user, _config);
 
-            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel);
-            if (channel is null) //todo: set channel back to 0
+            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel); //todo: add param to cleanup
+            if (channel is null)
+            {
+                _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+                dbGuild.UserAnalysisChannel = 0;
+                var dbCtx = _services.GetRequiredService<DatabaseContext>();
+                dbCtx.GuildConfigs.Update(dbGuild);
+                var (_, err) = await dbCtx.TrySaveChangesAsync();
+                if (err is not null)
+                    _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+                else
+                    _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
                 return;
+            }
 
             //todo: send message?
         }

@@ -75,7 +75,7 @@ namespace SolarisBot
                     new("Skin", -30, "skins?"),
                     new("Discord Link", -20, @"(?:discord|dsc)\.gg"),
                     new("Hacked", -50, "(?:hacked|compromised)"),
-                    new("Alt Account", -50, "(?:alt(?:ernative)?[- ]*(?:acc(?:ount)?)?|new[- ]*acc(?:ount)?)"), //todo: this triggering on "alt" might suck
+                    new("Alt Account", -50, "(?:alt(?:ernative)?[- ]*(?:acc(?:ount)?)?|new[- ]*acc(?:ount)?)"),
                     new("Portfolio", -15, "(?:portfolio|pric(?:es|ing))"),
                     new("Emotes", -30,"emo(?:tes?|ji)"),
                     new("Profile Picture", -10, "(?:profile[- ]*pic(?:ture)?|pfp)s?"),
