@@ -5,7 +5,7 @@
         public string Name { get; init; }
         public int Score { get; init; }
 
-        internal CredibilityRule(string name, int score)
+        public CredibilityRule(string name, int score)
         {
             Name = name;
             Score = score;

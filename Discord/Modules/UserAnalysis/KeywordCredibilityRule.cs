@@ -7,7 +7,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         public string Keyword { get; init; }
         private readonly Regex _regex;
 
-        internal KeywordCredibilityRule(string name, int score, string keyword) : base(name, score)
+        public KeywordCredibilityRule(string name, int score, string keyword) : base(name, score)
         {
             Keyword = keyword;
             _regex = new Regex(Keyword, RegexOptions.IgnoreCase);

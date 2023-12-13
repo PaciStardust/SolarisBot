@@ -4,7 +4,7 @@
     {
         public TimeSpan MinimumAge { get; init; }
 
-        internal TimeCredibilityRule(string name, int score, TimeSpan minimumAge) : base(name, score)
+        public TimeCredibilityRule(string name, int score, TimeSpan minimumAge) : base(name, score)
         {
             MinimumAge = minimumAge;
         }
