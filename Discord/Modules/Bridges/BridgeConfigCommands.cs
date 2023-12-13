@@ -150,7 +150,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Added bridge {bridge} to channel {channel} in guild {guild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log());
             await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge to channel {Context.Channel.Id} in guild {Context.Guild.Id} with id {dbBridge.BridgeId}"));
-            await Interaction.ReplyAsync($"Created bridge to channel {otherChannel.Id} in guild {otherGuild.Id} with id {dbBridge.BridgeId}");
+            await Interaction.ReplyAsync($"Created bridge to channel **{otherChannel.Id}** in guild **{otherGuild.Id}** with id **{dbBridge.BridgeId}**");
         }
 
         [SlashCommand("remove", "Remove bridges from channel")]
@@ -180,7 +180,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             _logger.LogDebug("{intTag} Removing {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Removed {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Removed {bridges.Count} bridge{(bridges.Count == 0 ? string.Empty : "s")}");
+            await Interaction.ReplyAsync($"Removed **{bridges.Count}** bridge{(bridges.Count == 0 ? string.Empty : "s")}");
         }
     }
 }
