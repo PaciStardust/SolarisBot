@@ -22,7 +22,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         }
 
         [SlashCommand("config", "Set up user analysis")] //todo: [TESTING] Does configure work?
-        public async Task ConfigureAnalysisAsynx
+        public async Task ConfigureAnalysisAsync
         (
             [Summary(description: "Notification channel (none to disable)")] IChannel? channel, //todo: tweak defaults,is param optional
             [Summary(description: "Minimum points for warning")] ulong minWarn = 0,
