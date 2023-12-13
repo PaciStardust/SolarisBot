@@ -47,7 +47,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         }
 
         [SlashCommand("create", "Create a bridge")]
-        public async Task CreateBridgeAsync
+        public async Task CreateBridgeAsync //todo: better logging
         (
             [MinLength(2), MaxLength(20), Summary(description: "Bridge name")] string name,
             [Summary(description: "Id of target guild")] string guildId,
@@ -149,8 +149,8 @@ namespace SolarisBot.Discord.Modules.Bridges
             _logger.LogDebug("{intTag} Adding bridge {bridge} to channel {channel} in guild {guild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Added bridge {bridge} to channel {channel} in guild {guild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log());
-            await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge to channel {Context.Channel.Id} in guild {Context.Guild.Id} with id {dbBridge.BridgeId}"));
-            await Interaction.ReplyAsync($"Created bridge to channel **{otherChannel.Id}** in guild **{otherGuild.Id}** with id **{dbBridge.BridgeId}**");
+            await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge to channel **{Context.Channel.Log()}** in guild **{Context.Guild.Log()}** with id **{dbBridge.BridgeId}**"));
+            await Interaction.ReplyAsync($"Created bridge to channel **{otherChannel.Log()}** in guild **{otherGuild.Log()}** with id **{dbBridge.BridgeId}**");
         }
 
         [SlashCommand("remove", "Remove bridges from channel")]
