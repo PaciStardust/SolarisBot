@@ -102,7 +102,7 @@ namespace SolarisBot
                     new("Age <= 270D", -75, new(270, 0, 0, 0)),
                     new("Age <= 360D", -35, new(360, 0, 0, 0)),
                 };
-                //todo: time
+                CredibilityRulesTime.AddRange(credibilityTimes);
 
                 Version = 1;
             }

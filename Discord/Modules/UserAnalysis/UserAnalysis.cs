@@ -60,7 +60,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var failedDiscriminatorCheck = user.DiscriminatorValue == 0;
             var failedProfileCheck = user.GetAvatarUrl() == null; //todo: does this check function?
 
-            ulong userBadges = 0; //todo: does this work???
+            ulong userBadges = 0;
             if (user.PublicFlags.HasValue)
             {
                 var flags = user.PublicFlags.Value & _userBadgeFlags;
@@ -109,7 +109,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             return score;
         }
 
-        internal Embed GenerateSummaryEmbed(int? score = null)
+        internal Embed GenerateSummaryEmbed(int? score = null) //todo: formatting
         {
             var summaryStrings = new List<string>();
 

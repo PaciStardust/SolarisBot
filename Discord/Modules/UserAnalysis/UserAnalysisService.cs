@@ -44,31 +44,31 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
         private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
         {
-            if (user.IsWebhook || user.IsBot)
-                return;
+            //if (user.IsWebhook || user.IsBot)
+            //    return;
 
-            var dbGuild = await _dbCtx.GetGuildByIdAsync(user.Guild.Id);
-            if (dbGuild is null || dbGuild.UserAnalysisChannel == ulong.MinValue)
-                return;
+            //var dbGuild = await _dbCtx.GetGuildByIdAsync(user.Guild.Id);
+            //if (dbGuild is null || dbGuild.UserAnalysisChannel == ulong.MinValue)
+            //    return;
 
-            var analysis = UserAnalysis.ForUser(user, _config);
+            //var analysis = UserAnalysis.ForUser(user, _config);
 
-            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel);
-            if (channel is null)
-            {
-                _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
-                dbGuild.UserAnalysisChannel = 0;
-                var dbCtx = _services.GetRequiredService<DatabaseContext>();
-                dbCtx.GuildConfigs.Update(dbGuild);
-                var (_, err) = await dbCtx.TrySaveChangesAsync();
-                if (err is not null)
-                    _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
-                else
-                    _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
-                return;
-            }
+            //var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel);
+            //if (channel is null)
+            //{
+            //    _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+            //    dbGuild.UserAnalysisChannel = 0;
+            //    var dbCtx = _services.GetRequiredService<DatabaseContext>();
+            //    dbCtx.GuildConfigs.Update(dbGuild);
+            //    var (_, err) = await dbCtx.TrySaveChangesAsync();
+            //    if (err is not null)
+            //        _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+            //    else
+            //        _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+            //    return;
+            //}
 
-            //todo: send message?
+            ////todo: send message?
         }
     }
 }
