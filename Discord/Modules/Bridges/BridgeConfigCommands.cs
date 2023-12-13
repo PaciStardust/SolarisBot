@@ -165,9 +165,10 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            var query = pBridge == 0
-                ? _dbContext.Bridges.ForChannel(Context.Channel.Id)
-                : _dbContext.Bridges.Where(x => x.BridgeId == pBridge);
+            var query = _dbContext.Bridges.ForGuild(Context.Guild.Id);
+            query = pBridge == 0
+                ? query.ForChannel(Context.Channel.Id)
+                : query.Where(x => x.BridgeId == pBridge);
 
             var bridges = await query.ToListAsync();
             if (bridges.Count == 0)
