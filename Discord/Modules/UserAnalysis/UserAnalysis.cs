@@ -4,7 +4,7 @@ using SolarisBot.Discord.Common;
 
 namespace SolarisBot.Discord.Modules.UserAnalysis
 {
-    internal class UserAnalysis
+    internal class UserAnalysis //todo: [BUG] does not have access to online state
     {
         private readonly SocketGuildUser _user;
 
