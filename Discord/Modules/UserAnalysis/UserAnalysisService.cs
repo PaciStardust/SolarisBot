@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
             var analysis = UserAnalysis.ForUser(user, _config);
 
-            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel); //todo: add param to cleanup
+            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel);
             if (channel is null)
             {
                 _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
