@@ -192,28 +192,9 @@ namespace SolarisBot.Discord.Modules.Bridges
                 var channelB = await _client.GetChannelAsync(bridge.ChannelBId);
 
                 if (channelA is not null && channelA is IMessageChannel msgChannelA)
-                    await TryNotifyChannelForBridgeDeletionAsync(msgChannelA, channelB, bridge, true);
+                    await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgChannelA, channelB, bridge, _logger, true);
                 if (channelB is not null && channelB is IMessageChannel msgChannelB)
-                    await TryNotifyChannelForBridgeDeletionAsync(msgChannelB, channelA, bridge, false);
-            }
-        }
-
-        private async Task TryNotifyChannelForBridgeDeletionAsync(IMessageChannel msgChannel, IChannel? otherChannel, DbBridge bridge, bool bridgeGroupB = false) //todo: [TESTING] Does notifying work
-        {
-            SocketGuildChannel? gOtherChannel = null;
-            if (otherChannel is not null && otherChannel is SocketGuildChannel goc)
-                gOtherChannel = goc;
-
-            try
-            {
-                _logger.LogDebug("{intTag} Notifying channel {channel} in guild {guild} of deleted bridge {bridge}", GetIntTag(), otherChannel?.Log() ?? (bridgeGroupB ? bridge.ChannelBId : bridge.ChannelAId).ToString(), gOtherChannel?.Guild.Log() ?? (bridgeGroupB ? bridge.GuildBId : bridge.GuildAId).ToString(), bridge);
-                var notifyEmbed = EmbedFactory.Default($"Bridge {bridge.ToDiscordInfoString()} to channel {otherChannel?.ToDiscordInfoString() ?? (bridgeGroupB ? bridge.ChannelBId : bridge.ChannelAId).ToString()} in guild {gOtherChannel?.Guild.ToDiscordInfoString() ?? $"**{(bridgeGroupB ? bridge.GuildBId : bridge.GuildAId)}**"} has been removed");
-                await msgChannel.SendMessageAsync(embed: notifyEmbed);
-                _logger.LogInformation("{intTag} Notified channel {channel} in guild {guild} of deleted bridge {bridge}", GetIntTag(), otherChannel?.Log() ?? (bridgeGroupB ? bridge.ChannelBId : bridge.ChannelAId).ToString(), gOtherChannel?.Guild.Log() ?? (bridgeGroupB ? bridge.GuildBId : bridge.GuildAId).ToString(), bridge);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{intTag} Failed notifying channel {channel} in guild {guild} of deleted bridge {bridge}", GetIntTag(), otherChannel?.Log() ?? (bridgeGroupB ? bridge.ChannelBId : bridge.ChannelAId).ToString(), gOtherChannel?.Guild.Log() ?? (bridgeGroupB ? bridge.GuildBId : bridge.GuildAId).ToString(), bridge);
+                    await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgChannelB, channelA, bridge, _logger, false);
             }
         }
     }

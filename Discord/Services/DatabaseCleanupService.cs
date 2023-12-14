@@ -8,6 +8,7 @@ using SolarisBot.Database;
 using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
+using SolarisBot.Discord.Modules.Bridges;
 
 namespace SolarisBot.Discord.Services
 {
@@ -255,7 +256,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Removes all DbBridges connected with a destroyed channel
         /// </summary>
-        private async Task<bool> OnChannelDestroyedRemoveBridgesAsync(IGuildChannel gChannel, DatabaseContext dbCtx) //todo: notify channels?
+        private async Task<bool> OnChannelDestroyedRemoveBridgesAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
         {
             var bridges = await dbCtx.Bridges.ForChannel(gChannel.Id).ToArrayAsync();
             if (bridges.Length == 0)
@@ -263,6 +264,17 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing {bridges} bridges for deleted channel {channel} in guild {guild}", bridges, gChannel.Log(), gChannel.Guild.Log());
             dbCtx.Bridges.RemoveRange(bridges);
+
+            foreach (var bridge in bridges) //todo: [TESTING] Does notifying work?
+            {
+                var useB = gChannel.Id == bridge.ChannelAId;
+
+                var notifyChannel = await _client.GetChannelAsync(useB ? bridge.ChannelBId : bridge.ChannelAId);
+                if (notifyChannel is null || notifyChannel is not IMessageChannel msgNotifyChannel)
+                    continue;
+
+                await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgNotifyChannel, gChannel, bridge, _logger, !useB);
+            }
             return true;
         }
         #endregion
@@ -306,7 +318,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Removes bridges when leaving a guild
         /// </summary>
-        private async Task<bool> OnLeftGuildRemoveBridgesAsync(SocketGuild guild, DatabaseContext dbCtx) //todo: notify channels?
+        private async Task<bool> OnLeftGuildRemoveBridgesAsync(SocketGuild guild, DatabaseContext dbCtx)
         {
             var bridges = await dbCtx.Bridges.ForGuild(guild.Id).ToArrayAsync();
             if (bridges.Length == 0)
@@ -314,6 +326,20 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing {bridges} bridges for deleted guild {guild}", bridges.Length, guild.Log());
             dbCtx.Bridges.RemoveRange(bridges);
+
+            foreach(var bridge in bridges)
+            {
+                if (bridge.GuildAId == guild.Id && bridge.GuildBId == guild.Id)
+                    continue;
+
+                var useB = guild.Id == bridge.GuildAId;
+
+                var notifyChannel = await _client.GetChannelAsync(useB ? bridge.ChannelBId : bridge.ChannelAId);
+                if (notifyChannel is null || notifyChannel is not IMessageChannel msgNotifyChannel)
+                    continue;
+
+                await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgNotifyChannel, null, bridge, _logger, !useB);
+            }
             return true;
         }
         #endregion

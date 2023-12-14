@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Modules.Bridges
                 var channelId = bridge.ChannelAId == message.Channel.Id ? bridge.ChannelBId : bridge.ChannelAId;
                 var channel = await _client.GetChannelAsync(channelId);
 
-                if (channel is null)
+                if (channel is null) //todo: notify for bridge deletion
                 {
                     var tempCtx = _services.GetRequiredService<DatabaseContext>();
                     tempCtx.Bridges.Remove(bridge);
