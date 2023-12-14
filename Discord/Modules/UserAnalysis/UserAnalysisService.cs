@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
+using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.UserAnalysis
@@ -40,35 +41,44 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
         //todo: autoban, warn, ignore at x point level, role at x, kick at x
         //todo: ban button
-        //todo: logging
 
-        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user) //todo: reactivate
+        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
         {
-            //if (user.IsWebhook || user.IsBot)
-            //    return;
+            if (user.IsWebhook || user.IsBot)
+                return;
 
-            //var dbGuild = await _dbCtx.GetGuildByIdAsync(user.Guild.Id);
-            //if (dbGuild is null || dbGuild.UserAnalysisChannel == ulong.MinValue)
-            //    return;
+            var dbGuild = await _dbCtx.GetGuildByIdAsync(user.Guild.Id);
+            if (dbGuild is null || dbGuild.UserAnalysisChannel == ulong.MinValue)
+                return;
 
-            //var analysis = UserAnalysis.ForUser(user, _config);
+            var analysis = UserAnalysis.ForUser(user, _config);
 
-            //var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel);
-            //if (channel is null)
-            //{
-            //    _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
-            //    dbGuild.UserAnalysisChannel = 0;
-            //    var dbCtx = _services.GetRequiredService<DatabaseContext>();
-            //    dbCtx.GuildConfigs.Update(dbGuild);
-            //    var (_, err) = await dbCtx.TrySaveChangesAsync();
-            //    if (err is not null)
-            //        _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
-            //    else
-            //        _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
-            //    return;
-            //}
+            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel);
+            if (channel is null || channel is not IMessageChannel msgChannel)
+            {
+                _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+                dbGuild.UserAnalysisChannel = 0;
+                var dbCtx = _services.GetRequiredService<DatabaseContext>();
+                dbCtx.GuildConfigs.Update(dbGuild);
+                var (_, err) = await dbCtx.TrySaveChangesAsync();
+                if (err is not null)
+                    _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+                else
+                    _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+                return;
+            }
 
-            ////todo: send message?
+            var analysisScore = analysis.CalculateScore();
+            try
+            {
+                _logger.LogInformation("Sending user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
+                await msgChannel.SendMessageAsync(embed: analysis.GenerateSummaryEmbed(analysisScore));
+                _logger.LogInformation("Sent user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed sending user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
+            }
         }
     }
 }

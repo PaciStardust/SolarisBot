@@ -153,6 +153,9 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
         internal static int CalculateRuleScoreSum<T>(IEnumerable<T> enumerable) where T : CredibilityRule
             => enumerable.Sum(x => x.Score);
+
+        internal string Log(int? score = null)
+            => $"{_user.Log()} => {score ?? CalculateScore()}";
     }
 
     //internal enum UserAnalysisOnlineState
