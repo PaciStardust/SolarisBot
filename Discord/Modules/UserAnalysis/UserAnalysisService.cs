@@ -42,7 +42,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         //todo: ban button
         //todo: logging
 
-        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
+        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user) //todo: reactivate
         {
             //if (user.IsWebhook || user.IsBot)
             //    return;

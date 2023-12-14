@@ -87,7 +87,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             };
         }
 
-        internal int CalculateScore()  //todo: parameterize
+        internal int CalculateScore()
         {
             var score = CalculateRuleScoreSum(FailedKeywordRulesUsername) + CalculateRuleScoreSum(FailedKeywordRulesGlobalname);
 
@@ -146,7 +146,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             return embed.Build();
         }
 
-        internal int CalculateBadgeScore() //todo: parameterize
+        internal int CalculateBadgeScore()
             => UserBadges == 0
             ? _noBadgesPenalty
             : Convert.ToInt32(UserBadges) * _badgeValue;
