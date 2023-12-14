@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
@@ -17,12 +18,14 @@ namespace SolarisBot.Discord.Modules.Bridges
         private readonly ILogger<BridgeConfigCommands> _logger;
         private readonly DatabaseContext _dbContext;
         private readonly BotConfig _config;
+        private readonly DiscordSocketClient _client;
 
-        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DatabaseContext dbctx, BotConfig config)
+        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DatabaseContext dbctx, BotConfig config, DiscordSocketClient client)
         {
             _dbContext = dbctx;
             _logger = logger;
             _config = config;
+            _client = client;
         }
 
         [SlashCommand("list", "List all bridges")]
@@ -46,7 +49,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             await Interaction.ReplyAsync($"Bridges for this {(guild ? "Guild" : "Channel")}", bridgeText);
         }
 
-        [SlashCommand("create", "Create a bridge")]
+        [SlashCommand("create", "Create a bridge")] //todo: add bridge name to notify
         public async Task CreateBridgeAsync
         (
             [MinLength(2), MaxLength(20), Summary(description: "Bridge name")] string name,
@@ -182,6 +185,25 @@ namespace SolarisBot.Discord.Modules.Bridges
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Removed {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log());
             await Interaction.ReplyAsync($"Removed **{bridges.Count}** bridge{(bridges.Count == 0 ? string.Empty : "s")}");
+
+            foreach (var bridge in bridges) //todo: logging, sending to both sides
+            {
+                if (bridge.GuildAId == bridge.GuildBId)
+                    continue;
+
+                var useGroupB = bridge.GuildAId == Context.Guild.Id;
+                ulong otherChannelId = useGroupB
+                    ? bridge.ChannelBId
+                    : bridge.ChannelAId;
+
+                var channel = await _client.GetChannelAsync(otherChannelId);
+                if (channel is null)
+                    continue;
+
+                //todo: error handling for all channel sends, formatted tosting for channels and guilds, insert full channel info?
+                var embed = EmbedFactory.Default($"Bridge **{bridge.Name}**​*({bridge.BridgeId})* to channel **{(useGroupB ? bridge.ChannelAId : bridge.ChannelBId)}** in guild **{Context.Guild.Name}**​*({Context.Guild.Id})* has been removed");
+                await ((IMessageChannel)channel).SendMessageAsync(embed: embed);
+            }
         }
     }
 }
