@@ -255,7 +255,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Removes all DbBridges connected with a destroyed channel
         /// </summary>
-        private async Task<bool> OnChannelDestroyedRemoveBridgesAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
+        private async Task<bool> OnChannelDestroyedRemoveBridgesAsync(IGuildChannel gChannel, DatabaseContext dbCtx) //todo: notify channels?
         {
             var bridges = await dbCtx.Bridges.ForChannel(gChannel.Id).ToArrayAsync();
             if (bridges.Length == 0)
@@ -306,7 +306,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Removes bridges when leaving a guild
         /// </summary>
-        private async Task<bool> OnLeftGuildRemoveBridgesAsync(SocketGuild guild, DatabaseContext dbCtx)
+        private async Task<bool> OnLeftGuildRemoveBridgesAsync(SocketGuild guild, DatabaseContext dbCtx) //todo: notify channels?
         {
             var bridges = await dbCtx.Bridges.ForGuild(guild.Id).ToArrayAsync();
             if (bridges.Length == 0)

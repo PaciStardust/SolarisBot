@@ -41,6 +41,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
         //todo: autoban, warn, ignore at x point level, role at x, kick at x
         //todo: quarantine?
+        //todo: vouch button?
 
         private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
         {
@@ -68,11 +69,19 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 return;
             }
 
+            var componentBuilder = new ComponentBuilder();
+            if (user.Guild.CurrentUser.GuildPermissions.ModerateMembers)
+            {
+                componentBuilder = componentBuilder
+                    .WithButton("Kick", $"solaris_analysis_kick.{user.Id}", ButtonStyle.Danger)
+                    .WithButton("Ban", $"solaris_analysis_vouch.{user.Id}", ButtonStyle.Danger);
+            }
+
             var analysisScore = analysis.CalculateScore();
             try
             {
                 _logger.LogInformation("Sending user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
-                await msgChannel.SendMessageAsync(embed: analysis.GenerateSummaryEmbed(analysisScore));
+                await msgChannel.SendMessageAsync(embed: analysis.GenerateSummaryEmbed(analysisScore), components: componentBuilder.Build()); //todo: [TESTING] Does this error without components?
                 _logger.LogInformation("Sent user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
             }
             catch (Exception ex)

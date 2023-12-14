@@ -198,7 +198,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
         }
 
-        private async Task TryNotifyChannelForBridgeDeletionAsync(IMessageChannel msgChannel, IChannel? otherChannel, DbBridge bridge, bool bridgeGroupB = false) //todo:[TESTING] Does notifying work
+        private async Task TryNotifyChannelForBridgeDeletionAsync(IMessageChannel msgChannel, IChannel? otherChannel, DbBridge bridge, bool bridgeGroupB = false) //todo: [TESTING] Does notifying work
         {
             SocketGuildChannel? gOtherChannel = null;
             if (otherChannel is not null && otherChannel is SocketGuildChannel goc)

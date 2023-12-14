@@ -59,7 +59,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             }
 
             var failedDiscriminatorCheck = user.DiscriminatorValue == 0;
-            var failedProfileCheck = user.GetAvatarUrl() == null; //todo: does this check function?
+            var failedProfileCheck = user.GetAvatarUrl() == null; //todo: [TESTING] Does this check function?
 
             ulong userBadges = 0;
             if (user.PublicFlags.HasValue)
