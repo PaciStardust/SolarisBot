@@ -37,6 +37,8 @@ namespace SolarisBot.Database
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
 
         public DbGuildConfig() { } //To avoid defaults not setting
+
+        public bool VouchingOn => VouchRoleId != ulong.MinValue && VouchPermissionRoleId != ulong.MinValue;
     }
 
     internal static class DbGuildConfigExtensions

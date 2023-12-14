@@ -44,7 +44,7 @@ namespace SolarisBot.Discord.Modules.Roles
             var gUser = GetGuildUser(Context.User);
             var gTargetUser = GetGuildUser(user);
 
-            if (dbGuild is null || dbGuild.VouchPermissionRoleId == ulong.MinValue || dbGuild.VouchRoleId == ulong.MinValue)
+            if (dbGuild is null || !dbGuild.VouchingOn)
             {
                 await Interaction.ReplyErrorAsync("Vouching is not enabled in this guild");
                 return;
