@@ -40,7 +40,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         }
 
         //todo: autoban, warn, ignore at x point level, role at x, kick at x
-        //todo: ban button
+        //todo: quarantine?
 
         private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
         {

@@ -9,7 +9,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Roles
 {
     [Module("roles/roleselect"), Group("cfg-roleselect", "[MANAGE ROLES ONLY] Role selection config commands")]
-    [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(ChannelPermission.ManageRoles)]
+    [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
     internal class RoleSelectConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RoleSelectConfigCommands> _logger;
@@ -212,7 +212,7 @@ namespace SolarisBot.Discord.Modules.Roles
             await Interaction.ReplyAsync($"A role with the identifier **\"{identifierSearch}\"** has been unregistered");
         }
 
-        [SlashCommand("spawn-permaselect", "Spawns a permanent role selector"), RequireBotPermission(ChannelPermission.ManageRoles)]
+        [SlashCommand("spawn-permaselect", "Spawns a permanent role selector"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task SpawnPermaselectAsync
         (
             [Summary(description: "Identifier of group"), MinLength(2), MaxLength(20)] string identifier
