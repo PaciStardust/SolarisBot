@@ -4,7 +4,7 @@ using SolarisBot.Discord.Common;
 
 namespace SolarisBot.Discord.Modules.UserAnalysis
 {
-    internal class UserAnalysis //todo: [BUG] does not have access to online state
+    internal class UserAnalysis
     {
         private readonly SocketGuildUser _user;
 
@@ -19,7 +19,8 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         internal bool FailedOldDiscriminatorCheck { get; private set; } = false;
         internal bool FailedDefaultPfpCheck { get; private set; } = false;
         internal ulong UserBadges { get; private set; } = 0;
-        internal UserAnalysisOnlineState OnlineState {  get; private set; } = UserAnalysisOnlineState.Online;
+        //All code regarding accessing a users online state has been disabled as the bot does not have access to this info
+        //internal UserAnalysisOnlineState OnlineState {  get; private set; } = UserAnalysisOnlineState.Online;
 
         private const UserProperties _userBadgeFlags = UserProperties.Staff | UserProperties.Partner | UserProperties.HypeSquadEvents | UserProperties.BugHunterLevel1
             | UserProperties.HypeSquadBalance | UserProperties.HypeSquadBravery | UserProperties.HypeSquadBrilliance | UserProperties.EarlySupporter | UserProperties.BugHunterLevel2
@@ -28,8 +29,8 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         private const int _failedDefaultPfpCheckPenalty = 75;
         private const int _noBadgesPenalty = 30;
         private const int _badgeValue = -15;
-        private const int _userOfflinePenalty = 50;
-        private const int _userInvisiblePenalty = 15;
+        //private const int _userOfflinePenalty = 50;
+        //private const int _userInvisiblePenalty = 15;
 
         internal static UserAnalysis ForUser(SocketGuildUser user, BotConfig config)
         {
@@ -68,11 +69,11 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             }
             var badgeValue = userBadges == 0 ? 30 : Convert.ToInt32(userBadges) * -15;
 
-            var onlineState = user.Status.HasFlag(UserStatus.Offline)
-                ? UserAnalysisOnlineState.Offline
-                : user.Status.HasFlag(UserStatus.Invisible)
-                ? UserAnalysisOnlineState.Invisible
-                : UserAnalysisOnlineState.Online;
+            //var onlineState = user.Status.HasFlag(UserStatus.Offline)
+            //    ? UserAnalysisOnlineState.Offline
+            //    : user.Status.HasFlag(UserStatus.Invisible)
+            //    ? UserAnalysisOnlineState.Invisible
+            //    : UserAnalysisOnlineState.Online;
 
             return new UserAnalysis(user)
             {
@@ -82,7 +83,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 FailedOldDiscriminatorCheck = failedDiscriminatorCheck,
                 FailedDefaultPfpCheck = failedProfileCheck,
                 UserBadges = userBadges,
-                OnlineState = onlineState,
+                //OnlineState = onlineState,
             };
         }
 
@@ -101,10 +102,10 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 ? _noBadgesPenalty
                 : Convert.ToInt32(UserBadges) * _badgeValue;
 
-            if (OnlineState != UserAnalysisOnlineState.Online)
-                score += OnlineState == UserAnalysisOnlineState.Invisible
-                    ? _userInvisiblePenalty
-                    : _userOfflinePenalty;
+            //if (OnlineState != UserAnalysisOnlineState.Online)
+            //    score += OnlineState == UserAnalysisOnlineState.Invisible
+            //        ? _userInvisiblePenalty
+            //        : _userOfflinePenalty;
 
             return score;
         }
@@ -126,13 +127,13 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             if (FailedDefaultPfpCheck)
                 othersStrings.Add($"No PFP({_failedDefaultPfpCheckPenalty})");
             othersStrings.Add($"{(UserBadges == 0 ? "No " : string.Empty)}Badges({CalculateBadgeScore()})");
-            if (OnlineState != UserAnalysisOnlineState.Online)
-            {
-                othersStrings.Add(OnlineState == UserAnalysisOnlineState.Invisible
-                    ? $"Invisible({_userInvisiblePenalty})"
-                    : $"Offline({_userOfflinePenalty})"
-                    );
-            }
+            //if (OnlineState != UserAnalysisOnlineState.Online)
+            //{
+            //    othersStrings.Add(OnlineState == UserAnalysisOnlineState.Invisible
+            //        ? $"Invisible({_userInvisiblePenalty})"
+            //        : $"Offline({_userOfflinePenalty})"
+            //        );
+            //}
             summaryStrings.Add($"Other: {string.Join(", ", othersStrings)}");
 
             score ??= CalculateScore();
@@ -154,10 +155,10 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             => enumerable.Sum(x => x.Score);
     }
 
-    internal enum UserAnalysisOnlineState
-    {
-        Online,
-        Invisible,
-        Offline
-    }
+    //internal enum UserAnalysisOnlineState
+    //{
+    //    Online,
+    //    Invisible,
+    //    Offline
+    //}
 }
