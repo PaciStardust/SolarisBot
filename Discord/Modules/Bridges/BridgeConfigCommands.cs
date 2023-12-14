@@ -49,7 +49,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             await Interaction.ReplyAsync($"Bridges for this {(guild ? "Guild" : "Channel")}", bridgeText);
         }
 
-        [SlashCommand("create", "Create a bridge")] //todo: add bridge name to notify
+        [SlashCommand("create", "Create a bridge")]
         public async Task CreateBridgeAsync
         (
             [MinLength(2), MaxLength(20), Summary(description: "Bridge name")] string name,
@@ -152,8 +152,8 @@ namespace SolarisBot.Discord.Modules.Bridges
             _logger.LogDebug("{intTag} Adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log(), otherChannel.Log(), otherGuild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} Added bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log(), otherChannel.Log(), otherGuild.Log());
-            await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge to channel **{Context.Channel.Name}**​*({Context.Channel.Id})* in guild **{Context.Guild.Name}**​*({Context.Guild.Id})* with id **{dbBridge.BridgeId}**"));
-            await Interaction.ReplyAsync($"Created bridge to channel **{otherChannel.Name}**​*({otherChannel.Id})* in guild **{otherGuild.Name}**​*({otherGuild.Id})* with id **{dbBridge.BridgeId}**");
+            await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge {dbBridge.ToDiscordInfoString()} channel {Context.Channel.ToDiscordInfoString()} in guild {Context.Guild.ToDiscordInfoString()}"));
+            await Interaction.ReplyAsync($"Created bridge {dbBridge.ToDiscordInfoString()} to channel {otherChannel.ToDiscordInfoString()} in guild {otherGuild.ToDiscordInfoString()}");
         }
 
         [SlashCommand("remove", "Remove bridges from channel")]
@@ -183,7 +183,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             _dbContext.Bridges.RemoveRange(bridges);
             _logger.LogDebug("{intTag} Removing {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Removed {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log());
+            _logger.LogInformation("{intTag} Removed {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Count, Context.Guild.Log()); //todo: detailed info
             await Interaction.ReplyAsync($"Removed **{bridges.Count}** bridge{(bridges.Count == 0 ? string.Empty : "s")}");
 
             foreach (var bridge in bridges) //todo: logging, sending to both sides
@@ -200,8 +200,8 @@ namespace SolarisBot.Discord.Modules.Bridges
                 if (channel is null)
                     continue;
 
-                //todo: error handling for all channel sends, formatted tosting for channels and guilds, insert full channel info?
-                var embed = EmbedFactory.Default($"Bridge **{bridge.Name}**​*({bridge.BridgeId})* to channel **{(useGroupB ? bridge.ChannelAId : bridge.ChannelBId)}** in guild **{Context.Guild.Name}**​*({Context.Guild.Id})* has been removed");
+                //todo: error handling for all channel sends, insert full channel info?
+                var embed = EmbedFactory.Default($"Bridge {bridge.ToDiscordInfoString()} to channel **{(useGroupB ? bridge.ChannelAId : bridge.ChannelBId)}** in guild {Context.Guild.ToDiscordInfoString()} has been removed");
                 await ((IMessageChannel)channel).SendMessageAsync(embed: embed);
             }
         }
