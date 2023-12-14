@@ -110,16 +110,16 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             return score;
         }
 
-        internal Embed GenerateSummaryEmbed(int? score = null) //todo: formatting
+        internal Embed GenerateSummaryEmbed(int? score = null)
         {
             var summaryStrings = new List<string>();
 
             if (FailedKeywordRulesUsername.Count > 0)
-                summaryStrings.Add($"Username({CalculateRuleScoreSum(FailedKeywordRulesUsername)}): {string.Join(", ", FailedKeywordRulesUsername)}");
+                summaryStrings.Add($"**Username({CalculateRuleScoreSum(FailedKeywordRulesUsername)}):** {string.Join(", ", FailedKeywordRulesUsername)}");
             if (FailedKeywordRulesGlobalname.Count > 0)
-                summaryStrings.Add($"Globalname({CalculateRuleScoreSum(FailedKeywordRulesGlobalname)}): {string.Join(", ", FailedKeywordRulesGlobalname)}");
+                summaryStrings.Add($"**Globalname({CalculateRuleScoreSum(FailedKeywordRulesGlobalname)}):** {string.Join(", ", FailedKeywordRulesGlobalname)}");
             if (FailedTimeRule is not null)
-                summaryStrings.Add($"Joined: {FailedTimeRule}");
+                summaryStrings.Add($"**Joined:** {FailedTimeRule}");
 
             var othersStrings = new List<string>();
             if (FailedOldDiscriminatorCheck)
@@ -134,7 +134,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             //        : $"Offline({_userOfflinePenalty})"
             //        );
             //}
-            summaryStrings.Add($"Other: {string.Join(", ", othersStrings)}");
+            summaryStrings.Add($"**Other:** {string.Join(", ", othersStrings)}");
 
             score ??= CalculateScore();
 

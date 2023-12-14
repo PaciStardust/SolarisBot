@@ -157,7 +157,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         }
 
         [SlashCommand("remove", "Remove bridges from channel")]
-        public async Task RemoveBridgeAsync //todo: logging
+        public async Task RemoveBridgeAsync
         (
             [Summary(description: "[Optional] Bridge Id")] string bridgeId = "0"
         )
@@ -188,7 +188,6 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             foreach (var bridge in bridges)
             {
-                //todo: error handling for all channel sends
                 var channelA = await _client.GetChannelAsync(bridge.ChannelAId);
                 var channelB = await _client.GetChannelAsync(bridge.ChannelBId);
 
