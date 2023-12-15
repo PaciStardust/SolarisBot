@@ -44,6 +44,11 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         [UserCommand("Analyze"), SlashCommand("analyze", "Analyze a user")] //todo: more positive?
         public async Task AnalyzeUserAsync(IUser user)
         {
+            if (user.IsBot || user.IsWebhook)
+            {
+                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                return;
+            }
             var gUser = GetGuildUser(user);
             var embed = UserAnalysis.ForUser(gUser, _config).GenerateSummaryEmbed();
             await Interaction.ReplyAsync(embed);
