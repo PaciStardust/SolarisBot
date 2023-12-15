@@ -8,7 +8,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Roles
 {
     [Module("roles/quarantine")]
-    internal class QuarantineCommands : SolarisInteractionModuleBase //todo: add quarantine to cleanup
+    internal class QuarantineCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuarantineCommands> _logger;
         private readonly DatabaseContext _dbContext;
