@@ -41,7 +41,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             await Interaction.ReplyAsync($"User analysis is currently **{(channel is not null ? "enabled" : "disabled")}**\n\nChannel: **{(channel is null ? "None" : $"<#{channel.Id}>")}**\nWarn at: **{minWarn}**\nBan at: **{minBan}**");
         }
 
-        [UserCommand("Analyze"), SlashCommand("analyze", "Analyze a user")]
+        [UserCommand("Analyze"), SlashCommand("analyze", "Analyze a user")] //todo: more positive?
         public async Task AnalyzeUserAsync(IUser user)
         {
             var gUser = GetGuildUser(user);

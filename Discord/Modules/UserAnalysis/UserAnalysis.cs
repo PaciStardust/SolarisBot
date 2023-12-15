@@ -115,18 +115,18 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var summaryStrings = new List<string>();
 
             if (FailedKeywordRulesUsername.Count > 0)
-                summaryStrings.Add($"**Username({CalculateRuleScoreSum(FailedKeywordRulesUsername)}):** {string.Join(", ", FailedKeywordRulesUsername)}");
+                summaryStrings.Add($"**Username** ***({CalculateRuleScoreSum(FailedKeywordRulesUsername)})***: {string.Join(", ", FailedKeywordRulesUsername)}");
             if (FailedKeywordRulesGlobalname.Count > 0)
-                summaryStrings.Add($"**Globalname({CalculateRuleScoreSum(FailedKeywordRulesGlobalname)}):** {string.Join(", ", FailedKeywordRulesGlobalname)}");
+                summaryStrings.Add($"**Globalname** ***({CalculateRuleScoreSum(FailedKeywordRulesGlobalname)})***: {string.Join(", ", FailedKeywordRulesGlobalname)}");
             if (FailedTimeRule is not null)
-                summaryStrings.Add($"**Joined:** {FailedTimeRule}");
+                summaryStrings.Add($"**Joined**: {FailedTimeRule}");
 
             var othersStrings = new List<string>();
             if (FailedOldDiscriminatorCheck)
-                othersStrings.Add($"Old discriminator({_failedOldDiscriminatorCheckPenalty})");
+                othersStrings.Add($"Old discriminator *({_failedOldDiscriminatorCheckPenalty})*");
             if (FailedDefaultPfpCheck)
-                othersStrings.Add($"No PFP({_failedDefaultPfpCheckPenalty})");
-            othersStrings.Add($"{(UserBadges == 0 ? "No " : string.Empty)}Badges({CalculateBadgeScore()})");
+                othersStrings.Add($"No PFP *({_failedDefaultPfpCheckPenalty})*");
+            othersStrings.Add($"{(UserBadges == 0 ? "No " : string.Empty)}Badges *({CalculateBadgeScore()})*");
             //if (OnlineState != UserAnalysisOnlineState.Online)
             //{
             //    othersStrings.Add(OnlineState == UserAnalysisOnlineState.Invisible
@@ -134,12 +134,12 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             //        : $"Offline({_userOfflinePenalty})"
             //        );
             //}
-            summaryStrings.Add($"**Other:** {string.Join(", ", othersStrings)}");
+            summaryStrings.Add($"**Other**: {string.Join(", ", othersStrings)}");
 
             score ??= CalculateScore();
 
             var embed = EmbedFactory.Builder()
-                .WithTitle($"Analysis of {_user.DisplayName}({score})")
+                .WithTitle($"Analysis of {_user.DisplayName} ({score} Score)")
                 .WithThumbnailUrl(_user.GetDisplayAvatarUrl())
                 .WithDescription(string.Join("\n", summaryStrings));
 

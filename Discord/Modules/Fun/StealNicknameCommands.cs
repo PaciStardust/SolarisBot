@@ -94,7 +94,7 @@ namespace SolarisBot.Discord.Modules.Fun
             await gTargetUser.ModifyAsync(x => x.Nickname = gTargetNameNew);
             _logger.LogInformation("{intTag} Renamed user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", GetIntTag(), gUser.Log(), gNameNew, gTargetUser.Log(), gTargetNameNew);
 
-            await Interaction.ReplyAsync($"**{gUserName}**​*({gUser.Mention})* stole the letter **{stolenLetter}** from **{gTargetName}**​*({gTargetUser.Mention})*");
+            await Interaction.ReplyAsync($"**{gUserName}** *({gUser.Mention})* stole the letter **{stolenLetter}** from **{gTargetName}** *({gTargetUser.Mention})*");
         }
     }
 }

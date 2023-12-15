@@ -17,7 +17,7 @@ namespace SolarisBot.Database.Models
         public override string ToString()
             => $"{BridgeId}: {Name} {ChannelAId}({GuildAId}) <=> {ChannelBId}({GuildBId})";
         internal string ToDiscordInfoString()
-            => $"**{Name}**​*({BridgeId})*";
+            => $"**{Name}** *({BridgeId})*";
     }
 
     internal static class DbBridgeExtensions

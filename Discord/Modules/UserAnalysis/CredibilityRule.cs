@@ -12,6 +12,6 @@
         }
 
         public override string ToString()
-            => $"{Name}({Score})";
+            => $"{Name} *({Score})*";
     }
 }
