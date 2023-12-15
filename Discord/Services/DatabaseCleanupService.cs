@@ -197,7 +197,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles all OnChannelDestroyed events
         /// </summary>
-        private async Task OnChannelDestroyedHandleAsync(SocketChannel channel) //todo: [TESTING] Does channel deletion get handled correctly?
+        private async Task OnChannelDestroyedHandleAsync(SocketChannel channel)
         {
             if (channel is not IGuildChannel gChannel)
                 return;
@@ -270,7 +270,7 @@ namespace SolarisBot.Discord.Services
             _logger.LogDebug("Removing {bridges} bridges for deleted channel {channel} in guild {guild}", bridges, gChannel.Log(), gChannel.Guild.Log());
             dbCtx.Bridges.RemoveRange(bridges);
 
-            foreach (var bridge in bridges) //todo: [TESTING] Does notifying work?
+            foreach (var bridge in bridges)
             {
                 var useB = gChannel.Id == bridge.ChannelAId;
 
@@ -288,7 +288,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles all OnLeftGuild events
         /// </summary>
-        private async Task OnLeftGuildHandleAsync(SocketGuild guild) //todo: [TESTING] Does guild deletion get handled correctly?
+        private async Task OnLeftGuildHandleAsync(SocketGuild guild)
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
 

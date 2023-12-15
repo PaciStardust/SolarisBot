@@ -8,7 +8,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 {
     internal static class BridgeHelper
     {
-        internal static async Task TryNotifyChannelForBridgeDeletionAsync(IMessageChannel msgChannel, IChannel? otherChannel, DbBridge bridge, ILogger logger, bool bridgeGroupB = false) //todo: [TESTING] Does notifying work
+        internal static async Task TryNotifyChannelForBridgeDeletionAsync(IMessageChannel msgChannel, IChannel? otherChannel, DbBridge bridge, ILogger logger, bool bridgeGroupB = false)
         {
             SocketGuildChannel? gOtherChannel = null;
             if (otherChannel is not null && otherChannel is SocketGuildChannel goc)
