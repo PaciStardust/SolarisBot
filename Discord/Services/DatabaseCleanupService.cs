@@ -178,6 +178,11 @@ namespace SolarisBot.Discord.Services
                 guild.SpellcheckRoleId = 0;
                 changeMade = true;
             }
+            if (guild.QuarantineRoleId == role.Id)
+            {
+                guild.QuarantineRoleId = 0;
+                changeMade = true;
+            }
 
             if (!changeMade)
                 return false;

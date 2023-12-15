@@ -8,7 +8,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Roles
 {
     [Module("roles/quarantine")]
-    internal class QuarantineCommands : SolarisInteractionModuleBase //todo: [TESTING] Does quarantine work?
+    internal class QuarantineCommands : SolarisInteractionModuleBase //todo: add quarantine to cleanup
     {
         private readonly ILogger<QuarantineCommands> _logger;
         private readonly DatabaseContext _dbContext;
@@ -30,8 +30,8 @@ namespace SolarisBot.Discord.Modules.Roles
 
             _logger.LogDebug("{intTag} Setting quarantine to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set vouching to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await Interaction.ReplyAsync($"Vouching is currently **{(role is null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
+            _logger.LogInformation("{intTag} Set quarantine to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
+            await Interaction.ReplyAsync($"Quarantine is currently **{(role is null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
 
         [UserCommand("Quarantine"), SlashCommand("quarantine", "Quarantine a user"), RequireBotPermission(GuildPermission.ManageRoles), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
