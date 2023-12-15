@@ -59,7 +59,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             }
 
             var failedDiscriminatorCheck = user.DiscriminatorValue != 0;
-            var failedProfileCheck = user.GetAvatarUrl() == null; //todo: [TESTING] Does this check function?
+            var failedProfileCheck = user.GetAvatarUrl() == null;
 
             ulong userBadges = 0;
             if (user.PublicFlags.HasValue)
@@ -115,11 +115,11 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var summaryStrings = new List<string>();
 
             if (FailedKeywordRulesUsername.Count > 0)
-                summaryStrings.Add($"**Username** ***({CalculateRuleScoreSum(FailedKeywordRulesUsername)})***: {string.Join(", ", FailedKeywordRulesUsername)}");
+                summaryStrings.Add($"**Username**:\n{string.Join(", ", FailedKeywordRulesUsername)}");
             if (FailedKeywordRulesGlobalname.Count > 0)
-                summaryStrings.Add($"**Globalname** ***({CalculateRuleScoreSum(FailedKeywordRulesGlobalname)})***: {string.Join(", ", FailedKeywordRulesGlobalname)}");
+                summaryStrings.Add($"**Globalname**:\n{string.Join(", ", FailedKeywordRulesGlobalname)}");
             if (FailedTimeRule is not null)
-                summaryStrings.Add($"**Joined**: {FailedTimeRule}");
+                summaryStrings.Add($"**Joined**:\n{FailedTimeRule}");
 
             var othersStrings = new List<string>();
             if (FailedOldDiscriminatorCheck)
@@ -134,14 +134,18 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             //        : $"Offline({_userOfflinePenalty})"
             //        );
             //}
-            summaryStrings.Add($"**Other**: {string.Join(", ", othersStrings)}");
+            if (othersStrings.Count > 0)
+                summaryStrings.Add($"**Other**:\n{string.Join(", ", othersStrings)}");
+
+            if (summaryStrings.Count == 0)
+                summaryStrings.Add("Nothing to report");
 
             score ??= CalculateScore();
 
             var embed = EmbedFactory.Builder()
                 .WithTitle($"Analysis of {_user.DisplayName} ({score} Score)")
-                .WithThumbnailUrl(_user.GetDisplayAvatarUrl())
-                .WithDescription(string.Join("\n", summaryStrings));
+                .WithThumbnailUrl(_user.GetAvatarUrl())
+                .WithDescription(string.Join("\n\n", summaryStrings));
 
             return embed.Build();
         }
