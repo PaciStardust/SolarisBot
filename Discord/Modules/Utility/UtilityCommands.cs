@@ -11,7 +11,7 @@ namespace SolarisBot.Discord.Modules.Utility
         //So far we need no constructor here as this has no dependencies
 
         [SlashCommand("get-pfp", "Get a users PFP"), UserCommand("Get PFP")]
-        public async Task GetUserPfpAsync(IUser user) //todo: [BUG] Does not embed due to embed
+        public async Task GetUserPfpAsync(IUser user) //todo: [TESTING] Does this look alright?
         {
             var gUser = GetGuildUser(user);
 
@@ -32,7 +32,7 @@ namespace SolarisBot.Discord.Modules.Utility
             }
 
             var response = string.Join("\n\n", strings);
-            await Interaction.ReplyAsync(response);
+            await Interaction.ReplyPlaintextAsync(response);
         }
     }
 }
