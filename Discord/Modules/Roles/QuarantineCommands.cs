@@ -34,7 +34,7 @@ namespace SolarisBot.Discord.Modules.Roles
             await Interaction.ReplyAsync($"Vouching is currently **{(role is null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
 
-        [UserCommand("Quarantine"), SlashCommand("quarantine", "Quarantine a user"), RequireBotPermission(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
+        [UserCommand("Quarantine"), SlashCommand("quarantine", "Quarantine a user"), RequireBotPermission(GuildPermission.ManageRoles), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task QuarantineUserAsync(IUser user)
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
