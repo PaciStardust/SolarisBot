@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Modules.Bridges
                 var channelId = bridge.ChannelAId == message.Channel.Id ? bridge.ChannelBId : bridge.ChannelAId;
                 var channel = await _client.GetChannelAsync(channelId);
 
-                if (channel is null) //todo: notify for bridge deletion
+                if (channel is null)
                 {
                     var tempCtx = _services.GetRequiredService<DatabaseContext>();
                     tempCtx.Bridges.Remove(bridge);
@@ -63,6 +63,12 @@ namespace SolarisBot.Discord.Modules.Bridges
                         _logger.LogError(err, "Failed deleting bridge {bridge}, could not locate channel {channel}", bridge, channelId);
                     else
                         _logger.LogInformation("Deleted bridge {bridge}, could not locate channel {channel}", bridge, channelId);
+
+                    var originChannel = await _client.GetChannelAsync(bridge.ChannelAId == channelId ? bridge.ChannelBId : bridge.ChannelAId);
+                    if (originChannel is null || originChannel is not IMessageChannel msgOriginChannel)
+                        continue;
+
+                    await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgOriginChannel, null, bridge, _logger, channelId == bridge.ChannelBId);
                     continue;
                 }
 
