@@ -11,7 +11,7 @@ namespace SolarisBot.Discord.Modules.Utility
         //So far we need no constructor here as this has no dependencies
 
         [SlashCommand("get-pfp", "Get a users PFP"), UserCommand("Get PFP")]
-        public async Task GetUserPfpAsync(IUser user) //todo: [TESTING] Does this look alright?
+        public async Task GetUserPfpAsync(IUser user)
         {
             var gUser = GetGuildUser(user);
 
@@ -19,11 +19,11 @@ namespace SolarisBot.Discord.Modules.Utility
 
             var defaultAvatar = gUser.GetAvatarUrl();
             if (defaultAvatar is not null)
-                strings.Add($"Default:\n{defaultAvatar}");
+                strings.Add($"Default: *{defaultAvatar}*");
 
             var guildAvatar = gUser.GetGuildAvatarUrl();
             if (guildAvatar is not null)
-                strings.Add($"Guild:\n{guildAvatar}");
+                strings.Add($"Guild: *{guildAvatar}*");
 
             if (strings.Count == 0)
             {
@@ -31,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Utility
                 return;
             }
 
-            var response = string.Join("\n\n", strings);
+            var response = string.Join("\n", strings);
             await Interaction.ReplyPlaintextAsync(response);
         }
     }
