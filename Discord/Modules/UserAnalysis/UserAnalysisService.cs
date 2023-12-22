@@ -14,7 +14,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
     {
         private readonly ILogger<UserAnalysisService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DatabaseContext _dbCtx;
         private readonly BotConfig _config;
         private readonly IServiceProvider _services;
 
@@ -22,7 +21,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         {
             _logger = logger;
             _client = client;
-            _dbCtx = dbCtx;
             _config = config;
             _services = services;
         }
@@ -39,12 +37,13 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             return Task.CompletedTask;
         }
 
-        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user) //todo: [TESTING] Does this service operate correctly?
+        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
         {
             if (user.IsWebhook || user.IsBot)
                 return;
 
-            var dbGuild = await _dbCtx.GetGuildByIdAsync(user.Guild.Id);
+            var dbCtx = _services.GetRequiredService<DatabaseContext>();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
             if (dbGuild is null || dbGuild.UserAnalysisChannel == ulong.MinValue)
                 return;
 
@@ -55,7 +54,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             {
                 _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
                 dbGuild.UserAnalysisChannel = 0;
-                var dbCtx = _services.GetRequiredService<DatabaseContext>();
                 dbCtx.GuildConfigs.Update(dbGuild);
                 var (_, err) = await dbCtx.TrySaveChangesAsync();
                 if (err is not null)
@@ -82,7 +80,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             try
             {
                 _logger.LogInformation("Sending user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
-                await msgChannel.SendMessageAsync(actionText, embed: analysis.GenerateSummaryEmbed(analysisScore), components: componentBuilder.Build()); //todo: [TESTING] Does this error without components?
+                await msgChannel.SendMessageAsync(actionText, embed: analysis.GenerateSummaryEmbed(analysisScore), components: componentBuilder.Build());
                 _logger.LogInformation("Sent user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
             }
             catch (Exception ex)

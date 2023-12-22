@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             _config = config;
         }
 
-        [SlashCommand("config", "Set up user analysis")] //todo: [TESTING] Does configure work?
+        [SlashCommand("config", "Set up user analysis")]
         public async Task ConfigureAnalysisAsync
         (
             [Summary(description: "Notification channel (none to disable)")] IChannel? channel = null,
@@ -64,7 +64,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         public async Task HandleButtonAnalysisBanAsync(string userId)
             => await ModerateUserAsync(userId, true);
 
-        private async Task ModerateUserAsync(string userId, bool ban) //todo: [TESTING] Does moderation work?
+        private async Task ModerateUserAsync(string userId, bool ban)
         {
             var gUser = GetGuildUser(Context.User);
             if ((!ban && !gUser.GuildPermissions.KickMembers) || (ban && !gUser.GuildPermissions.BanMembers))

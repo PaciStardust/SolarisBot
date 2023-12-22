@@ -14,16 +14,14 @@ namespace SolarisBot.Discord.Modules.Bridges
     [Module("bridges"), AutoLoadService]
     internal class BridgeService : IHostedService
     {
-        private readonly DatabaseContext _dbCtx;
         private readonly ILogger<BridgeService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly IServiceProvider _services;
 
-        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, DatabaseContext dbCtx, IServiceProvider services)
+        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, IServiceProvider services)
         {
             _logger = logger;
             _client = client;
-            _dbCtx = dbCtx;
             _services = services;
         }
 
@@ -44,7 +42,8 @@ namespace SolarisBot.Discord.Modules.Bridges
             if (message.Author.IsWebhook || message.Author.IsBot)
                 return;
 
-            var bridges = await _dbCtx.Bridges.ForChannel(message.Channel.Id).ToArrayAsync();
+            var dbCtx = _services.GetRequiredService<DatabaseContext>();
+            var bridges = await dbCtx.Bridges.ForChannel(message.Channel.Id).ToArrayAsync();
             if (bridges.Length == 0)
                 return;
 
