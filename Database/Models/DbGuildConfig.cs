@@ -24,9 +24,10 @@ namespace SolarisBot.Database
         public bool StealNicknameOn { get; set; } = false;
         public bool GififyOn { get; set; } = false;
         public ulong QuarantineRoleId { get; set; } = ulong.MinValue;
-        public ulong UserAnalysisChannel { get; set; } = ulong.MinValue; //todo: find good default values
-        public ulong UserAnalysisWarnAt { get; set; } = ulong.MinValue;
-        public ulong UserAnalysisBanAt { get; set; } = ulong.MinValue;
+        public ulong UserAnalysisChannel { get; set; } = ulong.MinValue;
+        public int UserAnalysisWarnAt { get; set; } = int.MaxValue;
+        public int UserAnalysisKickAt { get; set; } = int.MaxValue;
+        public int UserAnalysisBanAt { get; set; } = int.MaxValue;
 
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
