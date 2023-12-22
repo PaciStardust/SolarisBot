@@ -23,6 +23,11 @@ namespace SolarisBot.Database
         public ulong SpellcheckRoleId { get; set; } = ulong.MinValue;
         public bool StealNicknameOn { get; set; } = false;
         public bool GififyOn { get; set; } = false;
+        public ulong QuarantineRoleId { get; set; } = ulong.MinValue;
+        public ulong UserAnalysisChannel { get; set; } = ulong.MinValue;
+        public int UserAnalysisWarnAt { get; set; } = int.MaxValue;
+        public int UserAnalysisKickAt { get; set; } = int.MaxValue;
+        public int UserAnalysisBanAt { get; set; } = int.MaxValue;
 
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
@@ -34,6 +39,8 @@ namespace SolarisBot.Database
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
 
         public DbGuildConfig() { } //To avoid defaults not setting
+
+        public bool VouchingOn => VouchRoleId != ulong.MinValue && VouchPermissionRoleId != ulong.MinValue;
     }
 
     internal static class DbGuildConfigExtensions

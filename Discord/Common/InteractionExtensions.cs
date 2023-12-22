@@ -6,6 +6,17 @@ namespace SolarisBot.Discord.Common
     internal static class InteractionExtensions
     {
         /// <summary>
+        /// Respond with plaintext
+        /// </summary>
+        internal static async Task ReplyPlaintextAsync(this IDiscordInteraction interaction, string text, bool isEphemeral = false)
+        {
+            if (interaction.HasResponded)
+                await interaction.FollowupAsync(text, ephemeral: isEphemeral);
+            else
+                await interaction.RespondAsync(text, ephemeral: isEphemeral);
+        }
+
+        /// <summary>
         /// Respond with an embed
         /// </summary>
         internal static async Task ReplyAsync(this IDiscordInteraction interaction, Embed embed, bool isEphemeral = false)

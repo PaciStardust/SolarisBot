@@ -26,6 +26,7 @@ namespace SolarisBot
 
             logger.Information("Loading BotConfig from {cfgPath}", Utils.PathConfigFile);
             var botConfig = GetConfig();
+            botConfig.Update();
             if (!botConfig.SaveAt(Utils.PathConfigFile))
                 logger.Warning("Failed to save BotConfig");
             logger.Information("Successfully loaded BotConfig");
@@ -53,7 +54,8 @@ namespace SolarisBot
                 {
                     services.AddDbContext<DatabaseContext>(options => options.UseSqlite
                     (
-                        $"Data Source={Utils.PathDatabaseFile};Pooling=false")
+                        $"Data Source={Utils.PathDatabaseFile};Pooling=false"),
+                        ServiceLifetime.Transient
                     );
 
                     services.AddHttpClient();

@@ -80,7 +80,7 @@ namespace SolarisBot.Discord.Modules.Roles
             await Interaction.ReplyAsync(embedBuilder.Build());
         }
 
-        [SlashCommand("select", "Select roles from a group"), RequireBotPermission(ChannelPermission.ManageRoles)]
+        [SlashCommand("select", "Select roles from a group"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task SelectRolesAsync
         (
             [Summary(description: "Identifier of group or role"), MinLength(2), MaxLength(20)] string identifier
@@ -121,7 +121,7 @@ namespace SolarisBot.Discord.Modules.Roles
             await Interaction.ReplyComponentAsync(component, $"Roles in group {roleGroupMatch.Identifier}:", true);
         }
 
-        [ComponentInteraction("solaris_roleselector.*", true), RequireBotPermission(ChannelPermission.ManageRoles)]
+        [ComponentInteraction("solaris_roleselector.*", true), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task SelectRoleResponseAsync(string rgid, string[] selections)
         {
             var gUser = GetGuildUser(Context.User);

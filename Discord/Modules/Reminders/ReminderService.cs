@@ -52,12 +52,12 @@ namespace SolarisBot.Discord.Modules.Reminders
                 return;
 
             var nowUnix = Utils.GetCurrentUnix(_logger);
-            _logger.LogDebug("Checking Database for reminders");
+            //_logger.LogDebug("Checking Database for reminders");
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var reminders = await dbCtx.Reminders.FromSqlRaw($"SELECT * FROM reminders WHERE time <= {nowUnix}").ToArrayAsync(); //UInt equality not supported
             if (reminders.Length == 0)
             {
-                _logger.LogDebug("Checked database for reminders, none found");
+                //_logger.LogDebug("Checked database for reminders, none found");
                 return;
             }
 

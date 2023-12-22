@@ -6,23 +6,22 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Database.Models;
+using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
     [Module("bridges"), AutoLoadService]
-    internal class BridgeService : IHostedService //todo: [TESTING] Do everyone/here pings get filtered out?
+    internal class BridgeService : IHostedService
     {
-        private readonly DatabaseContext _dbCtx;
         private readonly ILogger<BridgeService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly IServiceProvider _services;
 
-        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, DatabaseContext dbCtx, IServiceProvider services)
+        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, IServiceProvider services)
         {
             _logger = logger;
             _client = client;
-            _dbCtx = dbCtx;
             _services = services;
         }
 
@@ -43,7 +42,8 @@ namespace SolarisBot.Discord.Modules.Bridges
             if (message.Author.IsWebhook || message.Author.IsBot)
                 return;
 
-            var bridges = await _dbCtx.Bridges.ForChannel(message.Channel.Id).ToArrayAsync();
+            var dbCtx = _services.GetRequiredService<DatabaseContext>();
+            var bridges = await dbCtx.Bridges.ForChannel(message.Channel.Id).ToArrayAsync();
             if (bridges.Length == 0)
                 return;
 
@@ -62,14 +62,20 @@ namespace SolarisBot.Discord.Modules.Bridges
                         _logger.LogError(err, "Failed deleting bridge {bridge}, could not locate channel {channel}", bridge, channelId);
                     else
                         _logger.LogInformation("Deleted bridge {bridge}, could not locate channel {channel}", bridge, channelId);
+
+                    var originChannel = await _client.GetChannelAsync(bridge.ChannelAId == channelId ? bridge.ChannelBId : bridge.ChannelAId);
+                    if (originChannel is null || originChannel is not IMessageChannel msgOriginChannel)
+                        continue;
+
+                    await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgOriginChannel, null, bridge, _logger, channelId == bridge.ChannelBId);
                     continue;
                 }
 
                 try
                 {
-                    _logger.LogDebug("Sending message via bridge {bridge}", bridge);
-                    await ((IMessageChannel)channel).SendMessageAsync($"**{message.Author.GlobalName} via {bridge.Name}:** {message.CleanContent}");
-                    _logger.LogInformation("Sent message via bridge {bridge}", bridge);
+                    _logger.LogDebug("Sending message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
+                    await ((IMessageChannel)channel).SendMessageAsync($"**[{bridge.Name}]{message.Author.GlobalName}:** {message.CleanContent}");
+                    _logger.LogInformation("Sent message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
                 }
                 catch (Exception ex)
                 {

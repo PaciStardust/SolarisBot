@@ -22,8 +22,8 @@ namespace SolarisBot.Discord.Modules.Roles
         [SlashCommand("cfg-vouch", "[MANAGE ROLES ONLY] Set up vouching"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task ConfigVouchingAsync
         (
-            [Summary(description: "Role required for vouching (none to disable)")] IRole? permission,
-            [Summary(description: "Role aquired through vouching (none to disable)")] IRole? vouch
+            [Summary(description: "Role required for vouching (none to disable)")] IRole? permission = null,
+            [Summary(description: "Role aquired through vouching (none to disable)")] IRole? vouch = null
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
@@ -37,14 +37,14 @@ namespace SolarisBot.Discord.Modules.Roles
             await Interaction.ReplyAsync($"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**");
         }
 
-        [UserCommand("Vouch"), SlashCommand("vouch", "Vouch for a user"), RequireBotPermission(ChannelPermission.ManageRoles)]
+        [UserCommand("Vouch"), SlashCommand("vouch", "Vouch for a user"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task VouchUserAsync(IUser user)
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
             var gUser = GetGuildUser(Context.User);
             var gTargetUser = GetGuildUser(user);
 
-            if (dbGuild is null || dbGuild.VouchPermissionRoleId == ulong.MinValue || dbGuild.VouchRoleId == ulong.MinValue)
+            if (dbGuild is null || !dbGuild.VouchingOn)
             {
                 await Interaction.ReplyErrorAsync("Vouching is not enabled in this guild");
                 return;

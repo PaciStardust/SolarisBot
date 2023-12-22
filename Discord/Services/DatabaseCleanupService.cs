@@ -8,6 +8,7 @@ using SolarisBot.Database;
 using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
+using SolarisBot.Discord.Modules.Bridges;
 
 namespace SolarisBot.Discord.Services
 {
@@ -177,6 +178,11 @@ namespace SolarisBot.Discord.Services
                 guild.SpellcheckRoleId = 0;
                 changeMade = true;
             }
+            if (guild.QuarantineRoleId == role.Id)
+            {
+                guild.QuarantineRoleId = 0;
+                changeMade = true;
+            }
 
             if (!changeMade)
                 return false;
@@ -191,7 +197,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles all OnChannelDestroyed events
         /// </summary>
-        private async Task OnChannelDestroyedHandleAsync(SocketChannel channel) //todo: [TESTING] Does channel deletion get handled correctly?
+        private async Task OnChannelDestroyedHandleAsync(SocketChannel channel)
         {
             if (channel is not IGuildChannel gChannel)
                 return;
@@ -200,6 +206,7 @@ namespace SolarisBot.Discord.Services
 
             var changes = await OnChannelDestroyedRemoveBridgesAsync(gChannel, dbCtx);
             changes = changes || await OnChannelDestroyedRemoveRemindersAsync(gChannel, dbCtx);
+            changes = changes || await OnChannelDestroyedCleanGuildSettingsAsync(gChannel, dbCtx);
 
             if (!changes)
                 return;
@@ -227,6 +234,31 @@ namespace SolarisBot.Discord.Services
         }
 
         /// <summary>
+        /// Removes all references of channel from GuildConfig
+        /// </summary>
+        private async Task<bool> OnChannelDestroyedCleanGuildSettingsAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
+        {
+            var guild = await dbCtx.GetGuildByIdAsync(gChannel.GuildId);
+            if (guild is null)
+                return false;
+
+            bool changeMade = false;
+
+            if (guild.UserAnalysisChannel == gChannel.Id)
+            {
+                guild.UserAnalysisChannel = 0;
+                changeMade = true;
+            }
+
+            if (!changeMade)
+                return false;
+
+            _logger.LogDebug("Removing references of channel {channel} from guild {guild} in DB", gChannel.Log(), guild);
+            dbCtx.GuildConfigs.Update(guild);
+            return true;
+        }
+
+        /// <summary>
         /// Removes all DbBridges connected with a destroyed channel
         /// </summary>
         private async Task<bool> OnChannelDestroyedRemoveBridgesAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
@@ -237,6 +269,17 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing {bridges} bridges for deleted channel {channel} in guild {guild}", bridges, gChannel.Log(), gChannel.Guild.Log());
             dbCtx.Bridges.RemoveRange(bridges);
+
+            foreach (var bridge in bridges)
+            {
+                var useB = gChannel.Id == bridge.ChannelAId;
+
+                var notifyChannel = await _client.GetChannelAsync(useB ? bridge.ChannelBId : bridge.ChannelAId);
+                if (notifyChannel is null || notifyChannel is not IMessageChannel msgNotifyChannel)
+                    continue;
+
+                await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgNotifyChannel, gChannel, bridge, _logger, !useB);
+            }
             return true;
         }
         #endregion
@@ -245,7 +288,7 @@ namespace SolarisBot.Discord.Services
         /// <summary>
         /// Handles all OnLeftGuild events
         /// </summary>
-        private async Task OnLeftGuildHandleAsync(SocketGuild guild) //todo: [TESTING] Does guild deletion get handled correctly?
+        private async Task OnLeftGuildHandleAsync(SocketGuild guild)
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
 
@@ -288,6 +331,20 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing {bridges} bridges for deleted guild {guild}", bridges.Length, guild.Log());
             dbCtx.Bridges.RemoveRange(bridges);
+
+            foreach(var bridge in bridges)
+            {
+                if (bridge.GuildAId == guild.Id && bridge.GuildBId == guild.Id)
+                    continue;
+
+                var useB = guild.Id == bridge.GuildAId;
+
+                var notifyChannel = await _client.GetChannelAsync(useB ? bridge.ChannelBId : bridge.ChannelAId);
+                if (notifyChannel is null || notifyChannel is not IMessageChannel msgNotifyChannel)
+                    continue;
+
+                await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgNotifyChannel, null, bridge, _logger, !useB);
+            }
             return true;
         }
         #endregion

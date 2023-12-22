@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Newtonsoft.Json;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Utility
@@ -10,7 +11,7 @@ namespace SolarisBot.Discord.Modules.Utility
         //So far we need no constructor here as this has no dependencies
 
         [SlashCommand("get-pfp", "Get a users PFP"), UserCommand("Get PFP")]
-        public async Task GetUserPfpAsync(IUser user) //todo: [TESTING] Does this format correctly?
+        public async Task GetUserPfpAsync(IUser user)
         {
             var gUser = GetGuildUser(user);
 
@@ -18,11 +19,11 @@ namespace SolarisBot.Discord.Modules.Utility
 
             var defaultAvatar = gUser.GetAvatarUrl();
             if (defaultAvatar is not null)
-                strings.Add($"Default:\n{defaultAvatar}");
+                strings.Add($"Default: *{defaultAvatar}*");
 
             var guildAvatar = gUser.GetGuildAvatarUrl();
             if (guildAvatar is not null)
-                strings.Add($"Guild:\n{guildAvatar}");
+                strings.Add($"Guild: *{guildAvatar}*");
 
             if (strings.Count == 0)
             {
@@ -30,19 +31,8 @@ namespace SolarisBot.Discord.Modules.Utility
                 return;
             }
 
-            var response = string.Join("\n\n", strings);
-            await Interaction.ReplyAsync(response);
-        }
-
-        [SlashCommand("gen-embed", "Generate an embed from JSON")] //todo: [TESTING] Does this allow users to use everyone/here pings?
-        public async Task GenerateEmbedAsync(string json)
-        {
-            if (!EmbedBuilder.TryParse(json, out var embed))
-            {
-                await Interaction.ReplyErrorAsync("Failed to generate embed from supplied JSON");
-                return;
-            }
-            await Interaction.ReplyAsync(embed.Build());
+            var response = string.Join("\n", strings);
+            await Interaction.ReplyPlaintextAsync(response);
         }
     }
 }

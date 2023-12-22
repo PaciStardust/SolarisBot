@@ -41,7 +41,7 @@ namespace SolarisBot.Discord.Modules.Roles
             await Interaction.ReplyAsync($"Magic is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
         }
 
-        [SlashCommand("magic", "Use magic"), RequireBotPermission(ChannelPermission.ManageRoles)]
+        [SlashCommand("magic", "Use magic"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task UseMagicAsync()
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
