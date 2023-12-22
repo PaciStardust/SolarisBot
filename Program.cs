@@ -54,7 +54,8 @@ namespace SolarisBot
                 {
                     services.AddDbContext<DatabaseContext>(options => options.UseSqlite
                     (
-                        $"Data Source={Utils.PathDatabaseFile};Pooling=false")
+                        $"Data Source={Utils.PathDatabaseFile};Pooling=false"),
+                        ServiceLifetime.Transient
                     );
 
                     services.AddHttpClient();
