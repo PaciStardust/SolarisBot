@@ -74,9 +74,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                     .WithButton("Ban", $"solaris_analysis_ban.{user.Id}", ButtonStyle.Danger, disabled: !user.Guild.CurrentUser.GuildPermissions.BanMembers);
             }
 
-            if (completedAction >= ModerationAction.Warn)
-                actionText = "@here " + actionText;
-
+            actionText = $"{(completedAction >= ModerationAction.Warn ? "@here " : string.Empty)}{user.Mention} " + actionText;
             try
             {
                 _logger.LogInformation("Sending user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
@@ -103,45 +101,45 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             switch(moderationAction)
             {
                 case ModerationAction.None:
-                    return ("No action taken", ModerationAction.None);
+                    return ("appears legit", ModerationAction.None);
 
                 case ModerationAction.Warn:
-                    return ($"Detected suspicious user *({analysisScore} >= {dbGuild.UserAnalysisWarnAt} Score)*", ModerationAction.Warn);
+                    return ($"was classified as suspicious *({analysisScore} >= {dbGuild.UserAnalysisWarnAt} Score)*", ModerationAction.Warn);
 
                 case ModerationAction.Kick:
                     if (!targetUser.Guild.CurrentUser.GuildPermissions.KickMembers)
-                        return ("Unable to kick as permission is missing", ModerationAction.None);
+                        return ("was not kicked as permission is missing", ModerationAction.Warn);
                     try
                     {
                         _logger.LogDebug("Kicking user {user} from guild {guild}, user analysis score {score} satisfies kick score {kickScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisKickAt);
                         await targetUser.KickAsync($"Automatically kicked via user analysis ({analysisScore} >= {dbGuild.UserAnalysisKickAt} Score)");
                         _logger.LogInformation("Kicked user {user} from guild {guild}, user analysis score {score} satisfies kick score {kickScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisKickAt);
-                        return ($"Automatically kicked *({analysisScore} >= {dbGuild.UserAnalysisKickAt} Score)*", ModerationAction.Kick);
+                        return ($"was automatically kicked *({analysisScore} >= {dbGuild.UserAnalysisKickAt} Score)*", ModerationAction.Kick);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed kicking user {user} from guild {guild}, user analysis score {score} satisfies kick score {kickScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisKickAt);
-                        return ($"Unable to kick *({ex.Message})*", ModerationAction.None);
+                        return ($"was not kicked *({ex.Message})*", ModerationAction.Warn);
                     }
 
                 case ModerationAction.Ban:
                     if (!targetUser.Guild.CurrentUser.GuildPermissions.BanMembers)
-                        return ("Unable to ban as permission is missing", ModerationAction.None);
+                        return ("was not banned as permission is missing", ModerationAction.Warn);
                     try
                     {
                         _logger.LogDebug("Banning user {user} from guild {guild}, user analysis score {score} satisfies ban score {banScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisBanAt);
                         await targetUser.KickAsync($"Automatically banned via user analysis ({analysisScore} >= {dbGuild.UserAnalysisBanAt} Score)");
                         _logger.LogInformation("Banned user {user} from guild {guild}, user analysis score {score} satisfies ban score {banScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisBanAt);
-                        return ($"Automatically banned *({analysisScore} >= {dbGuild.UserAnalysisBanAt} Score)*", ModerationAction.Ban);
+                        return ($"was automatically banned *({analysisScore} >= {dbGuild.UserAnalysisBanAt} Score)*", ModerationAction.Ban);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed banned user {user} from guild {guild}, user analysis score {score} satisfies ban score {banScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisBanAt);
-                        return ($"Unable to ban *({ex.Message})*", ModerationAction.None);
+                        return ($"was not banned *({ex.Message})*", ModerationAction.Warn);
                     }
 
                 default:
-                    return ("*Unknown evaluation*", ModerationAction.None);
+                    return ("received unknown evaluation*", ModerationAction.Warn);
             }
         }
 
