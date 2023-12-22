@@ -7,7 +7,7 @@ using SolarisBot.Discord.Common.Attributes;
 
 namespace SolarisBot.Discord.Modules.UserAnalysis
 {
-    [Module("useranalysis"), Group("useranalysis", "[MODERATE MEMBERS ONLY] User analysis commands")]
+    [Module("cfg-useranalysis"), Group("useranalysis", "[MODERATE MEMBERS ONLY] User analysis commands")]
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ModerateMembers), RequireUserPermission(GuildPermission.ModerateMembers)]
     internal class UserAnalysisConfigCommands : SolarisInteractionModuleBase
     {
