@@ -24,21 +24,23 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         [SlashCommand("config", "Set up user analysis")] //todo: [TESTING] Does configure work?
         public async Task ConfigureAnalysisAsync
         (
-            [Summary(description: "Notification channel (none to disable)")] IChannel? channel = null, //todo: tweak defaults
-            [Summary(description: "[Optional] Minimum points for warning")] ulong minWarn = 0,
-            [Summary(description: "[Optional] Minimum points for ban")] ulong minBan = 0
+            [Summary(description: "Notification channel (none to disable)")] IChannel? channel = null,
+            [Summary(description: "[Optional] Minimum points for warning")] int minWarn = int.MaxValue,
+            [Summary(description: "[Optional] Minimum points for kick")] int minKick = int.MaxValue,
+            [Summary(description: "[Optional] Minimum points for ban")] int minBan = int.MaxValue
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.UserAnalysisChannel = channel?.Id ?? 0;
             guild.UserAnalysisWarnAt = minWarn;
+            guild.UserAnalysisKickAt = minKick;
             guild.UserAnalysisBanAt = minBan;
 
-            _logger.LogDebug("{intTag} Setting userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minBan, Context.Guild.Log());
+            _logger.LogDebug("{intTag} Setting userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minKick, minBan, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minBan, Context.Guild.Log());
-            await Interaction.ReplyAsync($"User analysis is currently **{(channel is not null ? "enabled" : "disabled")}**\n\nChannel: **{(channel is null ? "None" : $"<#{channel.Id}>")}**\nWarn at: **{minWarn}**\nBan at: **{minBan}**");
+            _logger.LogInformation("{intTag} Set userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minKick, minBan, Context.Guild.Log());
+            await Interaction.ReplyAsync($"User analysis is currently **{(channel is not null ? "enabled" : "disabled")}**\n\nChannel: **{(channel is null ? "None" : $"<#{channel.Id}>")}**\nWarn at: **{(minWarn == int.MaxValue ? "OFF" : minWarn)}**\nKick at: **{(minKick == int.MaxValue ? "OFF" : minKick)}**\nBan at: **{(minBan == int.MaxValue ? "OFF" : minBan)}**");
         }
 
         [UserCommand("Analyze"), SlashCommand("analyze", "Analyze a user")]

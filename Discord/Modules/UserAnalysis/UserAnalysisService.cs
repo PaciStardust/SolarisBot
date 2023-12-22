@@ -39,10 +39,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             return Task.CompletedTask;
         }
 
-        //todo: autoban, warn, ignore at x point level, role at x, kick at x
-        //todo: Buttons for quarantine and vouch?
-
-        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
+        private async Task EvaluateUserCredibilityAsync(SocketGuildUser user) //todo: [TESTING] Does this service operate correctly?
         {
             if (user.IsWebhook || user.IsBot)
                 return;
@@ -68,25 +65,94 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 return;
             }
 
+            var analysisScore = analysis.CalculateScore();
+            var (actionText, completedAction) = await AutomaticallyModerateUser(user, analysisScore, dbGuild);
+
             var componentBuilder = new ComponentBuilder();
-            if (user.Guild.CurrentUser.GuildPermissions.ModerateMembers)
+            if (completedAction < ModerationAction.Kick)
             {
                 componentBuilder = componentBuilder
-                    .WithButton("Kick", $"solaris_analysis_kick.{user.Id}", ButtonStyle.Danger)
-                    .WithButton("Ban", $"solaris_analysis_vouch.{user.Id}", ButtonStyle.Danger);
+                    .WithButton("Kick", $"solaris_analysis_kick.{user.Id}", ButtonStyle.Danger, disabled: !user.Guild.CurrentUser.GuildPermissions.KickMembers)
+                    .WithButton("Ban", $"solaris_analysis_vouch.{user.Id}", ButtonStyle.Danger, disabled: !user.Guild.CurrentUser.GuildPermissions.BanMembers);
             }
 
-            var analysisScore = analysis.CalculateScore();
+            if (completedAction >= ModerationAction.Warn)
+                actionText = "@here " + actionText;
+
             try
             {
                 _logger.LogInformation("Sending user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
-                await msgChannel.SendMessageAsync(embed: analysis.GenerateSummaryEmbed(analysisScore), components: componentBuilder.Build()); //todo: [TESTING] Does this error without components?
+                await msgChannel.SendMessageAsync(actionText, embed: analysis.GenerateSummaryEmbed(analysisScore), components: componentBuilder.Build()); //todo: [TESTING] Does this error without components?
                 _logger.LogInformation("Sent user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed sending user analysis {analyis} to channel {channel}", analysis.Log(analysisScore), channel.Log());
             }
+        }
+
+        private async Task<(string, ModerationAction)> AutomaticallyModerateUser(SocketGuildUser targetUser, int analysisScore, DbGuildConfig dbGuild)
+        {
+            //Establishing needed action
+            var moderationAction = ModerationAction.None;
+            if (analysisScore >= dbGuild.UserAnalysisWarnAt)
+                moderationAction = ModerationAction.Warn;
+            if (analysisScore >= dbGuild.UserAnalysisKickAt)
+                moderationAction = ModerationAction.Kick;
+            if (analysisScore >= dbGuild.UserAnalysisBanAt)
+                moderationAction = ModerationAction.Ban;
+
+            switch(moderationAction)
+            {
+                case ModerationAction.None:
+                    return ("No action taken", ModerationAction.None);
+
+                case ModerationAction.Warn:
+                    return ($"Detected suspicious user *({analysisScore} >= {dbGuild.UserAnalysisWarnAt} Score)*", ModerationAction.Warn);
+
+                case ModerationAction.Kick:
+                    if (!targetUser.Guild.CurrentUser.GuildPermissions.KickMembers)
+                        return ("Unable to kick as permission is missing", ModerationAction.None);
+                    try
+                    {
+                        _logger.LogDebug("Kicking user {user} from guild {guild}, user analysis score {score} satisfies kick score {kickScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisKickAt);
+                        await targetUser.KickAsync($"Automatically kicked via user analysis ({analysisScore} >= {dbGuild.UserAnalysisKickAt} Score)");
+                        _logger.LogInformation("Kicked user {user} from guild {guild}, user analysis score {score} satisfies kick score {kickScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisKickAt);
+                        return ($"Automatically kicked *({analysisScore} >= {dbGuild.UserAnalysisKickAt} Score)*", ModerationAction.Kick);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed kicking user {user} from guild {guild}, user analysis score {score} satisfies kick score {kickScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisKickAt);
+                        return ($"Unable to kick *({ex.Message})*", ModerationAction.None);
+                    }
+
+                case ModerationAction.Ban:
+                    if (!targetUser.Guild.CurrentUser.GuildPermissions.BanMembers)
+                        return ("Unable to ban as permission is missing", ModerationAction.None);
+                    try
+                    {
+                        _logger.LogDebug("Banning user {user} from guild {guild}, user analysis score {score} satisfies ban score {banScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisBanAt);
+                        await targetUser.KickAsync($"Automatically banned via user analysis ({analysisScore} >= {dbGuild.UserAnalysisBanAt} Score)");
+                        _logger.LogInformation("Banned user {user} from guild {guild}, user analysis score {score} satisfies ban score {banScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisBanAt);
+                        return ($"Automatically banned *({analysisScore} >= {dbGuild.UserAnalysisBanAt} Score)*", ModerationAction.Ban);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed banned user {user} from guild {guild}, user analysis score {score} satisfies ban score {banScore}", targetUser.Log(), targetUser.Guild.Log(), analysisScore, dbGuild.UserAnalysisBanAt);
+                        return ($"Unable to ban *({ex.Message})*", ModerationAction.None);
+                    }
+
+                default:
+                    return ("*Unknown evaluation*", ModerationAction.None);
+            }
+        }
+
+        private enum ModerationAction
+        {
+            None,
+            Warn,
+            Kick,
+            Ban
         }
     }
 }
