@@ -71,7 +71,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             {
                 componentBuilder = componentBuilder
                     .WithButton("Kick", $"solaris_analysis_kick.{user.Id}", ButtonStyle.Danger, disabled: !user.Guild.CurrentUser.GuildPermissions.KickMembers)
-                    .WithButton("Ban", $"solaris_analysis_vouch.{user.Id}", ButtonStyle.Danger, disabled: !user.Guild.CurrentUser.GuildPermissions.BanMembers);
+                    .WithButton("Ban", $"solaris_analysis_ban.{user.Id}", ButtonStyle.Danger, disabled: !user.Guild.CurrentUser.GuildPermissions.BanMembers);
             }
 
             if (completedAction >= ModerationAction.Warn)
