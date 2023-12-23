@@ -69,8 +69,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id, x => x.Include(y => y.RoleGroups));
 
-            var identifierSearch = identifierTrimmed.ToLower();
-            var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch)
+            var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase))
                 ?? new() { GuildId = Context.Guild.Id, Identifier = identifierTrimmed };
 
             var logVerb = roleGroup.RoleGroupId == ulong.MinValue ? "Creat" : "Updat";
@@ -99,8 +98,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var identifierSearch = identifierTrimmed.ToLower();
-            var match = await _dbContext.RoleGroups.ForGuild(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierSearch);
+            var match = await _dbContext.RoleGroups.ForGuild(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase));
             if (match is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -129,7 +127,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             var descriptionTrimmed = description.Trim();
             var identifierTrimmed = identifier.Trim();
-            var groupSearch = group.Trim().ToLower();
+            var groupSearch = group.Trim();
 
             var identifierValid = DiscordUtils.IsIdentifierValid(identifierTrimmed);
             if (!identifierValid || !DiscordUtils.IsIdentifierValid(groupSearch))
@@ -149,15 +147,14 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch);
+            var roleGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.Equals(groupSearch, StringComparison.OrdinalIgnoreCase));
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
-            var lowerIdentifierName = identifierTrimmed.ToLower();
-            if (roleGroup.RoleConfigs.FirstOrDefault(x => x.Identifier.ToLower() == lowerIdentifierName) is not null)
+            if (roleGroup.RoleConfigs.FirstOrDefault(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase)) is not null)
             {
                 await Interaction.ReplyErrorAsync("A Role with that identifier is already registered");
                 return;
@@ -186,8 +183,8 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "Identifier of role"), MinLength(2), MaxLength(20)] string identifier
         )
         {
-            var groupSearch = group.Trim().ToLower();
-            var identifierSearch = identifier.Trim().ToLower();
+            var groupSearch = group.Trim();
+            var identifierSearch = identifier.Trim();
 
             var groupValid = DiscordUtils.IsIdentifierValid(groupSearch);
             if (!groupValid || !DiscordUtils.IsIdentifierValid(identifierSearch))
@@ -196,8 +193,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var dbGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch);
-            var dbRole = dbGroup?.RoleConfigs.FirstOrDefault(x => x.Identifier.ToLower() == identifierSearch);
+            var dbGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.Equals(groupSearch, StringComparison.OrdinalIgnoreCase));
+            var dbRole = dbGroup?.RoleConfigs.FirstOrDefault(x => x.Identifier.Equals(identifierSearch, StringComparison.OrdinalIgnoreCase));
             if (dbRole is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -218,7 +215,7 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "Identifier of group"), MinLength(2), MaxLength(20)] string identifier
         )
         {
-            var identifierSearch = identifier.Trim().ToLower();
+            var identifierSearch = identifier.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierSearch))
             {
                 await Interaction.RespondInvalidIdentifierErrorEmbedAsync(identifier);
