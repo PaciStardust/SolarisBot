@@ -31,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Fun
             {
                 var words = File.ReadLines(Utils.PathDictionaryFile);
                 foreach (var item in words)
-                    _words.Add(item.ToLower());
+                    _words.Add(item);
             }
             catch (Exception ex)
             {
@@ -67,7 +67,7 @@ namespace SolarisBot.Discord.Modules.Fun
                 if (string.IsNullOrWhiteSpace(word))
                     continue;
 
-                if (!_words.Contains(word.ToLower()))
+                if (!_words.Any(x => x.Equals(word, StringComparison.OrdinalIgnoreCase)))
                     errors.Add(word);
             }
 

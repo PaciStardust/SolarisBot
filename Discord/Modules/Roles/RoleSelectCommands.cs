@@ -87,7 +87,7 @@ namespace SolarisBot.Discord.Modules.Roles
         )
         {
             var gUser = GetGuildUser(Context.User);
-            var identifierSearch = identifier.Trim().ToLower();
+            var identifierSearch = identifier.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierSearch))
             {
                 await Interaction.RespondInvalidIdentifierErrorEmbedAsync(identifier);

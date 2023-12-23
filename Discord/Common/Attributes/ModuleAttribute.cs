@@ -9,10 +9,10 @@
         internal string ModuleName { get; }
         internal ModuleAttribute(string moduleName)
         {
-            ModuleName = moduleName.ToLower();
+            ModuleName = moduleName;
         }
 
         internal bool IsDisabled(IEnumerable<string> disabledList)
-            => disabledList.Any(x => ModuleName.StartsWith(x.ToLower()));
+            => disabledList.Any(x => ModuleName.StartsWith(x, StringComparison.OrdinalIgnoreCase));
     }
 }
