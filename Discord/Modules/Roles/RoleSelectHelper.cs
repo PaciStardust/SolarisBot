@@ -34,8 +34,12 @@ namespace SolarisBot.Discord.Modules.Roles
                 .Build();
         }
 
-        internal static DbRoleGroup? FindRoleGroupForIdentifier(IEnumerable<DbRoleGroup> roleGroups, string identifierSearch) //Todo: advanced search
+        internal static DbRoleGroup? FindRoleGroupForIdentifier(IEnumerable<DbRoleGroup> roleGroups, string identifierSearch)
             => roleGroups.FirstOrDefault(x => x.Identifier.Equals(identifierSearch, StringComparison.OrdinalIgnoreCase))
-                ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.Equals(identifierSearch, StringComparison.OrdinalIgnoreCase)));
+                ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.Equals(identifierSearch, StringComparison.OrdinalIgnoreCase)))
+                ?? roleGroups.FirstOrDefault(x => x.Identifier.StartsWith(identifierSearch, StringComparison.OrdinalIgnoreCase))
+                ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.StartsWith(identifierSearch, StringComparison.OrdinalIgnoreCase)))
+                ?? roleGroups.FirstOrDefault(x => x.Identifier.Contains(identifierSearch, StringComparison.OrdinalIgnoreCase))
+                ?? roleGroups.FirstOrDefault(x => x.RoleConfigs.Any(y => y.Identifier.Contains(identifierSearch, StringComparison.OrdinalIgnoreCase)));
     }
 }
