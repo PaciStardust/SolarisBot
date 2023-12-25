@@ -98,7 +98,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var match = await _dbContext.RoleGroups.ForGuild(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase));
+            var identifierSearch = identifierTrimmed.ToLower();
+            var match = await _dbContext.RoleGroups.ForGuild(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierSearch); //No ordinal because EF
             if (match is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -127,7 +128,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             var descriptionTrimmed = description.Trim();
             var identifierTrimmed = identifier.Trim();
-            var groupSearch = group.Trim();
+            var groupSearch = group.Trim().ToLower();
 
             var identifierValid = DiscordUtils.IsIdentifierValid(identifierTrimmed);
             if (!identifierValid || !DiscordUtils.IsIdentifierValid(groupSearch))
@@ -147,7 +148,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.Equals(groupSearch, StringComparison.OrdinalIgnoreCase));
+            var roleGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -183,7 +184,7 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "Identifier of role"), MinLength(2), MaxLength(20)] string identifier
         )
         {
-            var groupSearch = group.Trim();
+            var groupSearch = group.Trim().ToLower();
             var identifierSearch = identifier.Trim();
 
             var groupValid = DiscordUtils.IsIdentifierValid(groupSearch);
@@ -193,7 +194,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var dbGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.Equals(groupSearch, StringComparison.OrdinalIgnoreCase));
+            var dbGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
             var dbRole = dbGroup?.RoleConfigs.FirstOrDefault(x => x.Identifier.Equals(identifierSearch, StringComparison.OrdinalIgnoreCase));
             if (dbRole is null)
             {
