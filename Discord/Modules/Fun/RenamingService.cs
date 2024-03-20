@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Modules.Fun
                 return;
 
             var timeOut = guild.JokeTimeouts.FirstOrDefault(x => x.UserId == gUser.Id);
-            var currTime = Utils.GetCurrentUnix(_logger);
+            var currTime = Utils.GetCurrentUnix();
             if (timeOut is not null && timeOut.NextUse > currTime)
                 return;
 

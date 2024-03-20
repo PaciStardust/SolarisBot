@@ -51,7 +51,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             if (_client.LoginState != LoginState.LoggedIn)
                 return;
 
-            var nowUnix = Utils.GetCurrentUnix(_logger);
+            var nowUnix = Utils.GetCurrentUnix();
             //_logger.LogDebug("Checking Database for reminders");
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var reminders = await dbCtx.Reminders.FromSqlRaw($"SELECT * FROM reminders WHERE time <= {nowUnix}").ToArrayAsync(); //UInt equality not supported

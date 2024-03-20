@@ -52,7 +52,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var currentTime = Utils.GetCurrentUnix(_logger);
+            var currentTime = Utils.GetCurrentUnix();
             if (currentTime < dbGuild.MagicRoleNextUse)
             {
                 await Interaction.ReplyErrorAsync($"There is currently not enough mana to use magic, please wait until <t:{dbGuild.MagicRoleNextUse}:R>");

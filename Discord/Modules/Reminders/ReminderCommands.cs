@@ -93,9 +93,17 @@ namespace SolarisBot.Discord.Modules.Reminders
                 return;
             }
 
-            var offset = DateTimeOffset.Now.AddDays(days).AddHours(hours).AddMinutes(minutes);
-            var reminderTime = offset.ToUnixTimeSeconds().AsUlong(_logger);
-            await CreateReminderAsync(text, reminderTime);
+            try
+            {
+                var offset = DateTimeOffset.Now.AddDays(days).AddHours(hours).AddMinutes(minutes);
+                var reminderTime = Convert.ToUInt64(offset.ToUnixTimeSeconds());
+                await CreateReminderAsync(text, reminderTime);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed converting reminder time");
+                await Interaction.ReplyErrorAsync("Failed to convert reminder time");
+            }
         }
         #endregion
 
