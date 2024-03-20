@@ -147,11 +147,6 @@ namespace SolarisBot.Discord.Services
 
             bool changeMade = false;
 
-            if (guild.MagicRoleId == role.Id)
-            {
-                guild.MagicRoleId = ulong.MinValue;
-                changeMade = true;
-            }
             if (guild.AutoRoleId == role.Id)
             {
                 guild.AutoRoleId = ulong.MinValue;

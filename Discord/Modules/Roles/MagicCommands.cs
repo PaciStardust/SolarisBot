@@ -51,6 +51,11 @@ namespace SolarisBot.Discord.Modules.Roles
                 await Interaction.ReplyErrorAsync("Magic is not enabled in this guild");
                 return;
             }
+            if (FindRole(dbGuild.MagicRoleId) is null)
+            {
+                await Interaction.ReplyDeletedRoleErrorAsync("Magic");
+                return;
+            }
 
             var currentTime = Utils.GetCurrentUnix();
             if (currentTime < dbGuild.MagicRoleNextUse)
