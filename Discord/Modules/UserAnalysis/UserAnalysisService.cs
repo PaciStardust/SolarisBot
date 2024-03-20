@@ -44,7 +44,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
             var dbCtx = _services.GetRequiredService<DatabaseContext>();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
-            if (dbGuild is null || dbGuild.UserAnalysisChannel == ulong.MinValue)
+            if (dbGuild is null || dbGuild.UserAnalysisChannel == 0)
                 return;
 
             var analysis = UserAnalysis.ForUser(user, _config);
