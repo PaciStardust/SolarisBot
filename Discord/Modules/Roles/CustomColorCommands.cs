@@ -62,7 +62,7 @@ namespace SolarisBot.Discord.Modules.Roles
                     await Interaction.ReplyErrorAsync("Custom color roles are not enabled in this guild");
                     return;
                 }
-                if (gUser.Roles.FirstOrDefault(x => x.Id == permissionRole) is null)
+                if (gUser.FindRole(permissionRole.Value) is null)
                 {
                     await Interaction.ReplyErrorAsync($"You do not have the required role <@&{permissionRole}>");
                     return;

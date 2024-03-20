@@ -47,7 +47,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            if (gTargetUser.Roles.FirstOrDefault(x => x.Id == dbGuild.QuarantineRoleId) is not null)
+            if (gTargetUser.FindRole(dbGuild.QuarantineRoleId) is not null)
             {
                 _logger.LogDebug("{intTag} Removing quarantine role from user {targetUserData}, has been removed({quarantineRoleId}) in {guild} by {userData}", GetIntTag(), gTargetUser.Log(), dbGuild.QuarantineRoleId, Context.Guild.Log(), gUser.Log());
                 await gTargetUser.RemoveRoleAsync(dbGuild.QuarantineRoleId);

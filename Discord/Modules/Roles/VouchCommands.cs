@@ -54,7 +54,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 await Interaction.ReplyErrorAsync("Vouch permission role could not be found in guild, it might have been deleted");
                 return;
             }
-            if (gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) is null)
+            if (gUser.FindRole(dbGuild.VouchPermissionRoleId) is null)
             {
                 await Interaction.ReplyErrorAsync($"You do not have the required role <@&{dbGuild.VouchPermissionRoleId}>");
                 return;
@@ -64,7 +64,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 await Interaction.ReplyErrorAsync("Vouch role could not be found in guild, it might have been deleted");
                 return;
             }
-            if (gTargetUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchRoleId) is not null)
+            if (gTargetUser.FindRole(dbGuild.VouchRoleId) is not null)
             {
                 await Interaction.ReplyErrorAsync($"{gTargetUser.Mention} has already been vouched");
                 return;
