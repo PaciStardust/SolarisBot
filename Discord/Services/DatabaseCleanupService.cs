@@ -152,21 +152,6 @@ namespace SolarisBot.Discord.Services
                 guild.MagicRoleId = ulong.MinValue;
                 changeMade = true;
             }
-            if (guild.VouchPermissionRoleId == role.Id)
-            {
-                guild.VouchPermissionRoleId = ulong.MinValue;
-                changeMade = true;
-            }
-            if (guild.VouchRoleId == role.Id)
-            {
-                guild.VouchRoleId = ulong.MinValue;
-                changeMade = true;
-            }
-            if (guild.CustomColorPermissionRoleId == role.Id)
-            {
-                guild.CustomColorPermissionRoleId = ulong.MinValue;
-                changeMade = true;
-            }
             if (guild.AutoRoleId == role.Id)
             {
                 guild.AutoRoleId = ulong.MinValue;
