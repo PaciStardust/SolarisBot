@@ -87,6 +87,14 @@ namespace SolarisBot.Discord.Common
         /// <returns>A role matching the ID or null if none could be found</returns>
         internal static SocketRole? FindRole(this SocketGuildUser gUser, ulong id)
             => gUser.Roles.FirstOrDefault(x => x.Id == id);
+
+        /// <summary>
+        /// Gets a role by ID
+        /// </summary>
+        /// <param name="id">ID of role</param>
+        /// <returns>A role matching the ID or null if none could be found</returns>
+        internal static SocketRole? FindRole(this SocketGuild guild, ulong id)
+            => guild.Roles.FirstOrDefault(x => x.Id == id);
         #endregion
     }
 }
