@@ -148,7 +148,6 @@ namespace SolarisBot.Discord.Services
 
             var changes = await OnChannelDestroyedRemoveBridgesAsync(gChannel, dbCtx);
             changes = changes || await OnChannelDestroyedRemoveRemindersAsync(gChannel, dbCtx);
-            changes = changes || await OnChannelDestroyedCleanGuildSettingsAsync(gChannel, dbCtx);
 
             if (!changes)
                 return;
@@ -172,31 +171,6 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Removing {reminders} related reminders for deleted channel {channel} in guild {guild}", reminders.Length, gChannel.Log(), gChannel.Guild.Log());
             dbCtx.Reminders.RemoveRange(reminders);
-            return true;
-        }
-
-        /// <summary>
-        /// Removes all references of channel from GuildConfig
-        /// </summary>
-        private async Task<bool> OnChannelDestroyedCleanGuildSettingsAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
-        {
-            var guild = await dbCtx.GetGuildByIdAsync(gChannel.GuildId);
-            if (guild is null)
-                return false;
-
-            bool changeMade = false;
-
-            if (guild.UserAnalysisChannelId == gChannel.Id)
-            {
-                guild.UserAnalysisChannelId = ulong.MinValue;
-                changeMade = true;
-            }
-
-            if (!changeMade)
-                return false;
-
-            _logger.LogDebug("Removing references of channel {channel} from guild {guild} in DB", gChannel.Log(), guild);
-            dbCtx.GuildConfigs.Update(guild);
             return true;
         }
 

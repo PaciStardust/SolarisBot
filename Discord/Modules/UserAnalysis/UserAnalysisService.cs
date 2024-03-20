@@ -52,14 +52,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannelId);
             if (channel is null || channel is not IMessageChannel msgChannel)
             {
-                _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
-                dbGuild.UserAnalysisChannelId = ulong.MinValue;
-                dbCtx.GuildConfigs.Update(dbGuild);
-                var (_, err) = await dbCtx.TrySaveChangesAsync();
-                if (err is not null)
-                    _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
-                else
-                    _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
+                _logger.LogDebug("Could not locate UserAnalysisChannel for guild {guild} with id {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
                 return;
             }
 
