@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
-using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Modules.Bridges;

@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SolarisBot.Database.Models;
 
 namespace SolarisBot.Database
 {

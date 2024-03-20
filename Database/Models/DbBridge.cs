@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace SolarisBot.Database.Models
+namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(BridgeId))]
-    public class DbBridge
+    public class DbBridge : DbModelBase //todo: impl create + update
     {
         public ulong BridgeId { get; set; } = ulong.MinValue;
         public string Name { get; set; } = string.Empty;
@@ -12,8 +12,6 @@ namespace SolarisBot.Database.Models
         public ulong GuildBId { get; set; } = ulong.MinValue;
         public ulong ChannelBId { get; set; } = ulong.MinValue;
         public bool IsDeleted { get; set; } = false; //todo: impl
-        public ulong CreatedAt { get; set; } = ulong.MinValue; //todo: impl
-        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         public DbBridge() { }
 

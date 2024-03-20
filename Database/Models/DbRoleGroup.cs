@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(RoleGroupId))]
-    public class DbRoleGroup
+    public class DbRoleGroup : DbModelBase //todo: impl create + update
     {
         public ulong RoleGroupId { get; set; } = ulong.MinValue;
         public ulong GuildId { get; set; } = ulong.MinValue;
@@ -13,8 +13,6 @@ namespace SolarisBot.Database
         public string Description { get; set; } = string.Empty;
         public ulong RequiredRoleId { get; set; } = ulong.MinValue;
         public bool IsDeleted { get; set; } = false;
-        public ulong CreatedAt { get; set; } = ulong.MinValue; //todo: impl
-        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         [ForeignKey(nameof(DbRoleConfig.RoleGroupId))]
         public virtual ICollection<DbRoleConfig> RoleConfigs { get; set; } = new HashSet<DbRoleConfig>();

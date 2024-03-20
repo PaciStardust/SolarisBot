@@ -1,8 +1,8 @@
 ﻿using Discord.WebSocket;
 using Discord;
-using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using Microsoft.Extensions.Logging;
+using SolarisBot.Database;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {

@@ -4,7 +4,6 @@ using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
-using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Modules.Roles;

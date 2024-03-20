@@ -1,11 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SolarisBot.Database.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(GuildId))]
-    public class DbGuildConfig //todo: no longer delete
+    public class DbGuildConfig : DbModelBase //todo: impl create + update, no longer delete
     {
         public ulong GuildId { get; set; } = ulong.MinValue;
         public ulong VouchRoleId { get; set; } = ulong.MinValue;
@@ -29,8 +28,6 @@ namespace SolarisBot.Database
         public int UserAnalysisWarnAt { get; set; } = int.MaxValue;
         public int UserAnalysisKickAt { get; set; } = int.MaxValue;
         public int UserAnalysisBanAt { get; set; } = int.MaxValue;
-        public ulong CreatedAt { get; set; } = ulong.MinValue; //todo: impl
-        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
