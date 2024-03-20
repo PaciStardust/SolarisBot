@@ -108,7 +108,6 @@ namespace SolarisBot.Discord.Services
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             
             var changes = await OnRoleDeletedCleanRoleSettingsAsync(dbCtx, role);
-            changes = changes || await OnRoleDeletedCleanGuildSettingsAsync(dbCtx, role);
 
             if (!changes)
                 return;
@@ -132,32 +131,6 @@ namespace SolarisBot.Discord.Services
 
             _logger.LogDebug("Deleting match {dbRole} for deleted role {role} in DB", dbRole, role.Log());
             dbCtx.RoleConfigs.Remove(dbRole);
-            return true;
-        }
-
-
-        /// <summary>
-        /// Updates GuildSettings if RoleId is contained in settings
-        /// </summary>
-        private async Task<bool> OnRoleDeletedCleanGuildSettingsAsync(DatabaseContext dbCtx, SocketRole role)
-        {
-            var guild = await dbCtx.GetGuildByIdAsync(role.Guild.Id);
-            if (guild is null)
-                return false;
-
-            bool changeMade = false;
-
-            if (guild.QuarantineRoleId == role.Id)
-            {
-                guild.QuarantineRoleId = ulong.MinValue;
-                changeMade = true;
-            }
-
-            if (!changeMade)
-                return false;
-
-            _logger.LogDebug("Removing references of role {role} from guild {guild} in DB", role.Log(), guild);
-            dbCtx.Update(guild);
             return true;
         }
         #endregion

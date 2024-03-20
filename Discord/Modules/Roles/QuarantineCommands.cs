@@ -46,6 +46,11 @@ namespace SolarisBot.Discord.Modules.Roles
                 await Interaction.ReplyErrorAsync("Quarantine is not enabled in this guild");
                 return;
             }
+            if (FindRole(dbGuild.VouchRoleId) is null)
+            {
+                await Interaction.ReplyDeletedRoleErrorAsync("Quarantine");
+                return;
+            }
 
             if (gTargetUser.FindRole(dbGuild.QuarantineRoleId) is not null)
             {

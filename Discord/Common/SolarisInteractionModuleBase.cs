@@ -38,6 +38,6 @@ namespace SolarisBot.Discord.Common
         /// <param name="id">ID of role</param>
         /// <returns>A role matching the ID or null if none could be found</returns>
         protected IRole? FindRole(ulong id)
-            => Context.Guild.Roles.FirstOrDefault(r => r.Id == id);
+            => Context.Guild.FindRole(id);
     }
 }
