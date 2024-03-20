@@ -51,7 +51,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             if (FindRole(dbGuild.VouchPermissionRoleId) is null) //todo: logging?
             {
-                await Interaction.ReplyDeletedRoleErrorAsync("Vouch permission");
+                await Interaction.ReplyDeletedRoleErrorAsync("Vouch permission"); //todo: [TEST] Does this trigger?
                 return;
             }
             if (gUser.FindRole(dbGuild.VouchPermissionRoleId) is null)
@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Modules.Roles
             }
             if (FindRole(dbGuild.VouchRoleId) is null)
             {
-                await Interaction.ReplyDeletedRoleErrorAsync("Vouch");
+                await Interaction.ReplyDeletedRoleErrorAsync("Vouch"); //todo: [TEST] Does this trigger?
                 return;
             }
             if (gTargetUser.FindRole(dbGuild.VouchRoleId) is not null)

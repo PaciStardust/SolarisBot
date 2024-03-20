@@ -48,7 +48,7 @@ namespace SolarisBot.Discord.Modules.Roles
             }
             if (FindRole(dbGuild.VouchRoleId) is null)
             {
-                await Interaction.ReplyDeletedRoleErrorAsync("Quarantine");
+                await Interaction.ReplyDeletedRoleErrorAsync("Quarantine"); //todo: [TEST] Does this trigger?
                 return;
             }
 

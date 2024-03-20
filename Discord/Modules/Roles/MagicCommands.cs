@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Modules.Roles
             }
             if (FindRole(dbGuild.MagicRoleId) is null)
             {
-                await Interaction.ReplyDeletedRoleErrorAsync("Magic");
+                await Interaction.ReplyDeletedRoleErrorAsync("Magic"); //todo: [TEST] Does this trigger?
                 return;
             }
 

@@ -64,7 +64,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 }
                 if (FindRole(permissionRole.Value) is null)
                 {
-                    await Interaction.ReplyDeletedRoleErrorAsync("Custom color");
+                    await Interaction.ReplyDeletedRoleErrorAsync("Custom color"); //todo: [TEST] Does this trigger?
                     return;
                 }
                 if (gUser.FindRole(permissionRole.Value) is null)

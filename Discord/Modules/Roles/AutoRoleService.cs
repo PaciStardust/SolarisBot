@@ -41,7 +41,7 @@ namespace SolarisBot.Discord.Modules.Roles
         {
             var dbCtx = _provider.GetRequiredService<DatabaseContext>();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
-            if (dbGuild is null || dbGuild.AutoRoleId == ulong.MinValue || user.Guild.FindRole(dbGuild.AutoRoleId) is null)
+            if (dbGuild is null || dbGuild.AutoRoleId == ulong.MinValue || user.Guild.FindRole(dbGuild.AutoRoleId) is null) //todo: [FEATURE] Notify for this?
                 return;
 
             try
