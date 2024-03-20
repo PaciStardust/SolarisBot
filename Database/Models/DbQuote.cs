@@ -3,7 +3,7 @@
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(QuoteId))]
-    public class DbQuote : DbModelBase //todo: impl create + update
+    public class DbQuote : DbModelBase
     {
         public ulong QuoteId { get; set; } = ulong.MinValue;
         public ulong GuildId { get; set; } = ulong.MinValue;

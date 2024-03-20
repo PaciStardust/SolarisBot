@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(ChannelId))]
-    public class DbRegexChannel : DbModelBase //todo: impl create + update
+    public class DbRegexChannel : DbModelBase
     {
         public ulong ChannelId { get; set; } = ulong.MinValue;
         public ulong GuildId { get; set; } = ulong.MinValue;

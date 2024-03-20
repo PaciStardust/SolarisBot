@@ -3,7 +3,7 @@
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(JokeTimeoutId))]
-    public class DbJokeTimeout : DbModelBase //todo: impl create + update
+    public class DbJokeTimeout : DbModelBase
     {
         public ulong JokeTimeoutId { get; set; } = ulong.MinValue;
         public ulong UserId { get; set; } = ulong.MinValue;

@@ -3,7 +3,7 @@
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(ReminderId))]
-    public class DbReminder : DbModelBase //todo: impl create + update
+    public class DbReminder : DbModelBase 
     {
         public ulong ReminderId { get; set; } = ulong.MinValue;
         public ulong GuildId { get; set; } = ulong.MinValue;

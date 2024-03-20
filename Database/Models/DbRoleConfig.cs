@@ -3,7 +3,7 @@
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(RoleId))]
-    public class DbRoleConfig : DbModelBase //todo: impl create + update
+    public class DbRoleConfig : DbModelBase
     {
         public ulong RoleId { get; set; } = ulong.MinValue;
         public ulong RoleGroupId { get; set; } = ulong.MinValue;

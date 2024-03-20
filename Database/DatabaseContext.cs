@@ -39,6 +39,26 @@ namespace SolarisBot.Database
             }
         }
 
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var changedEntries = ChangeTracker.Entries().Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+            if (changedEntries.Any())
+            {
+                var now = Utils.GetCurrentUnix();
+                foreach (var entry in changedEntries)
+                {
+                    if (entry.Entity is not DbModelBase baseEntity)
+                        continue;
+
+                    if (entry.State == EntityState.Added)
+                        baseEntity.CreatedAt = now;
+                    baseEntity.UpdatedAt = now;
+                }
+        }
+
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
         #region Migration
         /// <summary>
         /// Attempts to migrate the database, throws on error

@@ -3,7 +3,7 @@
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(BridgeId))]
-    public class DbBridge : DbModelBase //todo: impl create + update
+    public class DbBridge : DbModelBase
     {
         public ulong BridgeId { get; set; } = ulong.MinValue;
         public string Name { get; set; } = string.Empty;

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(RoleGroupId))]
-    public class DbRoleGroup : DbModelBase //todo: impl create + update
+    public class DbRoleGroup : DbModelBase
     {
         public ulong RoleGroupId { get; set; } = ulong.MinValue;
         public ulong GuildId { get; set; } = ulong.MinValue;
