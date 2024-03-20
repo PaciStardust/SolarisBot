@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SolarisBot.Database.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
