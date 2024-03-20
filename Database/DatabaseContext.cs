@@ -22,6 +22,7 @@ namespace SolarisBot.Database
         public DbSet<DbRoleGroup> RoleGroups { get; set; }
         public DbSet<DbReminder> Reminders { get; set; }
         public DbSet<DbBridge> Bridges { get; set; }
+        public DbSet<DbRegexChannel> RegexChannels { get; set; }
 
         /// <summary>
         /// Attempts to save changes to the database

@@ -37,6 +37,8 @@ namespace SolarisBot.Database
         public virtual ICollection<DbJokeTimeout> JokeTimeouts { get; set; } = new HashSet<DbJokeTimeout>();
         [ForeignKey(nameof(DbReminder.GuildId))]
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
+        [ForeignKey(nameof(DbRegexChannel.GuildId))]
+        public virtual ICollection<DbRegexChannel> RegexChannels { get; set; } = new HashSet<DbRegexChannel>();
 
         public DbGuildConfig() { } //To avoid defaults not setting
 
