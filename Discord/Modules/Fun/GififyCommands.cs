@@ -5,6 +5,7 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using Image = SixLabors.ImageSharp.Image;
+using SixLabors.ImageSharp;
 
 namespace SolarisBot.Discord.Modules.Fun
 {
