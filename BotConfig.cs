@@ -112,7 +112,7 @@ namespace SolarisBot
         #region Data
         public ulong Version { get; set; } = 0;
         public string Token { get; set; } = string.Empty;
-        public ulong MainGuild { get; set; } = ulong.MinValue;
+        public ulong MainGuild { get; set; } = 0;
         public string DefaultStatus { get; set; } = "SolarisBot by Paci";
         public byte MaxRemindersPerUser { get; set; } = 16;
         public short MaxQuoteCharacters { get; set; } = 500;

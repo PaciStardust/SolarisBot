@@ -57,7 +57,7 @@ namespace SolarisBot.Discord.Modules.Roles
             if (customColorRole is null)
             {
                 var permissionRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
-                if (permissionRole is null || permissionRole == ulong.MinValue)
+                if (permissionRole is null || permissionRole == 0)
                 {
                     await Interaction.ReplyErrorAsync("Custom color roles are not enabled in this guild");
                     return;

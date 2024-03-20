@@ -26,7 +26,7 @@ namespace SolarisBot.Discord.Modules.Roles
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.QuarantineRoleId = role?.Id ?? ulong.MinValue;
+            guild.QuarantineRoleId = role?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting quarantine to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();

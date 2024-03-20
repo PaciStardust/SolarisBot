@@ -5,12 +5,12 @@ namespace SolarisBot.Database.Models
     [PrimaryKey(nameof(BridgeId))]
     internal class DbBridge
     {
-        public ulong BridgeId { get; set; } = ulong.MinValue;
+        public ulong BridgeId { get; set; } = 0;
         public string Name { get; set; } = string.Empty;
-        public ulong GuildAId { get; set; } = ulong.MinValue;
-        public ulong ChannelAId { get; set; } = ulong.MinValue;
-        public ulong GuildBId { get; set; } = ulong.MinValue;
-        public ulong ChannelBId { get; set; } = ulong.MinValue;
+        public ulong GuildAId { get; set; } = 0;
+        public ulong ChannelAId { get; set; } = 0;
+        public ulong GuildBId { get; set; } = 0;
+        public ulong ChannelBId { get; set; } = 0;
 
         public DbBridge() { }
 

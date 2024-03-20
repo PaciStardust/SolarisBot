@@ -25,7 +25,7 @@ namespace SolarisBot.Discord.Modules.Fun
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-            guild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;
+            guild.SpellcheckRoleId = role?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();

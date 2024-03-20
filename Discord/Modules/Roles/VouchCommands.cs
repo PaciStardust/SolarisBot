@@ -28,8 +28,8 @@ namespace SolarisBot.Discord.Modules.Roles
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.VouchPermissionRoleId = permission?.Id ?? ulong.MinValue;
-            guild.VouchRoleId = vouch?.Id ?? ulong.MinValue;
+            guild.VouchPermissionRoleId = permission?.Id ?? 0;
+            guild.VouchRoleId = vouch?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();

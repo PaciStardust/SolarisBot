@@ -24,8 +24,8 @@ namespace SolarisBot.Discord.Modules.Fun
         public async Task ConfigureRenameAsync
         (
             [Summary(description: "Is feature enabled?")] bool enabled,
-            [Summary(description: "[Optional] Minimum time between renaming (in sec)"), MinValue(ulong.MinValue), MaxValue(2.628e+6)] ulong minTimeout = 1800,
-            [Summary(description: "[Optional] Maximum time between renaming (in sec)"), MinValue(ulong.MinValue), MaxValue(2.628e+6)] ulong maxTimeout = 86400
+            [Summary(description: "[Optional] Minimum time between renaming (in sec)"), MinValue(0), MaxValue(2.628e+6)] ulong minTimeout = 1800,
+            [Summary(description: "[Optional] Maximum time between renaming (in sec)"), MinValue(0), MaxValue(2.628e+6)] ulong maxTimeout = 86400
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);

@@ -72,17 +72,17 @@ namespace SolarisBot.Discord.Modules.Roles
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase))
                 ?? new() { GuildId = Context.Guild.Id, Identifier = identifierTrimmed };
 
-            var logVerb = roleGroup.RoleGroupId == ulong.MinValue ? "Creat" : "Updat";
+            var logVerb = roleGroup.RoleGroupId == 0 ? "Creat" : "Updat";
             roleGroup.AllowOnlyOne = oneOf;
             roleGroup.Description = descriptionTrimmed;
-            roleGroup.RequiredRoleId = requiredrole?.Id ?? ulong.MinValue;
+            roleGroup.RequiredRoleId = requiredrole?.Id ?? 0;
 
             _dbContext.RoleGroups.Update(roleGroup);
 
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Role group **\"{roleGroup.Identifier}\"** {logVerb.ToLower()}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
+            await Interaction.ReplyAsync($"Role group **\"{roleGroup.Identifier}\"** {logVerb.ToLower()}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
 
         [SlashCommand("group-delete", "Delete a role group")]

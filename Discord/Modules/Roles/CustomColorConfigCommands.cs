@@ -26,7 +26,7 @@ namespace SolarisBot.Discord.Modules.Roles
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
+            guild.CustomColorPermissionRoleId = role?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();

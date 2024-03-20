@@ -12,7 +12,7 @@ namespace SolarisBot.Discord.Modules.Quotes
                 return Array.Empty<DbQuote>();
 
             IQueryable<DbQuote> dbQuery = dbCtx.Quotes;
-            if (guild != ulong.MinValue)
+            if (guild != 0)
                 dbQuery = dbQuery.ForGuild(guild);
 
             if (id is not null)

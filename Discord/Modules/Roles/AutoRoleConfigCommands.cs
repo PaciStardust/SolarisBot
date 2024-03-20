@@ -25,7 +25,7 @@ namespace SolarisBot.Discord.Modules.Roles
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-            guild.AutoRoleId = role?.Id ?? ulong.MinValue;
+            guild.AutoRoleId = role?.Id ?? 0;
 
             _logger.LogDebug("{intTag} Setting auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
