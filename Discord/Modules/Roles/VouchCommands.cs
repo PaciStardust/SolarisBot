@@ -51,7 +51,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             if (FindRole(dbGuild.VouchPermissionRoleId) is null) //todo: logging?
             {
-                await Interaction.ReplyErrorAsync("Vouch permission role could not be found in guild, it might have been deleted");
+                await Interaction.ReplyDeletedRoleErrorAsync("Vouch permission");
                 return;
             }
             if (gUser.FindRole(dbGuild.VouchPermissionRoleId) is null)
@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Modules.Roles
             }
             if (FindRole(dbGuild.VouchRoleId) is null)
             {
-                await Interaction.ReplyErrorAsync("Vouch role could not be found in guild, it might have been deleted");
+                await Interaction.ReplyDeletedRoleErrorAsync("Vouch");
                 return;
             }
             if (gTargetUser.FindRole(dbGuild.VouchRoleId) is not null)

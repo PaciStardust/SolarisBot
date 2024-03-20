@@ -64,7 +64,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 }
                 if (FindRole(permissionRole.Value) is null)
                 {
-                    await Interaction.ReplyErrorAsync("Custom color permission role could not be found in guild, it might have been deleted");
+                    await Interaction.ReplyDeletedRoleErrorAsync("Custom color");
                     return;
                 }
                 if (gUser.FindRole(permissionRole.Value) is null)
