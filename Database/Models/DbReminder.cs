@@ -5,18 +5,20 @@ namespace SolarisBot.Database
     [PrimaryKey(nameof(ReminderId))]
     public class DbReminder
     {
-        public ulong ReminderId { get; set; } = 0;
-        public ulong GuildId { get; set; } = 0;
-        public ulong UserId { get; set; } = 0;
-        public ulong ChannelId { get; set; } = 0;
-        public ulong Time { get; set; } = 0;
-        public ulong Created { get; set; } = 0;
+        public ulong ReminderId { get; set; } = ulong.MinValue;
+        public ulong GuildId { get; set; } = ulong.MinValue;
+        public ulong UserId { get; set; } = ulong.MinValue;
+        public ulong ChannelId { get; set; } = ulong.MinValue;
+        public ulong RemindAt { get; set; } = ulong.MinValue;
         public string Text { get; set; } = string.Empty;
+        public bool IsDeleted { get; set; } = false; //todo: impl
+        public ulong CreatedAt { get; set; } = ulong.MinValue;
+        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         public DbReminder() { }
 
         public override string ToString()
-            => $"{Text}(Unix {Created}>{Time})";
+            => $"{Text}(Unix {CreatedAt}>{RemindAt})";
     }
 
     internal static class DbReminderExtensions

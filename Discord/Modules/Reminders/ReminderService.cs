@@ -70,7 +70,7 @@ namespace SolarisBot.Discord.Modules.Reminders
                     if (channel is not null && channel is IMessageChannel msgChannel)
                     {
                         _logger.LogDebug("Reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
-                        var embed = EmbedFactory.Default($"**{reminder.Text}**\n*(Created <t:{reminder.Created}:f>)*");
+                        var embed = EmbedFactory.Default($"**{reminder.Text}**\n*(Created <t:{reminder.CreatedAt}:f>)*");
                         await msgChannel.SendMessageAsync($"Here is your reminder <@{reminder.UserId}>!", embed: embed);
                         _logger.LogInformation("Reminded user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                     }

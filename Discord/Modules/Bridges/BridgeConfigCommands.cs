@@ -169,7 +169,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
 
             var query = _dbContext.Bridges.ForGuild(Context.Guild.Id);
-            query = pBridge == 0
+            query = pBridge == ulong.MinValue
                 ? query.ForChannel(Context.Channel.Id)
                 : query.Where(x => x.BridgeId == pBridge);
 

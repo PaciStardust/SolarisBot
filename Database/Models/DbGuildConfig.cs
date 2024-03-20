@@ -5,30 +5,32 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(GuildId))]
-    public class DbGuildConfig
+    public class DbGuildConfig //todo: no longer delete
     {
-        public ulong GuildId { get; set; } = 0;
-        public ulong VouchRoleId { get; set; } = 0;
-        public ulong VouchPermissionRoleId { get; set; } = 0;
-        public ulong CustomColorPermissionRoleId { get; set; } = 0;
+        public ulong GuildId { get; set; } = ulong.MinValue;
+        public ulong VouchRoleId { get; set; } = ulong.MinValue;
+        public ulong VouchPermissionRoleId { get; set; } = ulong.MinValue;
+        public ulong CustomColorPermissionRoleId { get; set; } = ulong.MinValue;
         public bool JokeRenameOn { get; set; } = false;
-        public ulong JokeRenameTimeoutMin { get; set; } = 0;
-        public ulong JokeRenameTimeoutMax { get; set; } = 0;
-        public ulong MagicRoleId { get; set; } = 0;
-        public ulong MagicRoleTimeout { get; set; } = 0;
-        public ulong MagicRoleNextUse { get; set; } = 0;
+        public ulong JokeRenameTimeoutMin { get; set; } = ulong.MinValue;
+        public ulong JokeRenameTimeoutMax { get; set; } = ulong.MinValue;
+        public ulong MagicRoleId { get; set; } = ulong.MinValue;
+        public ulong MagicRoleTimeout { get; set; } = ulong.MinValue;
+        public ulong MagicRoleNextUse { get; set; } = ulong.MinValue;
         public bool MagicRoleRenameOn { get; set; } = false;
         public bool RemindersOn { get; set; } = false;
         public bool QuotesOn { get; set; } = false;
-        public ulong AutoRoleId { get; set; } = 0;
-        public ulong SpellcheckRoleId { get; set; } = 0;
+        public ulong AutoRoleId { get; set; } = ulong.MinValue;
+        public ulong SpellcheckRoleId { get; set; } = ulong.MinValue;
         public bool StealNicknameOn { get; set; } = false;
         public bool GififyOn { get; set; } = false;
-        public ulong QuarantineRoleId { get; set; } = 0;
-        public ulong UserAnalysisChannel { get; set; } = 0;
+        public ulong QuarantineRoleId { get; set; } = ulong.MinValue;
+        public ulong UserAnalysisChannelId { get; set; } = ulong.MinValue;
         public int UserAnalysisWarnAt { get; set; } = int.MaxValue;
         public int UserAnalysisKickAt { get; set; } = int.MaxValue;
         public int UserAnalysisBanAt { get; set; } = int.MaxValue;
+        public ulong CreatedAt { get; set; } = ulong.MinValue; //todo: impl
+        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
@@ -43,7 +45,7 @@ namespace SolarisBot.Database
 
         public DbGuildConfig() { } //To avoid defaults not setting
 
-        public bool VouchingOn => VouchRoleId != 0 && VouchPermissionRoleId != 0;
+        public bool VouchingOn => VouchRoleId != ulong.MinValue && VouchPermissionRoleId != ulong.MinValue;
     }
 
     internal static class DbGuildConfigExtensions

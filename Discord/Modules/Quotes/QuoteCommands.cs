@@ -60,7 +60,7 @@ namespace SolarisBot.Discord.Modules.Quotes
                 GuildId = Context.Guild.Id,
                 MessageId = message.Id,
                 Text = message.CleanContent,
-                Time = Utils.GetCurrentUnix()
+                CreatedAt = Utils.GetCurrentUnix()
             };
 
             _logger.LogDebug("{intTag} Adding quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
@@ -164,7 +164,7 @@ namespace SolarisBot.Discord.Modules.Quotes
         /// Generates a discord embed for a quote
         /// </summary>
         private static Embed GetQuoteEmbed(DbQuote dbQuote)
-            => EmbedFactory.Default($"Quote #{dbQuote.QuoteId}", $"\"{dbQuote.Text}\" - <@{dbQuote.AuthorId}>\n\n*Created by <@{dbQuote.CreatorId}> at <t:{dbQuote.Time}:f>\n[Link to message](https://discord.com/channels/{dbQuote.GuildId}/{dbQuote.ChannelId}/{dbQuote.MessageId})*");
+            => EmbedFactory.Default($"Quote #{dbQuote.QuoteId}", $"\"{dbQuote.Text}\" - <@{dbQuote.AuthorId}>\n\n*Created by <@{dbQuote.CreatorId}> at <t:{dbQuote.CreatedAt}:f>\n[Link to message](https://discord.com/channels/{dbQuote.GuildId}/{dbQuote.ChannelId}/{dbQuote.MessageId})*");
         #endregion
     }
 }

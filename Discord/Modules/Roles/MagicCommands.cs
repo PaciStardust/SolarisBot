@@ -30,9 +30,9 @@ namespace SolarisBot.Discord.Modules.Roles
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.MagicRoleId = role?.Id ?? 0;
-            guild.MagicRoleNextUse = 0;
-            guild.MagicRoleTimeout = timeout >= 0 ? timeout : 0;
+            guild.MagicRoleId = role?.Id ?? ulong.MinValue;
+            guild.MagicRoleNextUse = ulong.MinValue;
+            guild.MagicRoleTimeout = timeout >= ulong.MinValue ? timeout : ulong.MinValue;
             guild.MagicRoleRenameOn = renaming;
 
             _logger.LogDebug("{intTag} Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
@@ -46,7 +46,7 @@ namespace SolarisBot.Discord.Modules.Roles
         {
             var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
 
-            if (dbGuild is null || dbGuild.MagicRoleId == 0)
+            if (dbGuild is null || dbGuild.MagicRoleId == ulong.MinValue)
             {
                 await Interaction.ReplyErrorAsync("Magic is not enabled in this guild");
                 return;

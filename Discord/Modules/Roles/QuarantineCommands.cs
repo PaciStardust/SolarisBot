@@ -26,7 +26,7 @@ namespace SolarisBot.Discord.Modules.Roles
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.QuarantineRoleId = role?.Id ?? 0;
+            guild.QuarantineRoleId = role?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting quarantine to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
@@ -41,7 +41,7 @@ namespace SolarisBot.Discord.Modules.Roles
             var gUser = GetGuildUser(Context.User);
             var gTargetUser = GetGuildUser(user);
 
-            if (dbGuild is null || dbGuild.QuarantineRoleId == 0)
+            if (dbGuild is null || dbGuild.QuarantineRoleId == ulong.MinValue)
             {
                 await Interaction.ReplyErrorAsync("Quarantine is not enabled in this guild");
                 return;

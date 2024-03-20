@@ -31,7 +31,7 @@ namespace SolarisBot
         /// Converts a long value to a ulong value
         /// </summary>
         /// <param name="value">Long to convert</param>
-        /// <returns>ulong value or 0, if parsing fails</returns>
+        /// <returns>ulong value or MinValue, if parsing fails</returns>
         internal static ulong AsUlong(this long value, ILogger? logger = null)
         {
             try
@@ -41,7 +41,7 @@ namespace SolarisBot
             catch (Exception ex)
             {
                 logger?.LogError(ex, "Failed to convert {long} to ulong", value);
-                return 0;
+                return ulong.MinValue;
             }
         }
 

@@ -150,37 +150,37 @@ namespace SolarisBot.Discord.Services
 
             if (guild.MagicRoleId == role.Id)
             {
-                guild.MagicRoleId = 0;
+                guild.MagicRoleId = ulong.MinValue;
                 changeMade = true;
             }
             if (guild.VouchPermissionRoleId == role.Id)
             {
-                guild.VouchPermissionRoleId = 0;
+                guild.VouchPermissionRoleId = ulong.MinValue;
                 changeMade = true;
             }
             if (guild.VouchRoleId == role.Id)
             {
-                guild.VouchRoleId = 0;
+                guild.VouchRoleId = ulong.MinValue;
                 changeMade = true;
             }
             if (guild.CustomColorPermissionRoleId == role.Id)
             {
-                guild.CustomColorPermissionRoleId = 0;
+                guild.CustomColorPermissionRoleId = ulong.MinValue;
                 changeMade = true;
             }
             if (guild.AutoRoleId == role.Id)
             {
-                guild.AutoRoleId = 0;
+                guild.AutoRoleId = ulong.MinValue;
                 changeMade = true;
             }
             if (guild.SpellcheckRoleId == role.Id)
             {
-                guild.SpellcheckRoleId = 0;
+                guild.SpellcheckRoleId = ulong.MinValue;
                 changeMade = true;
             }
             if (guild.QuarantineRoleId == role.Id)
             {
-                guild.QuarantineRoleId = 0;
+                guild.QuarantineRoleId = ulong.MinValue;
                 changeMade = true;
             }
 
@@ -244,9 +244,9 @@ namespace SolarisBot.Discord.Services
 
             bool changeMade = false;
 
-            if (guild.UserAnalysisChannel == gChannel.Id)
+            if (guild.UserAnalysisChannelId == gChannel.Id)
             {
-                guild.UserAnalysisChannel = 0;
+                guild.UserAnalysisChannelId = ulong.MinValue;
                 changeMade = true;
             }
 

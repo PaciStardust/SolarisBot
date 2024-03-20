@@ -44,22 +44,22 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
             var dbCtx = _services.GetRequiredService<DatabaseContext>();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
-            if (dbGuild is null || dbGuild.UserAnalysisChannel == 0)
+            if (dbGuild is null || dbGuild.UserAnalysisChannelId == ulong.MinValue)
                 return;
 
             var analysis = UserAnalysis.ForUser(user, _config);
 
-            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannel);
+            var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannelId);
             if (channel is null || channel is not IMessageChannel msgChannel)
             {
-                _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
-                dbGuild.UserAnalysisChannel = 0;
+                _logger.LogDebug("Resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
+                dbGuild.UserAnalysisChannelId = ulong.MinValue;
                 dbCtx.GuildConfigs.Update(dbGuild);
                 var (_, err) = await dbCtx.TrySaveChangesAsync();
                 if (err is not null)
-                    _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+                    _logger.LogError(err, "Failed resetting UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
                 else
-                    _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannel);
+                    _logger.LogInformation("Reset UserAnalysisChannel for guild {guild}, could not locate channel withid {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
                 return;
             }
 

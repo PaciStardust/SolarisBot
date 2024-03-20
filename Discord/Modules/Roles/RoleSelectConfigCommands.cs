@@ -34,7 +34,7 @@ namespace SolarisBot.Discord.Modules.Roles
             var strings = roleGroups.OrderBy(x => x.Identifier)
                 .Select(x =>
                 {
-                    var title = $"{x.Identifier} ({(x.AllowOnlyOne ? "One of" : "Multi")}{(x.RequiredRoleId == 0 ? string.Empty : $", <@&{x.RequiredRoleId}> Only")})";
+                    var title = $"{x.Identifier} ({(x.AllowOnlyOne ? "One of" : "Multi")}{(x.RequiredRoleId == ulong.MinValue ? string.Empty : $", <@&{x.RequiredRoleId}> Only")})";
                     var rolesText = x.RoleConfigs.Any()
                         ? string.Join("\n", x.RoleConfigs.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier}(<@&{x.RoleId}>)"))
                         : "┗ (No roles assigned to group)";
@@ -72,7 +72,7 @@ namespace SolarisBot.Discord.Modules.Roles
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase))
                 ?? new() { GuildId = Context.Guild.Id, Identifier = identifierTrimmed };
 
-            var logVerb = roleGroup.RoleGroupId == 0 ? "Creat" : "Updat";
+            var logVerb = roleGroup.RoleGroupId == ulong.MinValue ? "Creat" : "Updat";
             roleGroup.AllowOnlyOne = oneOf;
             roleGroup.Description = descriptionTrimmed;
             roleGroup.RequiredRoleId = requiredrole?.Id ?? 0;
@@ -82,7 +82,7 @@ namespace SolarisBot.Discord.Modules.Roles
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Role group **\"{roleGroup.Identifier}\"** {logVerb.ToLower()}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == 0 ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
+            await Interaction.ReplyAsync($"Role group **\"{roleGroup.Identifier}\"** {logVerb.ToLower()}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
 
         [SlashCommand("group-delete", "Delete a role group")]
@@ -235,7 +235,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
             var component = RoleSelectHelper.GenerateRoleGroupSelector(roleGroupMatch!);
             var title = $"Roles in group {roleGroupMatch!.Identifier}";
-            if (roleGroupMatch.RequiredRoleId != 0)
+            if (roleGroupMatch.RequiredRoleId != ulong.MinValue)
                 title += $" *(<@&{roleGroupMatch.RequiredRoleId}> only)*";
             await Interaction.ReplyComponentAsync(component, $"{title}:");
         }

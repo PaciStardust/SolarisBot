@@ -6,12 +6,15 @@ namespace SolarisBot.Database
     [PrimaryKey(nameof(RoleGroupId))]
     public class DbRoleGroup
     {
-        public ulong RoleGroupId { get; set; } = 0;
-        public ulong GuildId { get; set; } = 0;
+        public ulong RoleGroupId { get; set; } = ulong.MinValue;
+        public ulong GuildId { get; set; } = ulong.MinValue;
         public string Identifier { get; set; } = string.Empty;
         public bool AllowOnlyOne { get; set; } = false;
         public string Description { get; set; } = string.Empty;
-        public ulong RequiredRoleId { get; set; } = 0;
+        public ulong RequiredRoleId { get; set; } = ulong.MinValue;
+        public bool IsDeleted { get; set; } = false;
+        public ulong CreatedAt { get; set; } = ulong.MinValue; //todo: impl
+        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         [ForeignKey(nameof(DbRoleConfig.RoleGroupId))]
         public virtual ICollection<DbRoleConfig> RoleConfigs { get; set; } = new HashSet<DbRoleConfig>();

@@ -5,12 +5,15 @@ namespace SolarisBot.Database.Models
     [PrimaryKey(nameof(BridgeId))]
     public class DbBridge
     {
-        public ulong BridgeId { get; set; } = 0;
+        public ulong BridgeId { get; set; } = ulong.MinValue;
         public string Name { get; set; } = string.Empty;
-        public ulong GuildAId { get; set; } = 0;
-        public ulong ChannelAId { get; set; } = 0;
-        public ulong GuildBId { get; set; } = 0;
-        public ulong ChannelBId { get; set; } = 0;
+        public ulong GuildAId { get; set; } = ulong.MinValue;
+        public ulong ChannelAId { get; set; } = ulong.MinValue;
+        public ulong GuildBId { get; set; } = ulong.MinValue;
+        public ulong ChannelBId { get; set; } = ulong.MinValue;
+        public bool IsDeleted { get; set; } = false; //todo: impl
+        public ulong CreatedAt { get; set; } = ulong.MinValue; //todo: impl
+        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         public DbBridge() { }
 

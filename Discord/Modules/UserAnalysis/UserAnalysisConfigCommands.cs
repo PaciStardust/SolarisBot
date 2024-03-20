@@ -32,7 +32,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
-            guild.UserAnalysisChannel = channel?.Id ?? 0;
+            guild.UserAnalysisChannelId = channel?.Id ?? ulong.MinValue;
             guild.UserAnalysisWarnAt = minWarn;
             guild.UserAnalysisKickAt = minKick;
             guild.UserAnalysisBanAt = minBan;

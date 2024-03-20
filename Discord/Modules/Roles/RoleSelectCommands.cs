@@ -40,7 +40,7 @@ namespace SolarisBot.Discord.Modules.Roles
 
 
                 var featuresList = new List<string>();
-                if (roleGroup.RequiredRoleId != 0)
+                if (roleGroup.RequiredRoleId != ulong.MinValue)
                     featuresList.Add($"Requires <@&{roleGroup.RequiredRoleId}>");
                 if (!roleGroup.AllowOnlyOne)
                     featuresList.Add("Multiselect");
@@ -104,7 +104,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            if (roleGroupMatch!.RequiredRoleId != 0 && !gUser.Roles.Select(x => x.Id).Contains(roleGroupMatch.RequiredRoleId))
+            if (roleGroupMatch!.RequiredRoleId != ulong.MinValue && !gUser.Roles.Select(x => x.Id).Contains(roleGroupMatch.RequiredRoleId))
             {
                 await Interaction.ReplyErrorAsync($"You do not have the required role <@&{roleGroupMatch.RequiredRoleId}>");
                 return;
@@ -143,7 +143,7 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            if (roleGroup.RequiredRoleId != 0 && !gUser.Roles.Any(x => x.Id == roleGroup.RequiredRoleId))
+            if (roleGroup.RequiredRoleId != ulong.MinValue && !gUser.Roles.Any(x => x.Id == roleGroup.RequiredRoleId))
             {
                 await Interaction.ReplyErrorAsync($"You do not have the required role <@&{roleGroup.RequiredRoleId}>");
                 return;

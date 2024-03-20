@@ -65,9 +65,9 @@ namespace SolarisBot.Discord.Modules.Reminders
                 ChannelId = Context.Channel.Id,
                 GuildId = Context.Guild.Id,
                 Text = text,
-                Time = timestamp,
+                RemindAt = timestamp,
                 UserId = Context.User.Id,
-                Created = currentUnix
+                CreatedAt = currentUnix
             };
 
             _logger.LogDebug("{intTag} Creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
@@ -111,7 +111,7 @@ namespace SolarisBot.Discord.Modules.Reminders
                 return;
             }
 
-            var reminderText = string.Join("\n", reminders.Select(x => $"- [{x.ReminderId}] {x.Text} *(<t:{x.Time}:f>)*"));
+            var reminderText = string.Join("\n", reminders.Select(x => $"- [{x.ReminderId}] {x.Text} *(<t:{x.RemindAt}:f>)*"));
             await Interaction.ReplyAsync("Your Reminders", reminderText, isEphemeral: true);
         }
 
