@@ -24,10 +24,10 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         [SlashCommand("config", "Set up user analysis")]
         public async Task ConfigureAnalysisAsync
         (
-            [Summary(description: "Notification channel (none to disable)")] IChannel? channel = null,
-            [Summary(description: "[Optional] Minimum points for warning")] int minWarn = int.MaxValue,
-            [Summary(description: "[Optional] Minimum points for kick")] int minKick = int.MaxValue,
-            [Summary(description: "[Optional] Minimum points for ban")] int minBan = int.MaxValue
+            [Summary(description: "[Opt] Notification channel (none to disable)")] IChannel? channel = null,
+            [Summary(description: "[Opt] Minimum points for warning")] int minWarn = int.MaxValue,
+            [Summary(description: "[Opt] Minimum points for kick")] int minKick = int.MaxValue,
+            [Summary(description: "[Opt] Minimum points for ban")] int minBan = int.MaxValue
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);

@@ -49,9 +49,9 @@ namespace SolarisBot.Discord.Modules.Roles
         public async Task CreateRoleGroupAsync
         (
             [Summary(description: "Identifier of group"), MinLength(2), MaxLength(20)] string identifier,
-            [Summary(description: "[Optional] Description of group?"), MaxLength(200)] string description = "",
-            [Summary(description: "[Optional] Can only have one role from group?")] bool oneOf = true,
-            [Summary(description: "[Optional] Required role?")] IRole? requiredrole = null
+            [Summary(description: "[Opt] Description of group?"), MaxLength(200)] string description = "",
+            [Summary(description: "[Opt] Can only have one role from group?")] bool oneOf = true,
+            [Summary(description: "[Opt] Required role?")] IRole? requiredrole = null
         )
         {
             var identifierTrimmed = identifier.Trim();
@@ -119,8 +119,8 @@ namespace SolarisBot.Discord.Modules.Roles
         (
             [Summary(description: "Role to register")] IRole role,
             [Summary(description: "Group to register to")] string group,
-            [Summary(description: "[Optional] Identifier of role"), MinLength(2), MaxLength(20)] string identifier = "",
-            [Summary(description: "[Optional] Description of role"), MaxLength(200)] string description = ""
+            [Summary(description: "[Opt] Identifier of role"), MinLength(2), MaxLength(20)] string identifier = "",
+            [Summary(description: "[Opt] Description of role"), MaxLength(200)] string description = ""
         )
         {
             if (string.IsNullOrWhiteSpace(identifier))

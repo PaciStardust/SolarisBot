@@ -97,12 +97,12 @@ namespace SolarisBot.Discord.Modules.Quotes
         [SlashCommand("search", "Search (and view) quotes")]
         public async Task SearchAsync
         (
-            [Summary(description: "[Optional] User that was quoted")] IUser? author = null,
-            [Summary(description: "[Optional] User that created the quote")] IUser? creator = null,
-            [Summary(description: "[Optional] Id of quote")] ulong? id = null,
-            [Summary(description: "[Optional] Text contained in quote")] string? content = null, 
-            [Summary(description: "[Optional] Search offset"), MinValue(0)] int offset = 0,
-            [Summary(description: "[Optional] Show first result directly?")] bool showFirst = false
+            [Summary(description: "[Opt] User that was quoted")] IUser? author = null,
+            [Summary(description: "[Opt] User that created the quote")] IUser? creator = null,
+            [Summary(description: "[Opt] Id of quote")] ulong? id = null,
+            [Summary(description: "[Opt] Text contained in quote")] string? content = null, 
+            [Summary(description: "[Opt] Search offset"), MinValue(0)] int offset = 0,
+            [Summary(description: "[Opt] Show first result directly?")] bool showFirst = false
         )
         {
             var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, author: author, creator: creator, id: id, content: content, offset: offset, limit: showFirst ? 1 : 10);
@@ -122,10 +122,10 @@ namespace SolarisBot.Discord.Modules.Quotes
         [SlashCommand("search-self", "Search through own quotes, not limited by guild")]
         public async Task SearchSelfAsync
         (
-            [Summary(description: "[Optional] User that was quoted")] IUser? author = null,
-            [Summary(description: "[Optional] Id of quote")] ulong? id = null,
-            [Summary(description: "[Optional] Text contained in quote")] string? content = null,
-            [Summary(description: "[Optional] Search offset"), MinValue(0)] int offset = 0
+            [Summary(description: "[Opt] User that was quoted")] IUser? author = null,
+            [Summary(description: "[Opt] Id of quote")] ulong? id = null,
+            [Summary(description: "[Opt] Text contained in quote")] string? content = null,
+            [Summary(description: "[Opt] Search offset"), MinValue(0)] int offset = 0
         )
         {
             var quotes = await _dbContext.GetQuotesAsync(0, author: author, id: id, content: content, offset: offset);

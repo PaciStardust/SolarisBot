@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Modules.Roles
         [SlashCommand("cfg-customcolor", "[MANAGE ROLES ONLY] Set up custom color creation"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task ConfigureCustomColorAsync
         (
-            [Summary(description: "Required role (none to disable)")] IRole? role = null
+            [Summary(description: "[Opt] Required role (none to disable)")] IRole? role = null
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);

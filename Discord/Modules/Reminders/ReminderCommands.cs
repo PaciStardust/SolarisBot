@@ -82,9 +82,9 @@ namespace SolarisBot.Discord.Modules.Reminders
         public async Task CreateReminderInAsync
         (
             [Summary(description: "Reminder text")] string text, 
-            [Summary(description: "[Optional] Days to remind in")] ushort days = 0, 
-            [Summary(description: "[Optional] Hours to remind in"), MaxValue(23)] byte hours = 0,
-            [Summary(description: "[Optional] Minutes to remind in"), MaxValue(59)] byte minutes = 0
+            [Summary(description: "[Opt] Days to remind in")] ushort days = 0, 
+            [Summary(description: "[Opt] Hours to remind in"), MaxValue(23)] byte hours = 0,
+            [Summary(description: "[Opt] Minutes to remind in"), MaxValue(59)] byte minutes = 0
         )
         {
             if (days == 0 && hours == 0 && minutes == 0)

@@ -31,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         [SlashCommand("list", "List all bridges")]
         public async Task ListBridgesAsync
         (
-            [Summary(description: "[Optional] List guild bridges")] bool guild = false
+            [Summary(description: "[Opt] List guild bridges")] bool guild = false
         )
         {
             var query = guild
@@ -159,7 +159,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         [SlashCommand("remove", "Remove bridges from channel")]
         public async Task RemoveBridgeAsync
         (
-            [Summary(description: "[Optional] Bridge Id")] string bridgeId = "0"
+            [Summary(description: "[Opt] Bridge Id")] string bridgeId = "0"
         )
         {
             if (!ulong.TryParse(bridgeId, out var pBridge))

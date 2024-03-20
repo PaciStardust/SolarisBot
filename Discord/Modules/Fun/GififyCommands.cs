@@ -60,7 +60,7 @@ namespace SolarisBot.Discord.Modules.Fun
         public async Task GififySlashAsync
         (
             [Summary(description: "Image to convert to gif")] IAttachment image,
-            [Summary(description: "[Optional] Only visible locally?")] bool isPrivate = false
+            [Summary(description: "[Opt] Only visible locally?")] bool isPrivate = false
         )
         {
             if (!IsValidImage(image))

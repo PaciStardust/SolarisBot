@@ -22,8 +22,8 @@ namespace SolarisBot.Discord.Modules.Roles
         [SlashCommand("cfg-vouch", "[MANAGE ROLES ONLY] Set up vouching"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task ConfigVouchingAsync
         (
-            [Summary(description: "Role required for vouching (none to disable)")] IRole? permission = null,
-            [Summary(description: "Role aquired through vouching (none to disable)")] IRole? vouch = null
+            [Summary(description: "[Opt] Role required for vouching (none to disable)")] IRole? permission = null,
+            [Summary(description: "[Opt] Role aquired through vouching (none to disable)")] IRole? vouch = null
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);

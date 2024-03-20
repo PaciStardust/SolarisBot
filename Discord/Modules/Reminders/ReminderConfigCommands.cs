@@ -39,7 +39,7 @@ namespace SolarisBot.Discord.Modules.Reminders
         [SlashCommand("wipe", "Wipe reminders")]
         public async Task WipeRemindersAsync
         (
-            [Summary(description: "[Optional] Channel to wipe reminders from")] IChannel? channel = null
+            [Summary(description: "[Opt] Channel to wipe reminders from")] IChannel? channel = null
         )
         {
             var query = _dbContext.Reminders.ForGuild(Context.Guild.Id);

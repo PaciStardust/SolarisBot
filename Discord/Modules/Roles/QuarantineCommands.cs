@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Modules.Roles
         [SlashCommand("cfg-quarantine", "[MANAGE ROLES ONLY] Set up quarantine"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task ConfigQuarantineAsync
         (
-            [Summary(description: "Role aquired through quarantine (none to disable)")] IRole? role = null
+            [Summary(description: "[Opt] Role aquired through quarantine (none to disable)")] IRole? role = null
         )
         {
             var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
