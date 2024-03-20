@@ -42,7 +42,7 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
 
             var dbCtx = _services.GetRequiredService<DatabaseContext>();
-            var bridges = await dbCtx.Bridges.ForChannel(message.Channel.Id).ToArrayAsync();
+            var bridges = await dbCtx.Bridges.ForChannel(message.Channel.Id).IsDeleted(false).ToArrayAsync();
             if (bridges.Length == 0)
                 return;
 

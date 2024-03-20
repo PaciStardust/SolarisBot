@@ -37,7 +37,7 @@ namespace SolarisBot.Discord.Modules.Bridges
                 ? _dbContext.Bridges.ForGuild(Context.Guild.Id)
                 : _dbContext.Bridges.ForChannel(Context.Channel.Id);
 
-            var bridges = await query.ToArrayAsync();
+            var bridges = await query.IsDeleted(false).ToArrayAsync();
             if (bridges.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -80,21 +80,21 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            var bridgesHere = await _dbContext.Bridges.ForGuild(Context.Guild.Id).CountAsync();
+            var bridgesHere = await _dbContext.Bridges.ForGuild(Context.Guild.Id).IsDeleted(false).CountAsync();
             if (bridgesHere > _config.MaxBridgesPerGuild)
             {
                 await Interaction.ReplyErrorAsync($"This guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
                 return;
             }
 
-            var bridgesThere = await _dbContext.Bridges.ForGuild(pChannel).CountAsync();
+            var bridgesThere = await _dbContext.Bridges.ForGuild(pChannel).IsDeleted(false).CountAsync();
             if (bridgesThere > _config.MaxBridgesPerGuild)
             {
                 await Interaction.ReplyErrorAsync($"Target guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
                 return;
             }
 
-            var duplicate = await _dbContext.Bridges.ForGuild(pGuild).ForGuild(Context.Guild.Id).FirstOrDefaultAsync();
+            var duplicate = await _dbContext.Bridges.ForGuild(pGuild).ForGuild(Context.Guild.Id).IsDeleted(false).FirstOrDefaultAsync();
             if (duplicate is not null)
             {
                 await Interaction.ReplyErrorAsync("This bridge already exists");
@@ -167,7 +167,7 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            var query = _dbContext.Bridges.ForGuild(Context.Guild.Id);
+            var query = _dbContext.Bridges.ForGuild(Context.Guild.Id).IsDeleted(false);
             query = pBridge == ulong.MinValue
                 ? query.ForChannel(Context.Channel.Id)
                 : query.Where(x => x.BridgeId == pBridge);

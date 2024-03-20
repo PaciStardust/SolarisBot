@@ -179,7 +179,7 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task<bool> OnChannelDestroyedRemoveBridgesAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
         {
-            var bridges = await dbCtx.Bridges.ForChannel(gChannel.Id).ToArrayAsync();
+            var bridges = await dbCtx.Bridges.ForChannel(gChannel.Id).IsDeleted(false).ToArrayAsync();
             if (bridges.Length == 0)
                 return false;
 
@@ -241,7 +241,7 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task<bool> OnLeftGuildRemoveBridgesAsync(SocketGuild guild, DatabaseContext dbCtx)
         {
-            var bridges = await dbCtx.Bridges.ForGuild(guild.Id).ToArrayAsync();
+            var bridges = await dbCtx.Bridges.ForGuild(guild.Id).IsDeleted(false).ToArrayAsync();
             if (bridges.Length == 0)
                 return false;
 

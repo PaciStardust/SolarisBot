@@ -11,7 +11,7 @@ namespace SolarisBot.Database
         public ulong ChannelAId { get; set; } = ulong.MinValue;
         public ulong GuildBId { get; set; } = ulong.MinValue;
         public ulong ChannelBId { get; set; } = ulong.MinValue;
-        public bool IsDeleted { get; set; } = false; //todo: impl
+        public bool IsDeleted { get; set; } = false; //todo: [TEST] Do new DB Constraints and soft delete work?
 
         public DbBridge() { }
 
@@ -28,5 +28,8 @@ namespace SolarisBot.Database
 
         internal static IQueryable<DbBridge> ForGuild(this IQueryable<DbBridge> query, ulong id)
             => query.Where(x => x.GuildBId == id || x.GuildAId == id);
+
+        internal static IQueryable<DbBridge> IsDeleted(this IQueryable<DbBridge> query, bool isDeleted)
+            => query.Where(x => x.IsDeleted == isDeleted);
     }
 }
