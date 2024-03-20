@@ -60,12 +60,12 @@ namespace SolarisBot.Discord.Modules.Fun
             if (guild is null || guild.JokeRenameOn == false)
                 return;
 
-            var timeOut = guild.JokeTimeouts.FirstOrDefault(x => x.UserId == gUser.Id);
+            var newestTimeOut = guild.JokeTimeouts.OrderByDescending(x => x.NextUse).FirstOrDefault(); //todo: [OPTIMIZE] unoptimized?
             var currTime = Utils.GetCurrentUnix();
-            if (timeOut is not null && timeOut.NextUse > currTime)
+            if (newestTimeOut is not null && newestTimeOut.NextUse > currTime)
                 return;
 
-            timeOut ??= new()
+            var newTimeOut = new DbJokeTimeout()
             {
                 UserId = gUser.Id,
                 GuildId = gUser.GuildId
@@ -74,17 +74,17 @@ namespace SolarisBot.Discord.Modules.Fun
             var cooldown = guild.JokeRenameTimeoutMin >= guild.JokeRenameTimeoutMax
                 ? guild.JokeRenameTimeoutMax
                 : Utils.Faker.Random.ULong(guild.JokeRenameTimeoutMin, guild.JokeRenameTimeoutMax);
-            timeOut.NextUse = currTime + cooldown;
+            newTimeOut.NextUse = currTime + cooldown;
 
-            _logger.LogDebug("Setting renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
-            dbCtx.JokeTimeouts.Update(timeOut);
-            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            _logger.LogDebug("Setting renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), newTimeOut.NextUse);
+            dbCtx.JokeTimeouts.Update(newTimeOut);
+            var (_, err) = await dbCtx.TrySaveChangesAsync(); //todo: [TEST] if new one gets created
             if (err is not null)
             {
-                _logger.LogError(err, "Failed to set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
+                _logger.LogError(err, "Failed to set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), newTimeOut.NextUse);
                 return;
             }
-            _logger.LogInformation("Set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
+            _logger.LogInformation("Set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), newTimeOut.NextUse);
 
             var logTimespan = TimeSpan.FromSeconds(cooldown);
             try
