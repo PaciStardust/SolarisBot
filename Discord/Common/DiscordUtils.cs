@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Discord.Common;
 using System.Text.RegularExpressions;
@@ -78,6 +79,14 @@ namespace SolarisBot.Discord.Common
 
         internal static string GetCustomColorRoleName(IUser user)
             => $"{CustomColorRolePrefix} {user.Id}";
+
+        /// <summary>
+        /// Gets a role by ID
+        /// </summary>
+        /// <param name="id">ID of role</param>
+        /// <returns>A role matching the ID or null if none could be found</returns>
+        internal static SocketRole? FindRole(this SocketGuildUser gUser, ulong id)
+            => gUser.Roles.FirstOrDefault(x => x.Id == id);
         #endregion
     }
 }
