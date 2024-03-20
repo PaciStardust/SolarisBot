@@ -44,7 +44,7 @@ namespace SolarisBot.Discord.Modules.Reminders
         {
             var query = _dbContext.Reminders.ForGuild(Context.Guild.Id);
             if (channel is not null)
-                query.Where(x => x.ChannelId == channel.Id);
+                query.ForChannel(channel.Id);
 
             var reminders = await query.ToArrayAsync();
             if (reminders.Length == 0)

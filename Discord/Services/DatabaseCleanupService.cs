@@ -224,7 +224,7 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task<bool> OnChannelDestroyedRemoveRemindersAsync(IGuildChannel gChannel, DatabaseContext dbCtx)
         {
-            var reminders = await dbCtx.Reminders.Where(x => x.ChannelId == gChannel.Id).ToArrayAsync();
+            var reminders = await dbCtx.Reminders.ForChannel(gChannel.Id).ToArrayAsync();
             if (reminders.Length == 0)
                 return false;
 

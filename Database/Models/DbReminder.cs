@@ -26,5 +26,8 @@ namespace SolarisBot.Database
 
         internal static IQueryable<DbReminder> ForUser(this IQueryable<DbReminder> query, ulong id)
             => query.Where(x => x.UserId == id);
+
+        internal static IQueryable<DbReminder> ForChannel(this IQueryable<DbReminder> query, ulong id)
+            => query.Where(x => x.ChannelId == id);
     }
 }
