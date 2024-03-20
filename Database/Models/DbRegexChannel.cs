@@ -18,7 +18,7 @@ namespace SolarisBot.Database.Models
         public bool PunishmentDelete { get; set; } = false;
         public bool IsDeleted { get; set; } = false; //todo: impl
         public ulong CreatedAt { get; set; } = ulong.MinValue; //todo: impl
-        public ulong DeletedAt { get; set; } = ulong.MinValue; //todo: impl
+        public ulong UpdatedAt { get; set; } = ulong.MinValue; //todo: impl
 
         public override string ToString()
             => Regex;
