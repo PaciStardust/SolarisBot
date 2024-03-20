@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
@@ -49,9 +48,20 @@ namespace SolarisBot.Discord.Modules.Roles
                 await Interaction.ReplyErrorAsync("Vouching is not enabled in this guild");
                 return;
             }
+
+            if (FindRole(dbGuild.VouchPermissionRoleId) is null) //todo: logging?
+            {
+                await Interaction.ReplyErrorAsync("Vouch permission role could not be found in guild, it might have been deleted");
+                return;
+            }
             if (gUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchPermissionRoleId) is null)
             {
                 await Interaction.ReplyErrorAsync($"You do not have the required role <@&{dbGuild.VouchPermissionRoleId}>");
+                return;
+            }
+            if (FindRole(dbGuild.VouchRoleId) is null)
+            {
+                await Interaction.ReplyErrorAsync("Vouch role could not be found in guild, it might have been deleted");
                 return;
             }
             if (gTargetUser.Roles.FirstOrDefault(x => x.Id == dbGuild.VouchRoleId) is not null)
