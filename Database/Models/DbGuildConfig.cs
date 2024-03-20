@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SolarisBot.Database
 {
     [PrimaryKey(nameof(GuildId))]
-    public class DbGuildConfig : DbModelBase
+    public class DbGuildConfig : DbModelBase //todo: avoid deletion of data
     {
         public ulong GuildId { get; set; } = ulong.MinValue;
         public ulong VouchRoleId { get; set; } = ulong.MinValue;

@@ -8,7 +8,7 @@ namespace SolarisBot.Database
         private readonly ILogger<DatabaseContext> _logger;
         private static bool _hasMigrated = false;
 
-        public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options)
+        public DatabaseContext(DbContextOptions<DatabaseContext> options, ILogger<DatabaseContext> logger) : base(options) //Todo: [OPTIMIZE] Use select statements, better updates?
         {
             _logger = logger;
             TryMigrate();
@@ -54,7 +54,7 @@ namespace SolarisBot.Database
                         baseEntity.CreatedAt = now;
                     baseEntity.UpdatedAt = now;
                 }
-        }
+            }
 
             return base.SaveChangesAsync(cancellationToken);
         }
@@ -63,7 +63,7 @@ namespace SolarisBot.Database
         /// <summary>
         /// Attempts to migrate the database, throws on error
         /// </summary>
-        private void TryMigrate()
+        private void TryMigrate() //todo: [FEATURE] code first?
         {
             if (_hasMigrated) return;
 
