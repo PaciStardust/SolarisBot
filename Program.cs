@@ -13,7 +13,7 @@ using System.Reflection;
 
 namespace SolarisBot
 {
-    internal static class Program
+    internal static class Program //todo: implement fix for docker mounting
     {
         static async Task Main(string[] args)
         {
