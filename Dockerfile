@@ -1,4 +1,7 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+ARG TARGETARCH
+ARG BUILDPLATFORM
+
 WORKDIR /App
 
 # Copy csproj and restore as distinct layers
@@ -7,7 +10,7 @@ RUN dotnet restore
 
 # Copy everything else and build
 COPY . ./
-RUN dotnet publish -c Release --property:PublishDir=out
+RUN dotnet publish -c Release --property:PublishDir=out -a $TARGETARCH --platform=$BUILDPLATFORM
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/runtime:8.0
