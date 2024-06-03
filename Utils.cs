@@ -11,11 +11,12 @@ namespace SolarisBot
         internal static string PathDictionaryFile { get; private set; }
         internal static string PathDatabaseFile { get; private set; }
         internal static string PathConfigDirectory { get; private set; }
+        internal static string PathMainDirectory { get; private set; }
 
-        static Utils()
+        static Utils() //todo: [REFACTOR] Fix this mess
         {
-            var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
-            PathConfigDirectory = Path.Combine(assemblyDirectory, "cfg");
+            PathMainDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
+            PathConfigDirectory = Path.Combine(PathMainDirectory, "cfg");
             PathConfigFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "config.json"));
             PathDatabaseFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "database.db"));
             PathDictionaryFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "dictionary.txt"));

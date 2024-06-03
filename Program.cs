@@ -7,17 +7,28 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using SolarisBot.Database;
+using SolarisBot.DefaultConfig;
 using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Services;
 using System.Reflection;
 
 namespace SolarisBot
 {
-    internal static class Program //todo: implement fix for docker mounting
+    internal static class Program
     {
         static async Task Main(string[] args)
         {
-            var configuration = CreateConfiguration();
+            try
+            {
+                DefaultConfigProvider.PrepareDefaultConfig(Assembly.GetExecutingAssembly());
+            } 
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.GetType().Name}: {ex.Message}");
+                throw;
+            }
+
+            var configuration = CreateConfiguration(); //todo: this might need a fix
 
             var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
