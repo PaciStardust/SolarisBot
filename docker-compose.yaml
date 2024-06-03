@@ -1,0 +1,7 @@
+services:
+  SolarisBot:
+    restart: unless-stopped
+    image: ghcr.io/pacistardust/solarisbot:v2
+    volumes: 
+      - ./cfg:/App/cfg
+    tty: true
