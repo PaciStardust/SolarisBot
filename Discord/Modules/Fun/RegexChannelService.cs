@@ -72,7 +72,7 @@ namespace SolarisBot.Discord.Modules.Fun
                     else
                     {
                         _logger.LogDebug("Responding to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
-                        await userMessage.ReplyAsync(regexChannel.PunishmentMessage);
+                        await userMessage.ReplyAsync($"You {regexChannel.PunishmentMessage}");
                         _logger.LogInformation("Responded to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     }
                 }
