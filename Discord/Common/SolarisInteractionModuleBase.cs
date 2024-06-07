@@ -7,8 +7,8 @@ namespace SolarisBot.Discord.Common
     /// <summary>
     /// Extended InteractionModeuleBase with a few core functions
     /// </summary>
-    public abstract class SolarisInteractionModuleBase : InteractionModuleBase
-    {
+    public abstract class SolarisInteractionModuleBase : InteractionModuleBase //todo: [REFACTOR] Move most functionality into services with short lifetime
+    { //todo: [REFACTOR] Document all methods?
         /// <summary>
         /// Converts user to SGU
         /// </summary>
