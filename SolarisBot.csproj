@@ -19,14 +19,14 @@
 
   <ItemGroup>
     <None Remove="ConfigFiles\appsettings.json" />
-    <None Remove="ConfigFiles\dictionary.txt" />
+    <None Remove="ConfigFiles\defaultDictionary.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="ConfigFiles\appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="ConfigFiles\dictionary.txt">
+    <EmbeddedResource Include="ConfigFiles\defaultDictionary.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

@@ -126,6 +126,8 @@ namespace SolarisBot
         public byte MaxBridgesPerGuild { get; set; } = 8;
         public List<TimeCredibilityRule> CredibilityRulesTime { get; set; } = new();
         public List<KeywordCredibilityRule> CredibilityRulesKeyword { get; set; } = new();
+        public string DatabaseFile { get; set; } = "database.db";
+        public string DictionaryFile { get; set; } = "defaultDictionary.txt";
         #endregion
     }
 }

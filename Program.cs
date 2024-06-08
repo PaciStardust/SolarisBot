@@ -31,7 +31,7 @@ namespace SolarisBot
                 throw;
             }
 
-            var configuration = CreateConfiguration(); //todo: this might need a fix
+            var configuration = CreateConfiguration();
 
             var logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
@@ -59,9 +59,10 @@ namespace SolarisBot
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
                 {
+                    var dbPath = Path.Combine(Utils.PathConfigDirectory, botConfig.DatabaseFile);
                     services.AddDbContext<DatabaseContext>(options => options.UseSqlite
                     (
-                        $"Data Source={Utils.PathDatabaseFile};Pooling=false"),
+                        $"Data Source={dbPath};Pooling=false"),
                         ServiceLifetime.Transient
                     ); //todo: [FEATURE] Backups of database, counting?
 
@@ -116,8 +117,7 @@ namespace SolarisBot
         /// <returns>Updated BotConfig</returns>
         private static BotConfig GetOrCreateBotConfig()
         {
-            var configPath = Path.Combine(Utils.PathConfigDirectory, "config.json");
-            Console.WriteLine($"Loading config from {configPath}");
+            Console.WriteLine($"Loading config from {Utils.PathConfigFile}");
 
             var botConfig = BotConfig.FromFile(Utils.PathConfigFile) ?? new();
 
@@ -134,7 +134,7 @@ namespace SolarisBot
 
             Console.WriteLine("Updating and saving config");
             botConfig.Update();
-            botConfig.SaveAt(configPath);
+            botConfig.SaveAt(Utils.PathConfigFile);
 
             return botConfig;
         }
