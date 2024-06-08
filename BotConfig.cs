@@ -46,6 +46,9 @@ namespace SolarisBot
             }
         }
 
+        /// <summary>
+        /// Updates a cofiguration by adding missing configurations
+        /// </summary>
         internal void Update()
         {
             if (Version < 1)

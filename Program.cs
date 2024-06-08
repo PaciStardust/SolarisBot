@@ -6,8 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using SolarisBot.ConfigFiles;
 using SolarisBot.Database;
-using SolarisBot.DefaultConfig;
 using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Services;
 using System.Reflection;
@@ -20,7 +20,7 @@ namespace SolarisBot
         {
             try
             {
-                DefaultConfigProvider.PrepareDefaultConfig(Assembly.GetExecutingAssembly());
+                ConfigFileProvider.LoadConfigFiles(Assembly.GetExecutingAssembly());
             } 
             catch (Exception ex)
             {
