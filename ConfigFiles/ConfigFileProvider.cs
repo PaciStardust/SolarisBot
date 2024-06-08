@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
-namespace SolarisBot.DefaultConfig
+namespace SolarisBot.ConfigFiles
 {
-    internal static class DefaultConfigProvider
+    internal static class ConfigFileProvider
     {
-        internal static void PrepareDefaultConfig(Assembly assembly)
+        internal static void LoadConfigFiles(Assembly assembly)
         {
             if (!Directory.Exists(Utils.PathConfigDirectory))
             {
                 Directory.CreateDirectory(Utils.PathConfigDirectory);
             }
 
-            var thisType = typeof(DefaultConfigProvider);
+            var thisType = typeof(ConfigFileProvider);
             var thisNamespaceSearch = thisType.Namespace + ".";
 
             foreach (var name in assembly.GetManifestResourceNames())

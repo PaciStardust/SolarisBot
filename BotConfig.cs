@@ -46,6 +46,9 @@ namespace SolarisBot
             }
         }
 
+        /// <summary>
+        /// Updates a cofiguration by adding missing configurations
+        /// </summary>
         internal void Update()
         {
             if (Version < 1)
@@ -123,6 +126,8 @@ namespace SolarisBot
         public byte MaxBridgesPerGuild { get; set; } = 8;
         public List<TimeCredibilityRule> CredibilityRulesTime { get; set; } = new();
         public List<KeywordCredibilityRule> CredibilityRulesKeyword { get; set; } = new();
+        public string DatabaseFile { get; set; } = "database.db";
+        public string DictionaryFile { get; set; } = "defaultDictionary.txt";
         #endregion
     }
 }

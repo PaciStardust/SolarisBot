@@ -17,19 +17,22 @@ namespace SolarisBot.Discord.Modules.Fun
         private readonly DiscordSocketClient _client;
         private readonly IServiceProvider _provider;
         private readonly HashSet<string> _words = new();
+        private readonly BotConfig _botConfig;
 
-        public SpellcheckService(ILogger<SpellcheckService> logger, DiscordSocketClient client, IServiceProvider provider)
+        public SpellcheckService(ILogger<SpellcheckService> logger, DiscordSocketClient client, IServiceProvider provider, BotConfig botConfig)
         {
             _logger = logger;
             _client = client;
             _provider = provider;
+            _botConfig = botConfig;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             try
             {
-                var words = File.ReadLines(Utils.PathDictionaryFile);
+                var dictPath = Path.Combine(Utils.PathConfigFile, _botConfig.DictionaryFile);
+                var words = File.ReadLines(dictPath);
                 foreach (var item in words)
                     _words.Add(item);
             }

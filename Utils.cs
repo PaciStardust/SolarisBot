@@ -1,6 +1,4 @@
 ﻿using Bogus;
-using Microsoft.Extensions.Logging;
-using Serilog.Core;
 using System.Reflection;
 
 namespace SolarisBot
@@ -8,18 +6,13 @@ namespace SolarisBot
     internal static class Utils
     {
         internal static string PathConfigFile { get; private set; }
-        internal static string PathDictionaryFile { get; private set; }
-        internal static string PathDatabaseFile { get; private set; }
         internal static string PathConfigDirectory { get; private set; }
-        internal static string PathMainDirectory { get; private set; }
 
-        static Utils() //todo: [REFACTOR] Fix this mess
+        static Utils()
         {
-            PathMainDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
-            PathConfigDirectory = Path.Combine(PathMainDirectory, "cfg");
+            var mainDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
+            PathConfigDirectory = Path.Combine(mainDirectory, "cfg");
             PathConfigFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "config.json"));
-            PathDatabaseFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "database.db"));
-            PathDictionaryFile = Path.GetFullPath(Path.Combine(PathConfigDirectory, "dictionary.txt"));
         }
 
         /// <summary>
