@@ -18,9 +18,12 @@ namespace SolarisBot
     {
         static async Task Main(string[] args)
         {
+            BotConfig botConfig;
+            var assembly = Assembly.GetExecutingAssembly();
             try
             {
-                ConfigFileProvider.LoadConfigFiles(Assembly.GetExecutingAssembly());
+                botConfig = GetOrCreateBotConfig();
+                ConfigFileProvider.LoadConfigFiles(assembly);
             } 
             catch (Exception ex)
             {
@@ -35,15 +38,8 @@ namespace SolarisBot
                 .CreateLogger();
             logger.Information("SolarisBot by PaciStardust is starting");
 
-            logger.Information("Loading BotConfig from {cfgPath}", Utils.PathConfigFile);
-            var botConfig = GetConfig();
-            botConfig.Update();
-            if (!botConfig.SaveAt(Utils.PathConfigFile))
-                logger.Warning("Failed to save BotConfig");
-            logger.Information("Successfully loaded BotConfig");
-
             logger.Information("Initializing hosting, building host");
-            var host = CreateHost(configuration, botConfig, logger);
+            var host = CreateHost(configuration, botConfig, logger, assembly);
 
             logger.Information("Build complete, starting host");
             await host.RunAsync();
@@ -58,7 +54,7 @@ namespace SolarisBot
                 .AddEnvironmentVariables()
                 .Build();
 
-        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger)
+        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger, Assembly assembly)
             => Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
@@ -81,7 +77,7 @@ namespace SolarisBot
                     //Fix for constructor of interaction service being broken (Provided by Discord.NET discord)
                     services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
 
-                    foreach (var service in Assembly.GetExecutingAssembly().GetTypes())
+                    foreach (var service in assembly.GetTypes())
                     {
                         var autoLoadAttribute = service.GetCustomAttribute<AutoLoadServiceAttribute>();
                         if (autoLoadAttribute is null)
@@ -114,17 +110,31 @@ namespace SolarisBot
                 .UseSerilog(logger)
                 .Build();
 
-        private static BotConfig GetConfig()
+        /// <summary>
+        /// Loads a config or generates a new one if needed, updates it and saves it
+        /// </summary>
+        /// <returns>Updated BotConfig</returns>
+        private static BotConfig GetOrCreateBotConfig()
         {
-            var botConfig = BotConfig.FromFile(Utils.PathConfigFile);
-            if (botConfig is not null)
-                return botConfig;
+            var configPath = Path.Combine(Utils.PathConfigDirectory, "config.json");
+            Console.WriteLine($"Loading config from {configPath}");
 
-            botConfig = new();
-            Console.Write("Token > ");
-            botConfig.Token = Console.ReadLine() ?? string.Empty;
-            Console.Write("Main Guild > ");
-            botConfig.MainGuild = ulong.Parse(Console.ReadLine() ?? string.Empty);
+            var botConfig = BotConfig.FromFile(Utils.PathConfigFile) ?? new();
+
+            if (string.IsNullOrWhiteSpace(botConfig.Token))
+            {
+                Console.Write("Token > ");
+                botConfig.Token = Console.ReadLine() ?? string.Empty;
+            }
+            if (botConfig.MainGuild == 0)
+            {
+                Console.Write("Main Guild > ");
+                botConfig.MainGuild = ulong.Parse(Console.ReadLine() ?? string.Empty);
+            }
+
+            Console.WriteLine("Updating and saving config");
+            botConfig.Update();
+            botConfig.SaveAt(configPath);
 
             return botConfig;
         }
