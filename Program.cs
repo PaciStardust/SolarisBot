@@ -72,7 +72,8 @@ namespace SolarisBot
                     services.AddSingleton(new DiscordSocketClient(new()
                     {
                         GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent | GatewayIntents.GuildMembers,
-                        UseInteractionSnowflakeDate = false
+                        UseInteractionSnowflakeDate = false,
+                        DefaultRetryMode = RetryMode.RetryRatelimit
                     }));
 
                     //Fix for constructor of interaction service being broken (Provided by Discord.NET discord)
