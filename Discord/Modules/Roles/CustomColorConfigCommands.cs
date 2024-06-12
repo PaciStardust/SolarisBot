@@ -12,10 +12,10 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class CustomColorConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<CustomColorConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal CustomColorConfigCommands(ILogger<CustomColorConfigCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal CustomColorConfigCommands(ILogger<CustomColorConfigCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -25,12 +25,13 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "[Opt] Required role (none to disable)")] IRole? role = null
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**");
         }

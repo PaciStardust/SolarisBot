@@ -14,10 +14,11 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class CustomColorCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<CustomColorCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal CustomColorCommands(ILogger<CustomColorCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+
+        internal CustomColorCommands(ILogger<CustomColorCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -56,7 +57,8 @@ namespace SolarisBot.Discord.Modules.Roles
 
             if (customColorRole is null)
             {
-                var permissionRole = (await _dbContext.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
+                using var dbCtx = _dbService.GetContext();
+                var permissionRole = (await dbCtx.GetGuildByIdAsync(Context.Guild.Id))?.CustomColorPermissionRoleId;
                 if (permissionRole is null || permissionRole == ulong.MinValue)
                 {
                     await Interaction.ReplyErrorAsync("Custom color roles are not enabled in this guild");
