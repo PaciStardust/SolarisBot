@@ -16,13 +16,13 @@ namespace SolarisBot.Discord.Modules.Fun
     {
         private readonly ILogger<RegexChannelService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _provider;
+        private readonly DbService _dbService;
 
-        public RegexChannelService(ILogger<RegexChannelService> logger, DiscordSocketClient client, IServiceProvider provider)
+        public RegexChannelService(ILogger<RegexChannelService> logger, DiscordSocketClient client, DbService dbService)
         {
             _logger = logger;
             _client = client;
-            _provider = provider;
+            _dbService = dbService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken) //todo: [FEATURE] On edit?
@@ -42,7 +42,7 @@ namespace SolarisBot.Discord.Modules.Fun
             if (message is not IUserMessage userMessage || message.Author.IsWebhook || message.Author.IsBot || message.Author is not IGuildUser gUser)
                 return;
 
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var regexChannel = await dbCtx.RegexChannels.ForChannel(message.Channel.Id).FirstOrDefaultAsync();
 
             if (regexChannel is null)
