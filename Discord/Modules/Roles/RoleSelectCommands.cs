@@ -14,17 +14,18 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class RoleSelectCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RoleSelectCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal RoleSelectCommands(ILogger<RoleSelectCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal RoleSelectCommands(ILogger<RoleSelectCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
         [SlashCommand("view", "View all roles and groups")]
         public async Task ViewRolesAsync()
         {
-            var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
+            using var dbCtx = _dbService.GetContext();
+            var roleGroups = await dbCtx.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
 
             if (roleGroups.Length == 0)
             {
@@ -94,7 +95,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
+            using var dbCtx = _dbService.GetContext();
+            var roleGroups = await dbCtx.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
             var roleGroupMatch = RoleSelectHelper.FindRoleGroupForIdentifier(roleGroups, identifier);
 
             var roleCount = roleGroupMatch?.RoleConfigs.Count ?? 0;
@@ -136,7 +138,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.ForGuildWithRoles(gUser.Guild.Id).FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid);
+            using var dbCtx = _dbService.GetContext();
+            var roleGroup = await dbCtx.RoleGroups.ForGuildWithRoles(gUser.Guild.Id).FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid);
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);

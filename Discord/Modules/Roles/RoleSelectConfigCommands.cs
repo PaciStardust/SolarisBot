@@ -13,17 +13,18 @@ namespace SolarisBot.Discord.Modules.Roles
     internal class RoleSelectConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RoleSelectConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal RoleSelectConfigCommands(ILogger<RoleSelectConfigCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal RoleSelectConfigCommands(ILogger<RoleSelectConfigCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
         [SlashCommand("view-all", "View all roles and groups (Including empty ones)")]
         public async Task ViewAllRolesAsync()
         {
-            var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
+            using var dbCtx = _dbService.GetContext();
+            var roleGroups = await dbCtx.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
 
             if (roleGroups.Length == 0)
             {
@@ -67,7 +68,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id, x => x.Include(y => y.RoleGroups));
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id, x => x.Include(y => y.RoleGroups));
 
             var roleGroup = guild.RoleGroups.FirstOrDefault(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase))
                 ?? new() { GuildId = Context.Guild.Id, Identifier = identifierTrimmed };
@@ -77,10 +79,10 @@ namespace SolarisBot.Discord.Modules.Roles
             roleGroup.Description = descriptionTrimmed;
             roleGroup.RequiredRoleId = requiredrole?.Id ?? 0;
 
-            _dbContext.RoleGroups.Update(roleGroup);
+            dbCtx.RoleGroups.Update(roleGroup);
 
             _logger.LogDebug("{intTag} {verb}ing role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} {verb}ed role group {roleGroup} for guild {guild}", GetIntTag(), logVerb, roleGroup, Context.Guild.Log());
             await Interaction.ReplyAsync($"Role group **\"{roleGroup.Identifier}\"** {logVerb.ToLower()}ed\n\nOne Of: **{(roleGroup.AllowOnlyOne ? "Yes" : "No")}**\nDescription: **{(string.IsNullOrWhiteSpace(roleGroup.Description) ? "None" : roleGroup.Description)}**\nRequired: **{(roleGroup.RequiredRoleId == ulong.MinValue ? "None" : $"<@&{roleGroup.RequiredRoleId}>")}**");
         }
@@ -98,18 +100,19 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
+            using var dbCtx = _dbService.GetContext();
             var identifierSearch = identifierTrimmed.ToLower();
-            var match = await _dbContext.RoleGroups.ForGuild(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierSearch); //No ordinal because EF
+            var match = await dbCtx.RoleGroups.ForGuild(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierSearch); //No ordinal because EF
             if (match is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
                 return;
             }
 
-            _dbContext.RoleGroups.Remove(match);
+            dbCtx.RoleGroups.Remove(match);
 
             _logger.LogDebug("{intTag} Deleting role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Deleted role group {roleGroup} from guild {guild}", GetIntTag(), match, Context.Guild.Log());
             await Interaction.ReplyAsync("The role group with the identifier **\"{identifierTrimmed}\"** has been deleted");
         }
@@ -142,13 +145,14 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            if (await _dbContext.RoleConfigs.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
+            using var dbCtx = _dbService.GetContext();
+            if (await dbCtx.RoleConfigs.FirstOrDefaultAsync(x => x.RoleId == role.Id) is not null)
             {
                 await Interaction.ReplyErrorAsync("Role is already registered");
                 return;
             }
 
-            var roleGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
+            var roleGroup = await dbCtx.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
             if (roleGroup is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -169,10 +173,10 @@ namespace SolarisBot.Discord.Modules.Roles
                 Description = descriptionTrimmed
             };
 
-            _dbContext.RoleConfigs.Add(dbRole);
+            dbCtx.RoleConfigs.Add(dbRole);
 
             _logger.LogDebug("{intTag} Registering role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Registered role {role} to group {roleGroup} in guild {guild}", GetIntTag(), dbRole, roleGroup, Context.Guild.Log());
             await Interaction.ReplyAsync($"Role **\"{dbRole.Identifier}\"** registered\n\nGroup: **{roleGroup.Identifier}**\nRole: **{role.Mention}**\nDescription: **{(string.IsNullOrWhiteSpace(dbRole.Description) ? "None" : dbRole.Description)}**");
         }
@@ -194,7 +198,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var dbGroup = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
+            using var dbCtx = _dbService.GetContext();
+            var dbGroup = await dbCtx.RoleGroups.ForGuildWithRoles(Context.Guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
             var dbRole = dbGroup?.RoleConfigs.FirstOrDefault(x => x.Identifier.Equals(identifierSearch, StringComparison.OrdinalIgnoreCase));
             if (dbRole is null)
             {
@@ -202,10 +207,10 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            _dbContext.RoleConfigs.Remove(dbRole);
+            dbCtx.RoleConfigs.Remove(dbRole);
 
             _logger.LogDebug("{intTag} Unregistering role {role} from groups", GetIntTag(), dbRole);
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Unregistered role {role} from groups", GetIntTag(), dbRole);
             await Interaction.ReplyAsync($"A role with the identifier **\"{identifierSearch}\"** has been unregistered");
         }
@@ -223,7 +228,8 @@ namespace SolarisBot.Discord.Modules.Roles
                 return;
             }
 
-            var roleGroups = await _dbContext.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
+            using var dbCtx = _dbService.GetContext();
+            var roleGroups = await dbCtx.RoleGroups.ForGuildWithRoles(Context.Guild.Id).ToArrayAsync();
             var roleGroupMatch = RoleSelectHelper.FindRoleGroupForIdentifier(roleGroups, identifier);
 
             var roleCount = roleGroupMatch?.RoleConfigs.Count ?? 0;
