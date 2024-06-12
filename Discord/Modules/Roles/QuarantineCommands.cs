@@ -11,10 +11,10 @@ namespace SolarisBot.Discord.Modules.Roles
     internal class QuarantineCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuarantineCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal QuarantineCommands(ILogger<QuarantineCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal QuarantineCommands(ILogger<QuarantineCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -24,12 +24,13 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "[Opt] Role aquired through quarantine (none to disable)")] IRole? role = null
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.QuarantineRoleId = role?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting quarantine to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set quarantine to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await Interaction.ReplyAsync($"Quarantine is currently **{(role is null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
@@ -37,7 +38,8 @@ namespace SolarisBot.Discord.Modules.Roles
         [UserCommand("Quarantine"), SlashCommand("quarantine", "Quarantine a user"), RequireBotPermission(GuildPermission.ManageRoles), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task QuarantineUserAsync(IUser user)
         {
-            var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(Context.Guild.Id);
             var gUser = GetGuildUser(Context.User);
             var gTargetUser = GetGuildUser(user);
 

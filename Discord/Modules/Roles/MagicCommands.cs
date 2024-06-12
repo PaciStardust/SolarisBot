@@ -13,10 +13,10 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class MagicCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<MagicCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal MagicCommands(ILogger<MagicCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal MagicCommands(ILogger<MagicCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -28,7 +28,8 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "[Opt] Automatically rename role?")] bool renaming = false
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.MagicRoleId = role?.Id ?? ulong.MinValue;
             guild.MagicRoleNextUse = ulong.MinValue;
@@ -36,7 +37,7 @@ namespace SolarisBot.Discord.Modules.Roles
             guild.MagicRoleRenameOn = renaming;
 
             _logger.LogDebug("{intTag} Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", GetIntTag(), role?.Log() ?? "0", guild.MagicRoleTimeout, guild.MagicRoleRenameOn, Context.Guild.Log());
             await Interaction.ReplyAsync($"Magic is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**\nTimeout: **{guild.MagicRoleTimeout} seconds**\nRenaming: **{guild.MagicRoleRenameOn}**");
         }
@@ -44,7 +45,8 @@ namespace SolarisBot.Discord.Modules.Roles
         [SlashCommand("magic", "Use magic"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task UseMagicAsync()
         {
-            var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(Context.Guild.Id);
 
             if (dbGuild is null || dbGuild.MagicRoleId == ulong.MinValue)
             {
@@ -75,8 +77,8 @@ namespace SolarisBot.Discord.Modules.Roles
             });
 
             dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
-            _dbContext.GuildConfigs.Update(dbGuild);
-            await _dbContext.SaveChangesAsync();
+            dbCtx.GuildConfigs.Update(dbGuild);
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Used Magic({magicRoleId}) in guild {guild}, next use updating to {nextUse}", GetIntTag(), dbGuild.MagicRoleId, Context.Guild.Log(), dbGuild.MagicRoleNextUse);
             await Interaction.ReplyAsync($"Magic has been used, <@&{dbGuild.MagicRoleId}> feels different now", color);
         }
