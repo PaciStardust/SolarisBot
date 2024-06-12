@@ -13,10 +13,10 @@ namespace SolarisBot.Discord.Modules.Fun
     public sealed class RenamingConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RenamingConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal RenamingConfigCommands(ILogger<RenamingConfigCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal RenamingConfigCommands(ILogger<RenamingConfigCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -39,14 +39,15 @@ namespace SolarisBot.Discord.Modules.Fun
                 return;
             }
 
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.JokeRenameOn = enabled;
             guild.JokeRenameTimeoutMax = parsedMaxTimeout;
             guild.JokeRenameTimeoutMin = parsedMinTimeout > parsedMaxTimeout ? parsedMaxTimeout : parsedMinTimeout;
 
             _logger.LogDebug("{intTag} Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, parsedMinTimeout, parsedMaxTimeout, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", GetIntTag(), enabled, parsedMinTimeout, parsedMaxTimeout, Context.Guild.Log());
             await Interaction.ReplyAsync($"Joke Renaming is currently **{(enabled ? "enabled" : "disabled")}**\n\nTime: **{parsedMinTimeout} - {parsedMaxTimeout} seconds**");
         }
@@ -55,7 +56,8 @@ namespace SolarisBot.Discord.Modules.Fun
         public async Task RenameResetCooldownsAsync()
         {
             _logger.LogDebug("{intTag} Deleting all joke timeout cooldowns for guild {guild}", GetIntTag(), Context.Guild.Log());
-            var deleted = await _dbContext.JokeTimeouts.ForGuild(Context.Guild.Id).ExecuteDeleteAsync();
+            using var dbCtx = _dbService.GetContext();
+            var deleted = await dbCtx.JokeTimeouts.ForGuild(Context.Guild.Id).ExecuteDeleteAsync();
             _logger.LogInformation("{intTag} Deleted all {delCount} joke timeout cooldowns for guild {guild}", GetIntTag(), deleted, Context.Guild.Log());
             if (deleted == 0)
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);

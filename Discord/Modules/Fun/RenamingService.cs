@@ -16,13 +16,13 @@ namespace SolarisBot.Discord.Modules.Fun
     {
         private readonly ILogger<RenamingService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _provider;
+        private readonly DbService _dbService;
 
-        public RenamingService(ILogger<RenamingService> logger, DiscordSocketClient client, IServiceProvider provider)
+        public RenamingService(ILogger<RenamingService> logger, DiscordSocketClient client, DbService dbService)
         {
             _logger = logger;
             _client = client;
-            _provider = provider;
+            _dbService = dbService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -55,7 +55,7 @@ namespace SolarisBot.Discord.Modules.Fun
             if (name.Length > 32)
                 return;
 
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId, x => x.Include(y => y.JokeTimeouts));
             if (guild is null || guild.JokeRenameOn == false)
                 return;
