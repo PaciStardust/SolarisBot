@@ -22,7 +22,7 @@ namespace SolarisBot.Database
         {
             if (_initialized) return;
 
-            var dbCtx = CreateContextInternal();
+            using var dbCtx = CreateContextInternal();
             await MigrateAsync(dbCtx);
             _initialized = true;
         }
