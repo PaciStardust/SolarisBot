@@ -3,13 +3,13 @@ using Microsoft.Extensions.Logging;
 
 namespace SolarisBot.Database
 {
-    internal class DbService
+    internal class DatabaseService
     {
         private readonly DbContextOptions<DatabaseContext> _options;
-        private readonly ILogger<DbService> _logger;
+        private readonly ILogger<DatabaseService> _logger;
         private bool _initialized = false;
 
-        internal DbService(BotConfig botConfig, ILogger<DbService> logger)
+        internal DatabaseService(BotConfig botConfig, ILogger<DatabaseService> logger)
         {
             _logger = logger;
             var dbPath = Path.Combine(Utils.PathConfigDirectory, botConfig.DatabaseFile);

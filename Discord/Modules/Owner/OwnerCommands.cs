@@ -18,10 +18,10 @@ namespace SolarisBot.Discord.Modules.Owner
         private readonly BotConfig _botConfig;
         private readonly ILogger<OwnerCommands> _logger;
         private readonly StatisticsService _stats;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
         private readonly DiscordSocketClient _client;
 
-        internal OwnerCommands(BotConfig botConfig, ILogger<OwnerCommands> logger, StatisticsService stats, DbService dbService, DiscordSocketClient client)
+        internal OwnerCommands(BotConfig botConfig, ILogger<OwnerCommands> logger, StatisticsService stats, DatabaseService dbService, DiscordSocketClient client)
         {
             _botConfig = botConfig;
             _logger = logger;

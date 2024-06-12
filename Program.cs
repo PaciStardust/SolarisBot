@@ -42,7 +42,7 @@ namespace SolarisBot
 
             logger.Information("Build complete, starting host");
 
-            await host.Services.GetRequiredService<DbService>().ReadyAsync(); //todo: [REFACTOR] Move this?
+            await host.Services.GetRequiredService<DatabaseService>().ReadyAsync(); //todo: [REFACTOR] Move this?
 
             await host.RunAsync();
         }
@@ -61,7 +61,7 @@ namespace SolarisBot
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton<DbService>(); //todo: [REFACTOR] make this automatic at some point
+                    services.AddSingleton<DatabaseService>(); //todo: [REFACTOR] make this automatic at some point
 
                     services.AddHttpClient();
 

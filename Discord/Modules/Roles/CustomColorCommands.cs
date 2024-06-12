@@ -14,9 +14,9 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class CustomColorCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<CustomColorCommands> _logger;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
 
-        internal CustomColorCommands(ILogger<CustomColorCommands> logger, DbService dbService)
+        internal CustomColorCommands(ILogger<CustomColorCommands> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

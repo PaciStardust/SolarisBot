@@ -11,8 +11,8 @@ namespace SolarisBot.Discord.Modules.Fun
     public sealed class SpellcheckConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<SpellcheckConfigCommands> _logger;
-        private readonly DbService _dbService;
-        internal SpellcheckConfigCommands(ILogger<SpellcheckConfigCommands> logger, DbService dbService)
+        private readonly DatabaseService _dbService;
+        internal SpellcheckConfigCommands(ILogger<SpellcheckConfigCommands> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

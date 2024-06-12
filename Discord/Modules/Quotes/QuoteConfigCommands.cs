@@ -12,9 +12,9 @@ namespace SolarisBot.Discord.Modules.Quotes
     public sealed class QuoteConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuoteConfigCommands> _logger;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
 
-        internal QuoteConfigCommands(ILogger<QuoteConfigCommands> logger, DbService dbService)
+        internal QuoteConfigCommands(ILogger<QuoteConfigCommands> logger, DatabaseService dbService)
         {
             _logger = logger;
             _dbService = dbService;

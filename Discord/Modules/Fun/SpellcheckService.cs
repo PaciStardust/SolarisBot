@@ -15,11 +15,11 @@ namespace SolarisBot.Discord.Modules.Fun
     {
         private readonly ILogger<SpellcheckService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
         private readonly HashSet<string> _words = new();
         private readonly BotConfig _botConfig;
 
-        public SpellcheckService(ILogger<SpellcheckService> logger, DiscordSocketClient client, DbService dbService, BotConfig botConfig)
+        public SpellcheckService(ILogger<SpellcheckService> logger, DiscordSocketClient client, DatabaseService dbService, BotConfig botConfig)
         {
             _logger = logger;
             _client = client;

@@ -13,8 +13,8 @@ namespace SolarisBot.Discord.Modules.Fun
     public sealed class RenamingConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RenamingConfigCommands> _logger;
-        private readonly DbService _dbService;
-        internal RenamingConfigCommands(ILogger<RenamingConfigCommands> logger, DbService dbService)
+        private readonly DatabaseService _dbService;
+        internal RenamingConfigCommands(ILogger<RenamingConfigCommands> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

@@ -13,8 +13,8 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class MagicCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<MagicCommands> _logger;
-        private readonly DbService _dbService;
-        internal MagicCommands(ILogger<MagicCommands> logger, DbService dbService)
+        private readonly DatabaseService _dbService;
+        internal MagicCommands(ILogger<MagicCommands> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

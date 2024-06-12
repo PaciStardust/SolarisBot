@@ -15,9 +15,9 @@ namespace SolarisBot.Discord.Modules.Bridges
     {
         private readonly ILogger<BridgeService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
 
-        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, DbService dbService)
+        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, DatabaseService dbService)
         {
             _logger = logger;
             _client = client;

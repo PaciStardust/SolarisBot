@@ -13,9 +13,9 @@ namespace SolarisBot.Discord.Modules.Roles
     {
         private readonly ILogger<AutoRoleService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
 
-        public AutoRoleService(ILogger<AutoRoleService> logger, DiscordSocketClient client, DbService dbService)
+        public AutoRoleService(ILogger<AutoRoleService> logger, DiscordSocketClient client, DatabaseService dbService)
         {
             _client = client;
             _dbService = dbService;

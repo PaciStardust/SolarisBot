@@ -11,8 +11,8 @@ namespace SolarisBot.Discord.Modules.Fun
     internal class StealNicknameCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<StealNicknameCommands> _logger;
-        private readonly DbService _dbService;
-        internal StealNicknameCommands(ILogger<StealNicknameCommands> logger, DbService dbService)
+        private readonly DatabaseService _dbService;
+        internal StealNicknameCommands(ILogger<StealNicknameCommands> logger, DatabaseService dbService)
         {
             _logger = logger;
             _dbService = dbService;

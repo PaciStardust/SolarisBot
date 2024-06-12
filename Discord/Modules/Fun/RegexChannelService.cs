@@ -16,9 +16,9 @@ namespace SolarisBot.Discord.Modules.Fun
     {
         private readonly ILogger<RegexChannelService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
 
-        public RegexChannelService(ILogger<RegexChannelService> logger, DiscordSocketClient client, DbService dbService)
+        public RegexChannelService(ILogger<RegexChannelService> logger, DiscordSocketClient client, DatabaseService dbService)
         {
             _logger = logger;
             _client = client;

@@ -13,10 +13,10 @@ namespace SolarisBot.Discord.Modules.Fun
     internal class GififyCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<GififyCommands> _logger;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
         private readonly HttpClient _httpClient;
         private readonly BotConfig _botConfig;
-        internal GififyCommands(ILogger<GififyCommands> logger, DbService dbService, HttpClient httpClient, BotConfig botConfig)
+        internal GififyCommands(ILogger<GififyCommands> logger, DatabaseService dbService, HttpClient httpClient, BotConfig botConfig)
         {
             _dbService = dbService;
             _logger = logger;

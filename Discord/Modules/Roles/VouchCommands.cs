@@ -11,8 +11,8 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class VouchCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<VouchCommands> _logger;
-        private readonly DbService _dbService;
-        internal VouchCommands(ILogger<VouchCommands> logger, DbService dbService) //todo: [FEATURE] Custom message
+        private readonly DatabaseService _dbService;
+        internal VouchCommands(ILogger<VouchCommands> logger, DatabaseService dbService) //todo: [FEATURE] Custom message
         {
             _dbService = dbService;
             _logger = logger;

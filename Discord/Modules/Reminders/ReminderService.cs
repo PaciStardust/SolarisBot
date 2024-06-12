@@ -16,10 +16,10 @@ namespace SolarisBot.Discord.Modules.Reminders
     {
         private readonly ILogger<ReminderService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
         private readonly System.Timers.Timer _timer;
 
-        public ReminderService(ILogger<ReminderService> logger, DiscordSocketClient client, DbService dbService)
+        public ReminderService(ILogger<ReminderService> logger, DiscordSocketClient client, DatabaseService dbService)
         {
             _client = client;
             _dbService = dbService;

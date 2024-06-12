@@ -15,11 +15,11 @@ namespace SolarisBot.Discord.Modules.Bridges
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<BridgeConfigCommands> _logger;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
         private readonly BotConfig _config;
         private readonly DiscordSocketClient _client;
 
-        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DbService dbService, BotConfig config, DiscordSocketClient client)
+        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DatabaseService dbService, BotConfig config, DiscordSocketClient client)
         {
             _dbService = dbService;
             _logger = logger;

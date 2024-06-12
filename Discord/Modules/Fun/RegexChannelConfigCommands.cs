@@ -15,8 +15,8 @@ namespace SolarisBot.Discord.Modules.Fun
     public sealed class RegexChannelConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RegexChannelConfigCommands> _logger;
-        private readonly DbService _dbService;
-        internal RegexChannelConfigCommands(ILogger<RegexChannelConfigCommands> logger, DbService dbService)
+        private readonly DatabaseService _dbService;
+        internal RegexChannelConfigCommands(ILogger<RegexChannelConfigCommands> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

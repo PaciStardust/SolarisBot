@@ -13,8 +13,8 @@ namespace SolarisBot.Discord.Modules.Roles
     internal class RoleSelectConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<RoleSelectConfigCommands> _logger;
-        private readonly DbService _dbService;
-        internal RoleSelectConfigCommands(ILogger<RoleSelectConfigCommands> logger, DbService dbService)
+        private readonly DatabaseService _dbService;
+        internal RoleSelectConfigCommands(ILogger<RoleSelectConfigCommands> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

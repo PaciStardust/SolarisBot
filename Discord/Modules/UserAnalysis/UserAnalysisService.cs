@@ -15,9 +15,9 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         private readonly ILogger<UserAnalysisService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly BotConfig _config;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
 
-        public UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, BotConfig config, DbService dbService)
+        public UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, BotConfig config, DatabaseService dbService)
         {
             _logger = logger;
             _client = client;

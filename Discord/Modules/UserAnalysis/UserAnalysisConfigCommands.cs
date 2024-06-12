@@ -12,9 +12,9 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
     internal class UserAnalysisConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<UserAnalysisConfigCommands> _logger;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
         private readonly BotConfig _config;
-        internal UserAnalysisConfigCommands(ILogger<UserAnalysisConfigCommands> logger, DbService dbService, BotConfig config)
+        internal UserAnalysisConfigCommands(ILogger<UserAnalysisConfigCommands> logger, DatabaseService dbService, BotConfig config)
         {
             _dbService = dbService;
             _logger = logger;

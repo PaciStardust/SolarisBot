@@ -11,8 +11,8 @@ namespace SolarisBot.Discord.Modules.Roles
     internal class QuarantineCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuarantineCommands> _logger;
-        private readonly DbService _dbService;
-        internal QuarantineCommands(ILogger<QuarantineCommands> logger, DbService dbService)
+        private readonly DatabaseService _dbService;
+        internal QuarantineCommands(ILogger<QuarantineCommands> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

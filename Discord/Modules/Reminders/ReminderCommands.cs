@@ -12,9 +12,9 @@ namespace SolarisBot.Discord.Modules.Reminders
     public sealed class ReminderCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<ReminderCommands> _logger;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
         private readonly BotConfig _botConfig;
-        internal ReminderCommands(ILogger<ReminderCommands> logger, DbService dbService, BotConfig botConfig)
+        internal ReminderCommands(ILogger<ReminderCommands> logger, DatabaseService dbService, BotConfig botConfig)
         {
             _dbService = dbService;
             _logger = logger;

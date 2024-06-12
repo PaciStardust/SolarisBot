@@ -11,9 +11,9 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class AutoRoleConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<AutoRoleConfigCommands> _logger;
-        private readonly DbService _dbService;
+        private readonly DatabaseService _dbService;
 
-        internal AutoRoleConfigCommands(ILogger<AutoRoleConfigCommands> logger, DbService dbService)
+        internal AutoRoleConfigCommands(ILogger<AutoRoleConfigCommands> logger, DatabaseService dbService)
         {
             _logger = logger;
             _dbService = dbService;
