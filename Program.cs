@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -42,6 +41,9 @@ namespace SolarisBot
             var host = CreateHost(configuration, botConfig, logger, assembly);
 
             logger.Information("Build complete, starting host");
+
+            await host.Services.GetRequiredService<DbService>().ReadyAsync(); //todo: [REFACTOR] Move this?
+
             await host.RunAsync();
         }
 
@@ -54,17 +56,12 @@ namespace SolarisBot
                 .AddEnvironmentVariables()
                 .Build();
 
-        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger, Assembly assembly)
-            => Host.CreateDefaultBuilder()
+        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger, Assembly assembly) //todo: [FEATURE] Backups of database, counting?
+            => Host.CreateDefaultBuilder() 
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
                 {
-                    var dbPath = Path.Combine(Utils.PathConfigDirectory, botConfig.DatabaseFile);
-                    services.AddDbContext<DatabaseContext>(options => options.UseSqlite
-                    (
-                        $"Data Source={dbPath};Pooling=false"),
-                        ServiceLifetime.Transient
-                    ); //todo: [FEATURE] Backups of database, counting?
+                    services.AddSingleton<DbService>(); //todo: [REFACTOR] make this automatic at some point
 
                     services.AddHttpClient();
 
