@@ -13,12 +13,12 @@ namespace SolarisBot.Discord.Modules.Roles
     {
         private readonly ILogger<AutoRoleService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _provider;
+        private readonly DbService _dbService;
 
-        public AutoRoleService(ILogger<AutoRoleService> logger, DiscordSocketClient client, IServiceProvider provider)
+        public AutoRoleService(ILogger<AutoRoleService> logger, DiscordSocketClient client, DbService dbService)
         {
             _client = client;
-            _provider = provider;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -39,7 +39,7 @@ namespace SolarisBot.Discord.Modules.Roles
         /// </summary>
         private async Task ApplyAutoRoleAsync(SocketGuildUser user)
         {
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
             if (dbGuild is null || dbGuild.AutoRoleId == ulong.MinValue || user.Guild.FindRole(dbGuild.AutoRoleId) is null) //todo: [FEATURE] Notify for this?
                 return;

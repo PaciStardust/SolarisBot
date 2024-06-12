@@ -11,11 +11,12 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class AutoRoleConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<AutoRoleConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal AutoRoleConfigCommands(ILogger<AutoRoleConfigCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+
+        internal AutoRoleConfigCommands(ILogger<AutoRoleConfigCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
             _logger = logger;
+            _dbService = dbService;
         }
 
         [SlashCommand("cfg-autorole", "[MANAGE ROLES ONLY] Set an automatic join role"), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
@@ -24,11 +25,12 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "[Opt] Join role (none to disable)")] IRole? role = null
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
             guild.AutoRoleId = role?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set auto-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await Interaction.ReplyAsync($"Auto-Role is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
