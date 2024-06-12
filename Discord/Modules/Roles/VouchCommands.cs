@@ -11,10 +11,10 @@ namespace SolarisBot.Discord.Modules.Roles
     public sealed class VouchCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<VouchCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal VouchCommands(ILogger<VouchCommands> logger, DatabaseContext dbctx) //todo: [FEATURE] Custom message
+        private readonly DbService _dbService;
+        internal VouchCommands(ILogger<VouchCommands> logger, DbService dbService) //todo: [FEATURE] Custom message
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -25,13 +25,14 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "[Opt] Role aquired through vouching (none to disable)")] IRole? vouch = null
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.VouchPermissionRoleId = permission?.Id ?? ulong.MinValue;
             guild.VouchRoleId = vouch?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", GetIntTag(), permission?.Log() ?? "0", vouch?.Log() ?? "0", Context.Guild.Log());
             await Interaction.ReplyAsync($"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**");
         }
@@ -39,7 +40,8 @@ namespace SolarisBot.Discord.Modules.Roles
         [UserCommand("Vouch"), SlashCommand("vouch", "Vouch for a user"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task VouchUserAsync(IUser user)
         {
-            var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(Context.Guild.Id);
             var gUser = GetGuildUser(Context.User);
             var gTargetUser = GetGuildUser(user);
 
