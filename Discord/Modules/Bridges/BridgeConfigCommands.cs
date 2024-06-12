@@ -15,13 +15,13 @@ namespace SolarisBot.Discord.Modules.Bridges
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<BridgeConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
+        private readonly DbService _dbService;
         private readonly BotConfig _config;
         private readonly DiscordSocketClient _client;
 
-        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DatabaseContext dbctx, BotConfig config, DiscordSocketClient client)
+        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DbService dbService, BotConfig config, DiscordSocketClient client)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
             _config = config;
             _client = client;
@@ -33,9 +33,11 @@ namespace SolarisBot.Discord.Modules.Bridges
             [Summary(description: "[Opt] List guild bridges")] bool guild = false
         )
         {
+            using var dbCtx = _dbService.GetContext();
+
             var query = guild
-                ? _dbContext.Bridges.ForGuild(Context.Guild.Id)
-                : _dbContext.Bridges.ForChannel(Context.Channel.Id);
+                ? dbCtx.Bridges.ForGuild(Context.Guild.Id)
+                : dbCtx.Bridges.ForChannel(Context.Channel.Id);
 
             var bridges = await query.ToArrayAsync();
             if (bridges.Length == 0)
@@ -83,21 +85,23 @@ namespace SolarisBot.Discord.Modules.Bridges
             //Long interaction, so deffered
             await Interaction.DeferAsync();
 
-            var bridgesHere = await _dbContext.Bridges.ForGuild(Context.Guild.Id).CountAsync();
+            using var dbCtx = _dbService.GetContext();
+
+            var bridgesHere = await dbCtx.Bridges.ForGuild(Context.Guild.Id).CountAsync();
             if (bridgesHere > _config.MaxBridgesPerGuild)
             {
                 await Interaction.ReplyErrorAsync($"This guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
                 return;
             }
 
-            var bridgesThere = await _dbContext.Bridges.ForGuild(parsedChannelId).CountAsync();
+            var bridgesThere = await dbCtx.Bridges.ForGuild(parsedChannelId).CountAsync();
             if (bridgesThere > _config.MaxBridgesPerGuild)
             {
                 await Interaction.ReplyErrorAsync($"Target guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
                 return;
             }
 
-            var duplicate = await _dbContext.Bridges.ForGuild(parsedGuildId).ForGuild(Context.Guild.Id).FirstOrDefaultAsync();
+            var duplicate = await dbCtx.Bridges.ForGuild(parsedGuildId).ForGuild(Context.Guild.Id).FirstOrDefaultAsync();
             if (duplicate is not null)
             {
                 await Interaction.ReplyErrorAsync("This bridge already exists");
@@ -150,10 +154,10 @@ namespace SolarisBot.Discord.Modules.Bridges
                 GuildBId = otherGuild.Id,
                 ChannelBId = otherChannel.Id
             };
-            _dbContext.Bridges.Add(dbBridge);
+            dbCtx.Bridges.Add(dbBridge);
 
             _logger.LogDebug("{intTag} Adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log(), otherChannel.Log(), otherGuild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Added bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log(), otherChannel.Log(), otherGuild.Log());
             await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge {dbBridge.ToDiscordInfoString()} channel {Context.Channel.ToDiscordInfoString()} in guild {Context.Guild.ToDiscordInfoString()}"));
             await Interaction.ReplyAsync($"Created bridge {dbBridge.ToDiscordInfoString()} to channel {otherChannel.ToDiscordInfoString()} in guild {otherGuild.ToDiscordInfoString()}");
@@ -172,7 +176,9 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            var query = _dbContext.Bridges.ForGuild(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+
+            var query = dbCtx.Bridges.ForGuild(Context.Guild.Id);
             query = parsedBridgeId is null
                 ? query.ForChannel(Context.Channel.Id)
                 : query.Where(x => x.BridgeId == parsedBridgeId);
@@ -184,9 +190,9 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            _dbContext.Bridges.RemoveRange(bridges);
+            dbCtx.Bridges.RemoveRange(bridges);
             _logger.LogDebug("{intTag} Removing {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Length, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Removed {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Length, Context.Guild.Log());
             await Interaction.ReplyAsync($"Removed **{bridges.Length}** bridge{(bridges.Length == 1 ? string.Empty : "s")}");
 

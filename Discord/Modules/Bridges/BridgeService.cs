@@ -15,13 +15,13 @@ namespace SolarisBot.Discord.Modules.Bridges
     {
         private readonly ILogger<BridgeService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _services;
+        private readonly DbService _dbService;
 
-        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, IServiceProvider services)
+        public BridgeService(ILogger<BridgeService> logger, DiscordSocketClient client, DbService dbService)
         {
             _logger = logger;
             _client = client;
-            _services = services;
+            _dbService = dbService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -41,7 +41,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             if (message.Author.IsWebhook || message.Author.IsBot)
                 return;
 
-            var dbCtx = _services.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var bridges = await dbCtx.Bridges.ForChannel(message.Channel.Id).ToArrayAsync();
             if (bridges.Length == 0)
                 return;
@@ -78,7 +78,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
         private async Task DeleteBridgeAsync(DbBridge bridge, ulong missingChannelId)
         {
-            var tempCtx = _services.GetRequiredService<DatabaseContext>();
+            using var tempCtx = _dbService.GetContext();
             tempCtx.Bridges.Remove(bridge);
 
             _logger.LogDebug("Deleting bridge {bridge}, could not locate channel {channel}", bridge, missingChannelId);
