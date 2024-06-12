@@ -15,15 +15,15 @@ namespace SolarisBot.Discord.Modules.Fun
     {
         private readonly ILogger<SpellcheckService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _provider;
+        private readonly DbService _dbService;
         private readonly HashSet<string> _words = new();
         private readonly BotConfig _botConfig;
 
-        public SpellcheckService(ILogger<SpellcheckService> logger, DiscordSocketClient client, IServiceProvider provider, BotConfig botConfig)
+        public SpellcheckService(ILogger<SpellcheckService> logger, DiscordSocketClient client, DbService dbService, BotConfig botConfig)
         {
             _logger = logger;
             _client = client;
-            _provider = provider;
+            _dbService = dbService;
             _botConfig = botConfig;
         }
 
@@ -77,7 +77,7 @@ namespace SolarisBot.Discord.Modules.Fun
             if (errors.Count == 0)
                 return;
 
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
             if (guild is null || guild.SpellcheckRoleId == ulong.MinValue || gUser.Guild.FindRole(guild.SpellcheckRoleId) is null) //todo: [FEATURE] Notify for this?
                 return;

@@ -11,10 +11,10 @@ namespace SolarisBot.Discord.Modules.Fun
     public sealed class SpellcheckConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<SpellcheckConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal SpellcheckConfigCommands(ILogger<SpellcheckConfigCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal SpellcheckConfigCommands(ILogger<SpellcheckConfigCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -24,11 +24,12 @@ namespace SolarisBot.Discord.Modules.Fun
             [Summary(description: "[Opt] Role to be spellchecked (none to disable)")] IRole? role = null
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
             guild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;
 
             _logger.LogDebug("{intTag} Setting spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set spellcheck-role to role {role} for guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
             await Interaction.ReplyAsync($"Spellcheck is currently **{(role is not null ? "enabled" : "disabled")}**\n\nRole: **{role?.Mention ?? "None"}**");
         }
