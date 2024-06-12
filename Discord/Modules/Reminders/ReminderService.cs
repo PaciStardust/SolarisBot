@@ -16,13 +16,13 @@ namespace SolarisBot.Discord.Modules.Reminders
     {
         private readonly ILogger<ReminderService> _logger;
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _provider;
+        private readonly DbService _dbService;
         private readonly System.Timers.Timer _timer;
 
-        public ReminderService(ILogger<ReminderService> logger, DiscordSocketClient client, IServiceProvider provider)
+        public ReminderService(ILogger<ReminderService> logger, DiscordSocketClient client, DbService dbService)
         {
             _client = client;
-            _provider = provider;
+            _dbService = dbService;
             _logger = logger;
             _timer = new System.Timers.Timer(TimeSpan.FromSeconds(30));
             _timer.Elapsed += new ElapsedEventHandler(RemindUsersAsync);
@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Modules.Reminders
 
             var nowUnix = Utils.GetCurrentUnix();
             //_logger.LogDebug("Checking Database for reminders");
-            var dbCtx = _provider.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var reminders = await dbCtx.Reminders.FromSql($"SELECT * FROM Reminders WHERE RemindAt <= {nowUnix}").ToArrayAsync(); //UInt equality not supported
             if (reminders.Length == 0)
             {

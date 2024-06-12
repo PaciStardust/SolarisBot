@@ -12,11 +12,11 @@ namespace SolarisBot.Discord.Modules.Reminders
     public sealed class ReminderCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<ReminderCommands> _logger;
-        private readonly DatabaseContext _dbContext;
+        private readonly DbService _dbService;
         private readonly BotConfig _botConfig;
-        internal ReminderCommands(ILogger<ReminderCommands> logger, DatabaseContext dbctx, BotConfig botConfig)
+        internal ReminderCommands(ILogger<ReminderCommands> logger, DbService dbService, BotConfig botConfig)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
             _botConfig = botConfig;
         }
@@ -41,14 +41,15 @@ namespace SolarisBot.Discord.Modules.Reminders
                 return;
             }
 
-            var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(Context.Guild.Id);
             if (dbGuild is null || !dbGuild.RemindersOn)
             {
                 await Interaction.ReplyErrorAsync("Reminders are not enabled in this guild");
                 return;
             }
 
-            var userReminders = await _dbContext.Reminders.ForUser(Context.User.Id).ToArrayAsync();
+            var userReminders = await dbCtx.Reminders.ForUser(Context.User.Id).ToArrayAsync();
             if (userReminders.Length >= _botConfig.MaxRemindersPerUser)
             {
                 await Interaction.ReplyErrorAsync($"Reached maximum reminder count of **{_botConfig.MaxRemindersPerUser}**");
@@ -71,8 +72,8 @@ namespace SolarisBot.Discord.Modules.Reminders
             };
 
             _logger.LogDebug("{intTag} Creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
-            _dbContext.Reminders.Add(dbReminder);
-            await _dbContext.SaveChangesAsync();
+            dbCtx.Reminders.Add(dbReminder);
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", GetIntTag(), dbReminder, Context.User.Log(), Context.Channel.Log(), Context.Guild.Log());
 
             await Interaction.ReplyAsync($"Reminder #{dbReminder.ReminderId}: **{text}**\n*(Reminding <t:{timestamp}:f>)*");
@@ -111,7 +112,8 @@ namespace SolarisBot.Discord.Modules.Reminders
         [SlashCommand("list", "List your reminders")]
         public async Task ListRemindersAsync()
         {
-            var reminders = await _dbContext.Reminders.ForUser(Context.User.Id).ToArrayAsync();
+            using var dbCtx = _dbService.GetContext();
+            var reminders = await dbCtx.Reminders.ForUser(Context.User.Id).ToArrayAsync();
 
             if (reminders.Length == 0)
             {
@@ -135,7 +137,8 @@ namespace SolarisBot.Discord.Modules.Reminders
                 return;
             }
 
-            var reminder = await _dbContext.Reminders.ForUser(Context.User.Id).FirstOrDefaultAsync(x => x.ReminderId == parsedReminderId);
+            using var dbCtx = _dbService.GetContext();
+            var reminder = await dbCtx.Reminders.ForUser(Context.User.Id).FirstOrDefaultAsync(x => x.ReminderId == parsedReminderId);
             if (reminder is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -143,8 +146,8 @@ namespace SolarisBot.Discord.Modules.Reminders
             }
 
             _logger.LogDebug("{intTag} Deleting reminder {reminder} from user {user} in DB", GetIntTag(), reminder, Context.User.Log());
-            _dbContext.Reminders.Remove(reminder);
-            await _dbContext.SaveChangesAsync();
+            dbCtx.Reminders.Remove(reminder);
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Deleted reminder {reminder} from user {user} in DB", GetIntTag(), reminder, Context.User.Log());
             await Interaction.ReplyAsync($"Deleted reminder #{reminder.ReminderId}", isEphemeral: true);
         }

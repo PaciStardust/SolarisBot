@@ -13,10 +13,10 @@ namespace SolarisBot.Discord.Modules.Reminders
     public sealed class ReminderConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<ReminderConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal ReminderConfigCommands(ILogger<ReminderConfigCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal ReminderConfigCommands(ILogger<ReminderConfigCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
         }
 
@@ -26,12 +26,13 @@ namespace SolarisBot.Discord.Modules.Reminders
             [Summary(description: "Is feature enabled?")] bool enabled
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.RemindersOn = enabled;
 
             _logger.LogDebug("{intTag} Setting reminders to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set reminders to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
             await Interaction.ReplyAsync($"Reminders are currently **{(enabled ? "enabled" : "disabled")}**");
         }
@@ -42,7 +43,8 @@ namespace SolarisBot.Discord.Modules.Reminders
             [Summary(description: "[Opt] Channel to wipe reminders from")] IChannel? channel = null
         )
         {
-            var query = _dbContext.Reminders.ForGuild(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var query = dbCtx.Reminders.ForGuild(Context.Guild.Id);
             if (channel is not null)
                 query.ForChannel(channel.Id);
 
@@ -54,8 +56,8 @@ namespace SolarisBot.Discord.Modules.Reminders
             }
 
             _logger.LogDebug("{intTag} Wiping {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
-            _dbContext.Reminders.RemoveRange(reminders);
-            await _dbContext.SaveChangesAsync();
+            dbCtx.Reminders.RemoveRange(reminders);
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Wiped {reminders} reminders from guild {guild}", GetIntTag(), reminders.Length, Context.Guild.Log());
             await Interaction.ReplyAsync($"Wiped **{reminders.Length}** reminders from database");
         }
