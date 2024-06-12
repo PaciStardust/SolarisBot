@@ -15,17 +15,19 @@ namespace SolarisBot.Discord.Modules.Owner
     [Module("owner"), Group("owner", "[OWNER ONLY] Configure Solaris"), DefaultMemberPermissions(GuildPermission.Administrator), RequireOwner]
     public sealed class OwnerCommands : SolarisInteractionModuleBase
     {
-        private readonly IServiceProvider _services;
+        private readonly BotConfig _botConfig;
         private readonly ILogger<OwnerCommands> _logger;
         private readonly StatisticsService _stats;
-        private readonly DatabaseContext _databaseContext;
+        private readonly DbService _dbService;
+        private readonly DiscordSocketClient _client;
 
-        internal OwnerCommands(IServiceProvider services, ILogger<OwnerCommands> logger, StatisticsService stats, DatabaseContext databaseContext)
+        internal OwnerCommands(BotConfig botConfig, ILogger<OwnerCommands> logger, StatisticsService stats, DbService dbService, DiscordSocketClient client)
         {
-            _services = services;
+            _botConfig = botConfig;
             _logger = logger;
             _stats = stats;
-            _databaseContext = databaseContext;
+            _dbService = dbService;
+            _client = client;
         }
 
         [SlashCommand("set-status", "Set the status of the bot")]
@@ -35,17 +37,15 @@ namespace SolarisBot.Discord.Modules.Owner
         )
         {
             _logger.LogDebug("{intTag} Setting discord client status to {discordStatus}", GetIntTag(), status);
-            var config = _services.GetRequiredService<BotConfig>();
-            config.DefaultStatus = status;
+            _botConfig.DefaultStatus = status;
 
-            if (!config.SaveAt(Utils.PathConfigFile))
+            if (!_botConfig.SaveAt(Utils.PathConfigFile))
             {
                 await Interaction.ReplyErrorAsync("Unable to save new status in config file");
                 return;
             }
 
-            var client = _services.GetRequiredService<DiscordSocketClient>();
-            await client.SetGameAsync(status);
+            await _client.SetGameAsync(status);
             _logger.LogInformation("{intTag} Set discord client status to {discordStatus}", GetIntTag(), status);
             await Interaction.ReplyAsync($"Status set to \"{status}\"");
         }
@@ -77,7 +77,8 @@ namespace SolarisBot.Discord.Modules.Owner
         public async Task SqlRunAsync(string query)
         {
             _logger.LogWarning("{intTag} Executing manual RAW run query {query}", GetIntTag(), query);
-            var sql = await _databaseContext.Database.ExecuteSqlRawAsync(query);
+            using var dbCtx = _dbService.GetContext();
+            var sql = await dbCtx.Database.ExecuteSqlRawAsync(query);
             _logger.LogWarning("{intTag} Executed manual RAW run query {query}", GetIntTag(), query);
             await Interaction.ReplyAsync($"Ran raw SQL: {query}\n\n{sql} line(s) affected");
         }
