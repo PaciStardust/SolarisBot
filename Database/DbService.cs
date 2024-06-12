@@ -30,7 +30,7 @@ namespace SolarisBot.Database
         private DatabaseContext CreateContextInternal()
             => new(_options);
 
-        internal DatabaseContext CreateContext()
+        internal DatabaseContext GetContext()
         {
             if (!_initialized)
                 throw new InvalidOperationException("Unable to create DatabaseContext before DbService has been initialized");
