@@ -13,12 +13,12 @@ namespace SolarisBot.Discord.Modules.Fun
     internal class GififyCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<GififyCommands> _logger;
-        private readonly DatabaseContext _dbContext;
+        private readonly DbService _dbService;
         private readonly HttpClient _httpClient;
         private readonly BotConfig _botConfig;
-        internal GififyCommands(ILogger<GififyCommands> logger, DatabaseContext dbctx, HttpClient httpClient, BotConfig botConfig)
+        internal GififyCommands(ILogger<GififyCommands> logger, DbService dbService, HttpClient httpClient, BotConfig botConfig)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
             _httpClient = httpClient;
             _botConfig = botConfig;
@@ -30,12 +30,14 @@ namespace SolarisBot.Discord.Modules.Fun
             [Summary(description: "Is feature enabled?")] bool enabled
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.GififyOn = enabled;
 
             _logger.LogDebug("{intTag} Setting gif conversion to {enabled} in guild {guild}", GetIntTag(), guild.GififyOn, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set gif conversion to {enabled} in guild {guild}", GetIntTag(), guild.GififyOn, Context.Guild.Log());
             await Interaction.ReplyAsync($"Gif conversion is currently **{(guild.GififyOn ? "enabled" : "disabled")}**");
         }
@@ -74,7 +76,9 @@ namespace SolarisBot.Discord.Modules.Fun
 
         private async Task GififyAsync(IAttachment image, bool isPrivate = false)
         {
-            var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+
+            var guild = await dbCtx.GetGuildByIdAsync(Context.Guild.Id);
             if (guild is null || !guild.GififyOn)
             {
                 await Interaction.ReplyErrorAsync("Gifify is not enabled in this guild");
