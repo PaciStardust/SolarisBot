@@ -12,13 +12,13 @@ namespace SolarisBot.Discord.Modules.Quotes
     public sealed class QuoteCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuoteCommands> _logger;
-        private readonly DatabaseContext _dbContext;
+        private readonly DbService _dbService;
         private readonly BotConfig _botConfig;
-        internal QuoteCommands(ILogger<QuoteCommands> logger, DatabaseContext dbctx, BotConfig botConfig)
+        internal QuoteCommands(ILogger<QuoteCommands> logger, DbService dbService, BotConfig botConfig)
         {
-            _dbContext = dbctx;
             _logger = logger;
             _botConfig = botConfig;
+            _dbService = dbService;
         }
 
         [MessageCommand("Create Quote")]
@@ -31,7 +31,8 @@ namespace SolarisBot.Discord.Modules.Quotes
                 return;
             }
 
-            var guild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id, x => x.Include(y => y.Quotes));
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetGuildByIdAsync(Context.Guild.Id, x => x.Include(y => y.Quotes));
             if (guild is null || !guild.QuotesOn)
             {
                 await Interaction.ReplyErrorAsync("Quotes are not enabled in this guild");
@@ -65,7 +66,7 @@ namespace SolarisBot.Discord.Modules.Quotes
 
             _logger.LogDebug("{intTag} Adding quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
             guild.Quotes.Add(dbQuote);
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Added quote {quote} by user {user} to guild {guild}", GetIntTag(), dbQuote, Context.User.Log(), Context.Guild.Log());
             await Interaction.ReplyAsync(GetQuoteEmbed(dbQuote));
             return;
@@ -86,7 +87,8 @@ namespace SolarisBot.Discord.Modules.Quotes
             var user = GetGuildUser(Context.User);
             bool isAdmin = user?.GuildPermissions.ManageMessages ?? false;
 
-            var dbQuote = await _dbContext.Quotes.FirstOrDefaultAsync(x => x.QuoteId == parsedQuoteId && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || isAdmin && Context.Guild.Id == x.GuildId));
+            using var dbCtx = _dbService.GetContext();
+            var dbQuote = await dbCtx.Quotes.FirstOrDefaultAsync(x => x.QuoteId == parsedQuoteId && (x.AuthorId == Context.User.Id || x.CreatorId == Context.User.Id || isAdmin && Context.Guild.Id == x.GuildId));
             if (dbQuote is null)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -94,8 +96,8 @@ namespace SolarisBot.Discord.Modules.Quotes
             }
 
             _logger.LogDebug("{intTag} Removing quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
-            _dbContext.Quotes.Remove(dbQuote);
-            await _dbContext.SaveChangesAsync();
+            dbCtx.Quotes.Remove(dbQuote);
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Removed quote {quote} from guild {guild}", GetIntTag(), dbQuote, Context.Guild.Id);
             await Interaction.ReplyAsync($"Quote with ID **{parsedQuoteId}** has been deleted");
         }
@@ -130,7 +132,8 @@ namespace SolarisBot.Discord.Modules.Quotes
                 return;
             }
 
-            var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, authorId: authorIdParsed, creatorId: creatorIdParsed, quoteId: quoteIdParsed, content: content, offset: offset, limit: showFirst ? 1 : 10);
+            using var dbCtx = _dbService.GetContext();
+            var quotes = await dbCtx.GetQuotesAsync(Context.Guild.Id, authorId: authorIdParsed, creatorId: creatorIdParsed, quoteId: quoteIdParsed, content: content, offset: offset, limit: showFirst ? 1 : 10);
             if (quotes.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -166,7 +169,8 @@ namespace SolarisBot.Discord.Modules.Quotes
                 return;
             }
 
-            var quotes = await _dbContext.GetQuotesAsync(0, authorId: authorIdParsed, quoteId: quoteIdParsed, content: content, offset: offset);
+            using var dbCtx = _dbService.GetContext();
+            var quotes = await dbCtx.GetQuotesAsync(0, authorId: authorIdParsed, quoteId: quoteIdParsed, content: content, offset: offset);
             if (quotes.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -178,7 +182,8 @@ namespace SolarisBot.Discord.Modules.Quotes
         [SlashCommand("random", "Picks a random quote")]
         public async Task RandomQuoteAsync()
         {
-            var quotesQuery = _dbContext.Quotes.ForGuild(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var quotesQuery = dbCtx.Quotes.ForGuild(Context.Guild.Id);
 
             var quoteNum = await quotesQuery.CountAsync();
             if (quoteNum == 0)

@@ -12,11 +12,12 @@ namespace SolarisBot.Discord.Modules.Quotes
     public sealed class QuoteConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<QuoteConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal QuoteConfigCommands(ILogger<QuoteConfigCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+
+        internal QuoteConfigCommands(ILogger<QuoteConfigCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
             _logger = logger;
+            _dbService = dbService;
         }
 
         [SlashCommand("config", "Enable quotes")]
@@ -25,12 +26,13 @@ namespace SolarisBot.Discord.Modules.Quotes
             [Summary(description: "Is feature enabled?")] bool enabled
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.QuotesOn = enabled;
 
             _logger.LogDebug("{intTag} Setting quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
             await Interaction.ReplyAsync($"Quotes are currently **{(enabled ? "enabled" : "disabled")}**");
         }
@@ -58,7 +60,8 @@ namespace SolarisBot.Discord.Modules.Quotes
                 return;
             }
 
-            var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, authorId: authorIdParsed, creatorId: creatorIdParsed, content: content, offset: offset, limit: limit);
+            using var dbCtx = _dbService.GetContext();
+            var quotes = await dbCtx.GetQuotesAsync(Context.Guild.Id, authorId: authorIdParsed, creatorId: creatorIdParsed, content: content, offset: offset, limit: limit);
             if (quotes.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -66,8 +69,8 @@ namespace SolarisBot.Discord.Modules.Quotes
             }
 
             _logger.LogDebug("{intTag} Wiping {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-            _dbContext.Quotes.RemoveRange(quotes);
-            await _dbContext.SaveChangesAsync();
+            dbCtx.Quotes.RemoveRange(quotes);
+            await dbCtx.SaveChangesAsync();
             _logger.LogDebug("{intTag} Wiped {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
             await Interaction.ReplyAsync($"Wiped **{quotes.Length}** quotes from database");
         }
