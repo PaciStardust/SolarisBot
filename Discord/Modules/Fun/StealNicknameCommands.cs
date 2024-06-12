@@ -11,11 +11,11 @@ namespace SolarisBot.Discord.Modules.Fun
     internal class StealNicknameCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<StealNicknameCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal StealNicknameCommands(ILogger<StealNicknameCommands> logger, DatabaseContext dbctx)
+        private readonly DbService _dbService;
+        internal StealNicknameCommands(ILogger<StealNicknameCommands> logger, DbService dbService)
         {
-            _dbContext = dbctx;
             _logger = logger;
+            _dbService = dbService;
         }
 
         [SlashCommand("cfg-stealnick", "[MANAGE NICKS ONLY] Set up nickname stealing"), RequireBotPermission(GuildPermission.ManageNicknames), RequireUserPermission(GuildPermission.ManageNicknames)]
@@ -24,12 +24,13 @@ namespace SolarisBot.Discord.Modules.Fun
             [Summary(description: "Is feature enabled?")] bool enabled
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.StealNicknameOn = enabled;
 
             _logger.LogDebug("{intTag} Setting nickname stealing to {enabled} in guild {guild}", GetIntTag(), guild.StealNicknameOn, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set nickname stealing to {enabled} in guild {guild}", GetIntTag(), guild.StealNicknameOn, Context.Guild.Log());
             await Interaction.ReplyAsync($"Nickname stealing is currently **{(guild.StealNicknameOn ? "enabled" : "disabled")}**");
         }
@@ -74,7 +75,8 @@ namespace SolarisBot.Discord.Modules.Fun
                 return;
             }
 
-            var dbGuild = await _dbContext.GetGuildByIdAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(Context.Guild.Id);
 
             if (!dbGuild?.StealNicknameOn ?? true)
             {
