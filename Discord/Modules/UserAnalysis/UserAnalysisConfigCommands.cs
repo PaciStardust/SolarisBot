@@ -12,11 +12,11 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
     internal class UserAnalysisConfigCommands : SolarisInteractionModuleBase
     {
         private readonly ILogger<UserAnalysisConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
+        private readonly DbService _dbService;
         private readonly BotConfig _config;
-        internal UserAnalysisConfigCommands(ILogger<UserAnalysisConfigCommands> logger, DatabaseContext dbctx, BotConfig config)
+        internal UserAnalysisConfigCommands(ILogger<UserAnalysisConfigCommands> logger, DbService dbService, BotConfig config)
         {
-            _dbContext = dbctx;
+            _dbService = dbService;
             _logger = logger;
             _config = config;
         }
@@ -30,7 +30,8 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             [Summary(description: "[Opt] Minimum points for ban")] int minBan = int.MaxValue
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
+            using var dbCtx = _dbService.GetContext();
+            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
 
             guild.UserAnalysisChannelId = channel?.Id ?? ulong.MinValue;
             guild.UserAnalysisWarnAt = minWarn;
@@ -38,7 +39,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             guild.UserAnalysisBanAt = minBan;
 
             _logger.LogDebug("{intTag} Setting userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minKick, minBan, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
+            await dbCtx.SaveChangesAsync();
             _logger.LogInformation("{intTag} Set userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minKick, minBan, Context.Guild.Log());
             await Interaction.ReplyAsync($"User analysis is currently **{(channel is not null ? "enabled" : "disabled")}**\n\nChannel: **{(channel is null ? "None" : $"<#{channel.Id}>")}**\nWarn at: **{(minWarn == int.MaxValue ? "OFF" : minWarn)}**\nKick at: **{(minKick == int.MaxValue ? "OFF" : minKick)}**\nBan at: **{(minBan == int.MaxValue ? "OFF" : minBan)}**");
         }

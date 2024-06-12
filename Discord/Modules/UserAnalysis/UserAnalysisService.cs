@@ -15,14 +15,14 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         private readonly ILogger<UserAnalysisService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly BotConfig _config;
-        private readonly IServiceProvider _services;
+        private readonly DbService _dbService;
 
-        public UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, DatabaseContext dbCtx, BotConfig config, IServiceProvider services)
+        public UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, DatabaseContext dbCtx, BotConfig config, DbService dbService)
         {
             _logger = logger;
             _client = client;
             _config = config;
-            _services = services;
+            _dbService = dbService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -42,7 +42,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             if (user.IsWebhook || user.IsBot)
                 return;
 
-            var dbCtx = _services.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
             if (dbGuild is null || dbGuild.UserAnalysisChannelId == ulong.MinValue)
                 return;
