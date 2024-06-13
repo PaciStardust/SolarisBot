@@ -1,12 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
-using SolarisBot.Discord.Modules.Roles;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
@@ -14,32 +9,21 @@ namespace SolarisBot.Discord.Modules.Bridges
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)]
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
-        private readonly ILogger<BridgeConfigCommands> _logger;
-        private readonly DatabaseService _dbService;
-        private readonly BotConfig _config;
-        private readonly DiscordSocketClient _client;
-
-        internal BridgeConfigCommands(ILogger<BridgeConfigCommands> logger, DatabaseService dbService, BotConfig config, DiscordSocketClient client)
+        private readonly BridgeCommandService _service;
+        internal BridgeConfigCommands(BridgeCommandService service)
         {
-            _dbService = dbService;
-            _logger = logger;
-            _config = config;
-            _client = client;
+            _service = service;
         }
 
         [SlashCommand("list", "List all bridges")]
         public async Task ListBridgesAsync
         (
-            [Summary(description: "[Opt] List guild bridges")] bool guild = false
+            [Summary(description: "[Opt] Limit search to channel")] bool channelOnly = false
         )
         {
-            using var dbCtx = _dbService.GetContext();
+            var idToUse = channelOnly ? Context.Channel.Id : Context.Guild.Id;
+            var bridges = await _service.GetConnectedBridgesAsync(channelOnly, idToUse);
 
-            var query = guild
-                ? dbCtx.Bridges.ForGuild(Context.Guild.Id)
-                : dbCtx.Bridges.ForChannel(Context.Channel.Id);
-
-            var bridges = await query.ToArrayAsync();
             if (bridges.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -47,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
 
             string bridgeText = string.Join("\n", bridges.Select(x => $"- {x.BridgeId}: {x.Name} <#{(Context.Channel.Id == x.ChannelAId ? x.ChannelBId : x.ChannelAId)}> in {(Context.Guild.Id == x.GuildAId ? x.GuildBId : x.GuildAId)}"));
-            await Interaction.ReplyAsync($"Bridges for this {(guild ? "Guild" : "Channel")}", bridgeText);
+            await Interaction.ReplyAsync($"Bridges for this {(channelOnly ? "Channel" : "Guild")}", bridgeText);
         }
 
         [SlashCommand("create", "Create a bridge")]
@@ -69,98 +53,15 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            var nameTrimmed = name.Trim();
-            if (!DiscordUtils.IsIdentifierValid(nameTrimmed))
-            {
-                await Interaction.RespondInvalidIdentifierErrorEmbedAsync(nameTrimmed);
-                return;
-            }
-
-            if (parsedChannelId == Context.Channel.Id)
-            {
-                await Interaction.ReplyErrorAsync("Can not create a bridge to same channel");
-                return;
-            }
-
             //Long interaction, so deffered
             await Interaction.DeferAsync();
 
-            using var dbCtx = _dbService.GetContext();
-
-            var bridgesHere = await dbCtx.Bridges.ForGuild(Context.Guild.Id).CountAsync();
-            if (bridgesHere > _config.MaxBridgesPerGuild)
-            {
-                await Interaction.ReplyErrorAsync($"This guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
-                return;
-            }
-
-            var bridgesThere = await dbCtx.Bridges.ForGuild(parsedChannelId).CountAsync();
-            if (bridgesThere > _config.MaxBridgesPerGuild)
-            {
-                await Interaction.ReplyErrorAsync($"Target guild already has the maximum amount of bridges ({_config.MaxBridgesPerGuild})");
-                return;
-            }
-
-            var duplicate = await dbCtx.Bridges.ForGuild(parsedGuildId).ForGuild(Context.Guild.Id).FirstOrDefaultAsync();
-            if (duplicate is not null)
-            {
-                await Interaction.ReplyErrorAsync("This bridge already exists");
-                return;
-            }
-
-            var otherGuild = await Context.Client.GetGuildAsync(parsedGuildId);
-            if (otherGuild is null)
-            {
-                await Interaction.ReplyErrorAsync($"Guild with Id {parsedGuildId} could not be found by bot");
-                return;
-            }
-
-            var otherChannel = await otherGuild.GetChannelAsync(parsedChannelId);
-            if (otherChannel is null)
-            {
-                await Interaction.ReplyErrorAsync($"Channel with Id {parsedChannelId} could not be found in guild by bot");
-                return;
-            }
-
-            var user = await otherGuild.GetUserAsync(Context.User.Id);
-            if (user is null)
-            {
-                await Interaction.ReplyErrorAsync("You are not in the target guild");
-                return;
-            }
-            if (!user.GetPermissions(otherChannel).ManageChannel)
-            {
-                await Interaction.ReplyErrorAsync("You do not have the \"Manage Channel\" permission in the target channel");
-                return;
-            }
-
-            var botUserPerms = (await otherGuild.GetCurrentUserAsync()).GetPermissions(otherChannel);
-            if (!botUserPerms.ManageChannel)
-            {
-                await Interaction.ReplyErrorAsync("Bot does not have the \"Manage Channel\" permission in the target channel");
-                return;
-            }
-            if (!botUserPerms.SendMessages)
-            {
-                await Interaction.ReplyErrorAsync("Bot does not have the \"Send Messages\" permission in the target channel");
-                return;
-            }
-
-            var dbBridge = new DbBridge()
-            {
-                Name = nameTrimmed,
-                GuildAId = Context.Guild.Id,
-                ChannelAId = Context.Channel.Id,
-                GuildBId = otherGuild.Id,
-                ChannelBId = otherChannel.Id
-            };
-            dbCtx.Bridges.Add(dbBridge);
-
-            _logger.LogDebug("{intTag} Adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log(), otherChannel.Log(), otherGuild.Log());
-            await dbCtx.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Added bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", GetIntTag(), dbBridge, Context.Channel.Log(), Context.Guild.Log(), otherChannel.Log(), otherGuild.Log());
-            await ((IMessageChannel)otherChannel).SendMessageAsync(embed: EmbedFactory.Default($"{user.Mention} created bridge {dbBridge.ToDiscordInfoString()} channel {Context.Channel.ToDiscordInfoString()} in guild {Context.Guild.ToDiscordInfoString()}"));
-            await Interaction.ReplyAsync($"Created bridge {dbBridge.ToDiscordInfoString()} to channel {otherChannel.ToDiscordInfoString()} in guild {otherGuild.ToDiscordInfoString()}");
+            var serviceResult = await _service.CreateBridgeAsync(name, parsedGuildId, parsedChannelId, Context.Channel.Id, Context.Guild.Id, Context.User.Id);
+            await serviceResult.Match(
+                success => Interaction.ReplyAsync($"Created bridge {success.Value.ToDiscordInfoString()}"),
+                error => Interaction.ReplyErrorAsync(error.Value)
+            );
+            return;
         }
 
         [SlashCommand("remove", "Remove bridges from channel")]
@@ -176,36 +77,18 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            using var dbCtx = _dbService.GetContext();
+            var serviceResult = await _service.RemoveBridgesAsync(Context.Guild.Id, Context.Channel.Id, parsedBridgeId);
 
-            var query = dbCtx.Bridges.ForGuild(Context.Guild.Id);
-            query = parsedBridgeId is null
-                ? query.ForChannel(Context.Channel.Id)
-                : query.Where(x => x.BridgeId == parsedBridgeId);
-
-            var bridges = await query.ToArrayAsync();
-            if (bridges.Length == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            dbCtx.Bridges.RemoveRange(bridges);
-            _logger.LogDebug("{intTag} Removing {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Length, Context.Guild.Log());
-            await dbCtx.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Removed {bridgeCount} bridges in guild {guild}", GetIntTag(), bridges.Length, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Removed **{bridges.Length}** bridge{(bridges.Length == 1 ? string.Empty : "s")}");
-
-            foreach (var bridge in bridges)
-            {
-                var channelA = await _client.GetChannelAsync(bridge.ChannelAId);
-                var channelB = await _client.GetChannelAsync(bridge.ChannelBId);
-
-                if (channelA is not null && channelA is IMessageChannel msgChannelA)
-                    await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgChannelA, channelB, bridge, _logger, true);
-                if (channelB is not null && channelB is IMessageChannel msgChannelB)
-                    await BridgeHelper.TryNotifyChannelForBridgeDeletionAsync(msgChannelB, channelA, bridge, _logger, false);
-            }
+            await serviceResult.Match(
+                async success =>
+                {
+                    if (success.Value == 0)
+                        await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                    else
+                        await Interaction.ReplyAsync($"Removed **{success.Value}** bridge{(success.Value == 1 ? string.Empty : "s")}");
+                },
+                error => Interaction.ReplyErrorAsync(error.Value)
+            );
         }
     }
 }

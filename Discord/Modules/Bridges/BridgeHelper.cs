@@ -6,7 +6,7 @@ using SolarisBot.Database;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
-    internal static class BridgeHelper
+    internal static class BridgeHelper //todo: remove soon
     {
         internal static async Task TryNotifyChannelForBridgeDeletionAsync(IMessageChannel msgChannel, IChannel? otherChannel, DbBridge bridge, ILogger logger, bool bridgeGroupB = false)
         {
