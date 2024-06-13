@@ -72,7 +72,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed sending message via brigde {bridge}", bridge);
+                _logger.LogError(ex, "Failed sending message via brigde {bridge}", bridge); //todo: [FEATURE] notify for this?
             }
         }
 
