@@ -133,11 +133,9 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// Notifies a channel of bridge creation
         /// </summary>
         /// <param name="dbBridge">Created bridge</param>
-        /// <param name="targetGuildId">Id of guild to notify</param>
-        /// <param name="targetChannelId">Id of channel to notify</param>
-        /// <param name="executingGuildId">Id of creating guild</param>
-        /// <param name="executingChannelId">Id of creating channel</param>
-        /// <param name="executingUserId">Id of creating user</param>
+        /// <param name="targetChannel">Channel to notify</param>
+        /// <param name="executingChannel">Creating channel</param>
+        /// <param name="executingUser">Creating user</param>
         /// <returns>Success / Error with string / Error with exception</returns>
         private async Task<OneOf<Success, Error<string>, Error<Exception>>> NotifyChannelOfBridgeCreationAsync(DbBridge dbBridge, IGuildChannel targetChannel, IGuildChannel executingChannel, IUser executingUser) //todo: use IDs?
         {
