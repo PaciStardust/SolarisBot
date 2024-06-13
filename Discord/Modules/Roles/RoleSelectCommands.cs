@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Modules.Roles
             _logger = logger;
         }
 
-        [SlashCommand("view", "View all roles and groups")]
+        [SlashCommand("view", "View all roles and groups")] //todo: [FEATURE] Make this hidden
         public async Task ViewRolesAsync()
         {
             using var dbCtx = _dbService.GetContext();
