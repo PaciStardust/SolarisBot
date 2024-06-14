@@ -26,6 +26,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             _logger = logger;
         }
 
+        #region CRUD
         /// <summary>
         /// Returns all bridges connected to a channel or guild
         /// </summary>
@@ -130,34 +131,6 @@ namespace SolarisBot.Discord.Modules.Bridges
         }
 
         /// <summary>
-        /// Notifies a channel of bridge creation
-        /// </summary>
-        /// <param name="dbBridge">Created bridge</param>
-        /// <param name="targetChannel">Channel to notify</param>
-        /// <param name="executingChannel">Creating channel</param>
-        /// <param name="executingUser">Creating user</param>
-        /// <returns>Success / Error with string / Error with exception</returns>
-        private async Task<OneOf<Success, Error<string>, Error<Exception>>> NotifyChannelOfBridgeCreationAsync(DbBridge dbBridge, IGuildChannel targetChannel, IGuildChannel executingChannel, IUser executingUser)
-        {
-            if (targetChannel is not IMessageChannel targetMessageChannel)
-                return new Error<string>($"Target channel with Id {targetChannel.Id} could not be converted to messageChannel");
-
-            try
-            {
-                _logger.LogDebug("Notifying channel {channel} in guild {guild} of created bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
-                var notifyEmbed = EmbedFactory.Default($"{executingUser.Mention} created bridge {dbBridge.ToDiscordInfoString()} to channel {executingChannel.ToDiscordInfoString()} in guild {executingChannel.Guild.ToDiscordInfoString()}");
-                await targetMessageChannel.SendMessageAsync(embed: notifyEmbed);
-                _logger.LogInformation("Notified channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
-                return new Success();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
-                return new Error<Exception>(ex);
-            }
-        }
-
-        /// <summary>
         /// Removes bridges of ID x or for the whole channel
         /// </summary>
         /// <param name="guildId">Id of target guild</param>
@@ -194,6 +167,36 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             return new Success<int>(bridges.Length);
         }
+        #endregion
+
+        #region Notfiying
+        /// <summary>
+        /// Notifies a channel of bridge creation
+        /// </summary>
+        /// <param name="dbBridge">Created bridge</param>
+        /// <param name="targetChannel">Channel to notify</param>
+        /// <param name="executingChannel">Creating channel</param>
+        /// <param name="executingUser">Creating user</param>
+        /// <returns>Success / Error with string / Error with exception</returns>
+        private async Task<OneOf<Success, Error<string>, Error<Exception>>> NotifyChannelOfBridgeCreationAsync(DbBridge dbBridge, IGuildChannel targetChannel, IGuildChannel executingChannel, IUser executingUser)
+        {
+            if (targetChannel is not IMessageChannel targetMessageChannel)
+                return new Error<string>($"Target channel with Id {targetChannel.Id} could not be converted to messageChannel");
+
+            try
+            {
+                _logger.LogDebug("Notifying channel {channel} in guild {guild} of created bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
+                var notifyEmbed = EmbedFactory.Default($"{executingUser.Mention} created bridge {dbBridge.ToDiscordInfoString()} to channel {executingChannel.ToDiscordInfoString()} in guild {executingChannel.Guild.ToDiscordInfoString()}");
+                await targetMessageChannel.SendMessageAsync(embed: notifyEmbed);
+                _logger.LogInformation("Notified channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
+                return new Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
+                return new Error<Exception>(ex);
+            }
+        }
 
         /// <summary>
         /// Notifies a channel that a bridge has been deleted
@@ -222,5 +225,6 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return new Error<Exception>(ex);
             }
         }
+        #endregion
     }
 }
