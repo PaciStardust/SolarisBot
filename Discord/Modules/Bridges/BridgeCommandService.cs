@@ -53,14 +53,14 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="executingGuildId">Id of executing guild</param>
         /// <param name="executingUserId">Id of executing user</param>
         /// <returns>DbGuild on success, Reason on fail</returns>
-        internal async Task<OneOf<Success<DbBridge>, Error<string>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId) //todo: dont use IDs?
+        internal async Task<OneOf<Success<DbBridge>, Error<string>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId) //todo: [REFACTOR] Replace IDs with casted classes?
         {
             if (executingChannelId == targetChannelId)
                 return new Error<string>("A bridge can not be created to the same channel");
 
             var bridgeNameTrimmed = bridgeName.Trim();
             if (!DiscordUtils.IsIdentifierValid(bridgeNameTrimmed))
-                return new Error<string>("Identifier is invalid"); //todo: shortcut
+                return new Error<string>("Identifier is invalid"); //todo: [REFACTOR] shortcut this?
 
             using var dbCtx = _dbService.GetContext();
 
@@ -137,7 +137,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="executingChannel">Creating channel</param>
         /// <param name="executingUser">Creating user</param>
         /// <returns>Success / Error with string / Error with exception</returns>
-        private async Task<OneOf<Success, Error<string>, Error<Exception>>> NotifyChannelOfBridgeCreationAsync(DbBridge dbBridge, IGuildChannel targetChannel, IGuildChannel executingChannel, IUser executingUser) //todo: use IDs?
+        private async Task<OneOf<Success, Error<string>, Error<Exception>>> NotifyChannelOfBridgeCreationAsync(DbBridge dbBridge, IGuildChannel targetChannel, IGuildChannel executingChannel, IUser executingUser)
         {
             if (targetChannel is not IMessageChannel targetMessageChannel)
                 return new Error<string>($"Target channel with Id {targetChannel.Id} could not be converted to messageChannel");
@@ -175,7 +175,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var bridges = await query.ToArrayAsync();
             if (bridges.Length == 0)
-                return new Success<int>(0); //todo: should this be a success?
+                return new Success<int>(0); //todo: [REFACTOR] should this be a success?
 
             dbCtx.Bridges.RemoveRange(bridges);
             _logger.LogDebug("Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
