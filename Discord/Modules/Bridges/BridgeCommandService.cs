@@ -11,7 +11,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Bridges
 {
     [Module("bridges"), AutoLoadService]
-    internal class BridgeCommandService
+    internal class BridgeCommandService //todo: [REFACTOR] Should not be using SaveChanges
     {
         private readonly DatabaseService _dbService;
         private readonly BotConfig _botConfig;
