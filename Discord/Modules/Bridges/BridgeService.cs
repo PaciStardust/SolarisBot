@@ -56,7 +56,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="executingGuildId">Id of executing guild</param>
         /// <param name="executingUserId">Id of executing user</param>
         /// <returns>DbGuild on success, Reason on fail</returns>
-        internal async Task<OneOf<Success<DbBridge>, Error<string>, Error<Exception>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId) //todo: [REFACTOR] Replace IDs with casted classes?
+        internal async Task<OneOf<Success<DbBridge>, Error<string>, Error<Exception>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId)
         {
             if (executingChannelId == targetChannelId)
                 return new Error<string>("A bridge can not be created to the same channel");
