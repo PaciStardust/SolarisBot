@@ -1,18 +1,21 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
+using OneOf;
+using OneOf.Types;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
+using System;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
-namespace SolarisBot.Discord.Modules.Fun
+namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 {
     [Module("fun/regex"), AutoLoadService]
-    internal class RegexChannelService : IHostedService
+    internal class RegexChannelService
     {
         private readonly ILogger<RegexChannelService> _logger;
         private readonly DiscordSocketClient _client;
@@ -23,20 +26,52 @@ namespace SolarisBot.Discord.Modules.Fun
             _logger = logger;
             _client = client;
             _dbService = dbService;
+
+            _client.MessageReceived += CheckForRegexAsync; //todo: [FEATURE] On edit?
         }
 
-        public Task StartAsync(CancellationToken cancellationToken) //todo: [FEATURE] On edit?
+        #region Commands
+        internal async Task<OneOf<Success<DbRegexChannel>, Error<string>, Error<Exception>>> AddRegexChannel(IChannel channel, IGuild guild, string regex, IRole? punishmentRole, string punishmentMsg, bool deleteMsg, ulong punishmentTimeout)
         {
-            _client.MessageReceived += CheckForRegexAsync;
-            return Task.CompletedTask;
-        }
+            using var dbCtx = _dbService.GetContext();
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _client.MessageReceived -= CheckForRegexAsync;
-            return Task.CompletedTask;
-        }
+            if (string.IsNullOrWhiteSpace(regex))
+                return new Error<string>("Regular Expression can not be empty, to disable use remove command");
 
+            try
+            {
+                _ = new Regex(regex);
+            }
+            catch
+            {
+                return new Error<string>($"Failed to validate RegEx: {regex}");
+            }
+
+            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id, x => x.Include(y => y.RegexChannels));
+            var dbChannel = dbGuild.RegexChannels.FirstOrDefault(x => x.ChannelId == channel.Id)
+                ?? new DbRegexChannel() { GuildId = guild.Id, ChannelId = channel.Id };
+
+            dbChannel.Regex = regex;
+            dbChannel.AppliedRoleId = punishmentRole?.Id ?? ulong.MinValue;
+            dbChannel.PunishmentMessage = punishmentMsg;
+            dbChannel.PunishmentDelete = deleteMsg;
+            dbChannel.PunishmentTimeout = punishmentTimeout;
+
+            dbCtx.RegexChannels.Update(dbChannel);
+            _logger.LogDebug("Setting regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed setting regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Set regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
+
+            return new Success<DbRegexChannel>(dbChannel);
+        }
+        #endregion
+
+        #region Message Handling
         private async Task CheckForRegexAsync(SocketMessage message)
         {
             if (message is not IUserMessage userMessage || message.Author.IsWebhook || message.Author.IsBot || message.Author is not IGuildUser gUser)
@@ -132,5 +167,6 @@ namespace SolarisBot.Discord.Modules.Fun
                 }
             }
         }
+        #endregion
     }
 }

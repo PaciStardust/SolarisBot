@@ -8,23 +8,22 @@ using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using System;
 
-namespace SolarisBot.Discord.Modules.Fun
+namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 {
     [Module("fun/regex"), Group("cfg-regex", "[MANAGE CHANNELS ONLY] RegEx channel config commands")]
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)] //todo: [FEATURE] Info commands
     public sealed class RegexChannelConfigCommands : SolarisInteractionModuleBase
     {
-        private readonly ILogger<RegexChannelConfigCommands> _logger;
-        private readonly DatabaseService _dbService;
-        internal RegexChannelConfigCommands(ILogger<RegexChannelConfigCommands> logger, DatabaseService dbService)
+        private readonly RegexChannelService _rcService;
+
+        internal RegexChannelConfigCommands(RegexChannelService rcService)
         {
-            _dbService = dbService;
-            _logger = logger;
+            _rcService = rcService;
         }
 
         //todo: [FEATURE] service
         [SlashCommand("add", "Add a RegEx channel")]
-        public async Task ConfigureRegexChannelAsync 
+        public async Task ConfigureRegexChannelAsync
         (
             [Summary(description: "[Opt] Target channel")] IChannel? channel = null,
             [Summary(description: "[Opt] RegEx to enforce (None to disable)")] string regex = "",
@@ -32,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Fun
             [Summary(description: "[Opt] Message to send on fail")] string punishmentMsg = "",
             [Summary(description: "[Opt] Timeout duration on fail")] string punishmentTimeout = "0",
             [Summary(description: "[Opt] Delete fail message")] bool deleteMsg = false
-        ) 
+        )
         {
             if (!ulong.TryParse(punishmentTimeout, out var parsedPunishmentTimeout))
             {
@@ -40,50 +39,14 @@ namespace SolarisBot.Discord.Modules.Fun
                 return;
             }
 
-            using var dbCtx = _dbService.GetContext();
+            var targetChannel = channel ?? Context.Channel;
+            var res = await _rcService.AddRegexChannel(targetChannel, Context.Guild, regex, punishmentRole, punishmentMsg, deleteMsg, parsedPunishmentTimeout);
 
-            var thisChannel = channel ?? Context.Channel;
-            if (string.IsNullOrWhiteSpace(regex))
-            {
-                var deleteChannel = await dbCtx.RegexChannels.FirstOrDefaultAsync(x => x.ChannelId == thisChannel.Id);
-                if (deleteChannel is null)
-                {
-                    await Interaction.ReplyErrorAsync($"Failed to find a RegEx config for channel id {thisChannel.Id}");
-                    return;
-                }
-                dbCtx.RegexChannels.Remove(deleteChannel);
-                _logger.LogDebug("{intTag} Deleting regex {deleteRegex} for channel {channel} in guild {guild}", GetIntTag(), deleteChannel, thisChannel.Log(), Context.Guild.Log());
-                await dbCtx.SaveChangesAsync();
-                _logger.LogInformation("{intTag} Deleted regex {deleteRegex} for channel {channel} in guild {guild}", GetIntTag(), deleteChannel, thisChannel.Log(), Context.Guild.Log());
-                await Interaction.ReplyAsync($"Removed RegEx channel **\"{deleteChannel.Regex}\"** with id **{deleteChannel.RegexChannelId}** for channel **<#{thisChannel.Id}>**");
-                return;
-            }
-
-            try
-            {
-                _ = new Regex(regex);
-            }
-            catch
-            {
-                await Interaction.ReplyErrorAsync($"Failed to validate RegEx: {regex}");
-                return;
-            }
-
-            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id, x => x.Include(y => y.RegexChannels));
-            var dbChannel = dbGuild.RegexChannels.FirstOrDefault(x => x.ChannelId == thisChannel.Id)
-                ?? new DbRegexChannel() { GuildId = Context.Guild.Id, ChannelId = thisChannel.Id };
-
-            dbChannel.Regex = regex;
-            dbChannel.AppliedRoleId = punishmentRole?.Id ?? ulong.MinValue;
-            dbChannel.PunishmentMessage = punishmentMsg;
-            dbChannel.PunishmentDelete = deleteMsg;
-            dbChannel.PunishmentTimeout = parsedPunishmentTimeout;
-
-            dbCtx.RegexChannels.Update(dbChannel);
-            _logger.LogDebug("{intTag} Setting regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", GetIntTag(), dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, thisChannel.Log(), Context.Guild.Log());
-            await dbCtx.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", GetIntTag(), dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, thisChannel.Log(), Context.Guild.Log());
-            await Interaction.ReplyAsync($"RegEx for **<#{dbChannel.ChannelId}>** created\n\nRegex: **{regex}**\nRole: **{(punishmentRole is null ? "None" : $"{punishmentRole.Mention}")}**\nMessage: **{(string.IsNullOrWhiteSpace(dbChannel.PunishmentMessage) ? "None" : $"\"{dbChannel.PunishmentMessage}\"")}**\nTimeout: **{dbChannel.PunishmentTimeout}**\nDelete: **{(dbChannel.PunishmentDelete ? "Yes" : "No")}**");
+            await res.Match(
+                success => Interaction.ReplyAsync($"RegEx for **<#{success.Value.ChannelId}>** created\n\nRegex: **{regex}**\nRole: **{(punishmentRole is null ? "None" : $"{punishmentRole.Mention}")}**\nMessage: **{(string.IsNullOrWhiteSpace(success.Value.PunishmentMessage) ? "None" : $"\"{success.Value.PunishmentMessage}\"")}**\nTimeout: **{success.Value.PunishmentTimeout}**\nDelete: **{(success.Value.PunishmentDelete ? "Yes" : "No")}**"),
+                error => Interaction.ReplyErrorAsync(error.Value),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
 
         [SlashCommand("list", "List all RegEx channels")]
