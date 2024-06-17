@@ -31,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Fun
         {
             try
             {
-                var dictPath = Path.Combine(Utils.PathConfigFile, _botConfig.DictionaryFile);
+                var dictPath = Path.Combine(Utils.PathConfigDirectory, _botConfig.DictionaryFile);
                 var words = File.ReadLines(dictPath);
                 foreach (var item in words)
                     _words.Add(item);
