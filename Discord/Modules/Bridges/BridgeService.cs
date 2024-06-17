@@ -240,6 +240,10 @@ namespace SolarisBot.Discord.Modules.Bridges
         #endregion
 
         #region Message Handling
+        /// <summary>
+        /// Checks if a message should be sent to any bridges
+        /// </summary>
+        /// <param name="message">Sent message</param>
         private async Task CheckForBridgesAsync(SocketMessage message)
         {
             if (message.Author.IsWebhook || message.Author.IsBot || message.Channel is not IGuildChannel guildChannel) 
@@ -269,6 +273,12 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
         }
 
+        /// <summary>
+        /// Sends a message over a bridge
+        /// </summary>
+        /// <param name="message">Message to be sent</param>
+        /// <param name="bridge">Bridge to use</param>
+        /// <param name="targetMessageChannel">Channel to send to</param>
         private async Task SendMessageViaBridgeAsync(SocketMessage message, DbBridge bridge, IMessageChannel targetMessageChannel)
         {
             try
@@ -283,6 +293,12 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
         }
 
+        /// <summary>
+        /// Removes a missing bridge
+        /// </summary>
+        /// <param name="bridge">Bridge to remove</param>
+        /// <param name="originChannel">Channel to notify of removal</param>
+        /// <param name="missingChannelId">Channel that is missing</param>
         private async Task RemoveMissingBridgeAsync(DbBridge bridge, IGuildChannel originChannel, ulong missingChannelId) //todo: [REFACTOR] Combine with other delete?
         {
             using var tempCtx = _dbService.GetContext();
