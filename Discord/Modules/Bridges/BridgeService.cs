@@ -244,9 +244,9 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// Checks if a message should be sent to any bridges
         /// </summary>
         /// <param name="message">Sent message</param>
-        private async Task CheckForBridgesAsync(SocketMessage message)
+        private async Task CheckForBridgesAsync(SocketMessage message) //todo: [FEATURE] Files and links?
         {
-            if (message.Author.IsWebhook || message.Author.IsBot || message.Channel is not IGuildChannel guildChannel) 
+            if (message.Author.IsWebhook || message.Author.IsBot || string.IsNullOrWhiteSpace(message.CleanContent) || message.Channel is not IGuildChannel guildChannel) 
                 return;
 
             using var dbCtx = _dbService.GetContext();
