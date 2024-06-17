@@ -144,7 +144,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="channelId">Id of target channel</param>
         /// <param name="bridgeId">Specific Bridge to delete</param>
         /// <returns>Amount deleted on success, reason on failure</returns>
-        internal async Task<OneOf<Success<int>, Error<string>, Error<Exception>>> RemoveBridgesAsync(ulong guildId, ulong channelId, ulong? bridgeId)
+        internal async Task<OneOf<Success<int>, None, Error<string>, Error<Exception>>> RemoveBridgesAsync(ulong guildId, ulong channelId, ulong? bridgeId)
         {
             using var dbCtx = _dbService.GetContext();
 
@@ -155,7 +155,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var bridges = await query.ToArrayAsync();
             if (bridges.Length == 0)
-                return new Success<int>(0);
+                return new None();
 
             dbCtx.Bridges.RemoveRange(bridges);
             _logger.LogDebug("Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);

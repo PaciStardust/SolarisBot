@@ -80,13 +80,8 @@ namespace SolarisBot.Discord.Modules.Bridges
             var serviceResult = await _bridgeService.RemoveBridgesAsync(Context.Guild.Id, Context.Channel.Id, parsedBridgeId);
 
             await serviceResult.Match(
-                async success =>
-                {
-                    if (success.Value == 0)
-                        await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                    else
-                        await Interaction.ReplyAsync($"Removed **{success.Value}** bridge{(success.Value == 1 ? string.Empty : "s")}");
-                },
+                success => Interaction.ReplyAsync($"Removed **{success.Value}** bridge{(success.Value == 1 ? string.Empty : "s")}"),
+                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
