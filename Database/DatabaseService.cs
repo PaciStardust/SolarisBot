@@ -9,7 +9,7 @@ namespace SolarisBot.Database
         private readonly ILogger<DatabaseService> _logger;
         private bool _initialized = false;
 
-        internal DatabaseService(BotConfig botConfig, ILogger<DatabaseService> logger)
+        public DatabaseService(BotConfig botConfig, ILogger<DatabaseService> logger)
         {
             _logger = logger;
             var dbPath = Path.Combine(Utils.PathConfigDirectory, botConfig.DatabaseFile);
