@@ -9,10 +9,10 @@ namespace SolarisBot.Discord.Modules.Bridges
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)]
     internal class BridgeConfigCommands : SolarisInteractionModuleBase
     {
-        private readonly BridgeCommandService _service;
-        internal BridgeConfigCommands(BridgeCommandService service)
+        private readonly BridgeService _bridgeService;
+        internal BridgeConfigCommands(BridgeService bridgeService)
         {
-            _service = service;
+            _bridgeService = bridgeService;
         }
 
         [SlashCommand("list", "List all bridges")]
@@ -22,7 +22,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         )
         {
             var idToUse = channelOnly ? Context.Channel.Id : Context.Guild.Id;
-            var bridges = await _service.GetConnectedBridgesAsync(channelOnly, idToUse);
+            var bridges = await _bridgeService.GetConnectedBridgesAsync(channelOnly, idToUse);
 
             if (bridges.Length == 0)
             {
@@ -56,7 +56,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             //Long interaction, so deffered
             await Interaction.DeferAsync();
 
-            var serviceResult = await _service.CreateBridgeAsync(name, parsedGuildId, parsedChannelId, Context.Channel.Id, Context.Guild.Id, Context.User.Id);
+            var serviceResult = await _bridgeService.CreateBridgeAsync(name, parsedGuildId, parsedChannelId, Context.Channel.Id, Context.Guild.Id, Context.User.Id);
             await serviceResult.Match(
                 success => Interaction.ReplyAsync($"Created bridge {success.Value.ToDiscordInfoString()}"),
                 error => Interaction.ReplyErrorAsync(error.Value)
@@ -77,7 +77,7 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return;
             }
 
-            var serviceResult = await _service.RemoveBridgesAsync(Context.Guild.Id, Context.Channel.Id, parsedBridgeId);
+            var serviceResult = await _bridgeService.RemoveBridgesAsync(Context.Guild.Id, Context.Channel.Id, parsedBridgeId);
 
             await serviceResult.Match(
                 async success =>
