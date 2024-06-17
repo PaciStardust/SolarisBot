@@ -59,9 +59,9 @@ namespace SolarisBot.Discord.Modules.Bridges
             var serviceResult = await _bridgeService.CreateBridgeAsync(name, parsedGuildId, parsedChannelId, Context.Channel.Id, Context.Guild.Id, Context.User.Id);
             await serviceResult.Match(
                 success => Interaction.ReplyAsync($"Created bridge {success.Value.ToDiscordInfoString()}"),
-                error => Interaction.ReplyErrorAsync(error.Value)
+                error => Interaction.ReplyErrorAsync(error.Value),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
             );
-            return;
         }
 
         [SlashCommand("remove", "Remove bridges from channel")]
@@ -87,7 +87,8 @@ namespace SolarisBot.Discord.Modules.Bridges
                     else
                         await Interaction.ReplyAsync($"Removed **{success.Value}** bridge{(success.Value == 1 ? string.Empty : "s")}");
                 },
-                error => Interaction.ReplyErrorAsync(error.Value)
+                error => Interaction.ReplyErrorAsync(error.Value),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
     }

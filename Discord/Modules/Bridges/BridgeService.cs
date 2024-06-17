@@ -11,7 +11,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Bridges
 {
     [Module("bridges"), AutoLoadService]
-    internal class BridgeService //todo: [REFACTOR] Should not be using SaveChanges
+    internal class BridgeService
     {
         private readonly DatabaseService _dbService;
         private readonly BotConfig _botConfig;
@@ -25,7 +25,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             _discordClient = discordClient;
             _logger = logger;
 
-            _discordClient.MessageReceived += CheckForBridgesAsync; //todo: [TESTING] Does this actually get triggered?
+            _discordClient.MessageReceived += CheckForBridgesAsync;
         }
 
         #region Commands
@@ -56,7 +56,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="executingGuildId">Id of executing guild</param>
         /// <param name="executingUserId">Id of executing user</param>
         /// <returns>DbGuild on success, Reason on fail</returns>
-        internal async Task<OneOf<Success<DbBridge>, Error<string>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId) //todo: [REFACTOR] Replace IDs with casted classes?
+        internal async Task<OneOf<Success<DbBridge>, Error<string>, Error<Exception>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId) //todo: [REFACTOR] Replace IDs with casted classes?
         {
             if (executingChannelId == targetChannelId)
                 return new Error<string>("A bridge can not be created to the same channel");
@@ -123,7 +123,12 @@ namespace SolarisBot.Discord.Modules.Bridges
             dbCtx.Bridges.Add(dbBridge);
 
             _logger.LogDebug("Adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
-            await dbCtx.SaveChangesAsync();
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
+                return new Error<Exception>(err);
+            }
             _logger.LogInformation("Added bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
 
             await NotifyChannelOfBridgeCreationAsync(dbBridge, targetChannel, executingChannel, executingUser);
@@ -139,7 +144,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="channelId">Id of target channel</param>
         /// <param name="bridgeId">Specific Bridge to delete</param>
         /// <returns>Amount deleted on success, reason on failure</returns>
-        internal async Task<OneOf<Success<int>, Error<string>>> RemoveBridgesAsync(ulong guildId, ulong channelId, ulong? bridgeId)
+        internal async Task<OneOf<Success<int>, Error<string>, Error<Exception>>> RemoveBridgesAsync(ulong guildId, ulong channelId, ulong? bridgeId)
         {
             using var dbCtx = _dbService.GetContext();
 
@@ -150,11 +155,16 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var bridges = await query.ToArrayAsync();
             if (bridges.Length == 0)
-                return new Success<int>(0); //todo: [REFACTOR] should this be a success?
+                return new Success<int>(0);
 
             dbCtx.Bridges.RemoveRange(bridges);
             _logger.LogDebug("Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
-            await dbCtx.SaveChangesAsync();
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
+                return new Error<Exception>(err);
+            }
             _logger.LogInformation("Removed {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
 
             foreach (var bridge in bridges)
@@ -232,7 +242,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         #region Message Handling
         private async Task CheckForBridgesAsync(SocketMessage message)
         {
-            if (message.Author.IsWebhook || message.Author.IsBot || message.Channel is not IGuildChannel guildChannel) //todo: [TESTING] Does this cast work
+            if (message.Author.IsWebhook || message.Author.IsBot || message.Channel is not IGuildChannel guildChannel) 
                 return;
 
             using var dbCtx = _dbService.GetContext();
