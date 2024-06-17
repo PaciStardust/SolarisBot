@@ -70,14 +70,28 @@ namespace SolarisBot.Discord.Common
 
         #region Naming
         private static readonly Regex _nameVerificator = new(@"\A[A-Za-z \d]{2,20}\Z");
+
+        /// <summary>
+        /// Checks if an identifier is valid
+        /// </summary>
+        /// <param name="identifier">Identifier to check</param>
+        /// <returns>Is valid?</returns>
         internal static bool IsIdentifierValid(string identifier)
             => _nameVerificator.IsMatch(identifier);
+
+        /// <summary>
+        /// Returns an error for an invalid identifier
+        /// </summary>
+        /// <param name="identifier">Invalid identifier</param>
+        /// <returns>Error message</returns>
+        internal static string GetIdentifierError(string identifier)
+            => $"Identifier **{identifier}** is invalid, identifiers can only contain letters, numbers, and spaces and must be between 2 and 20 characters long";
         #endregion
 
         #region Roles
         internal const string CustomColorRolePrefix = "Solaris Custom Color";
 
-        internal static string GetCustomColorRoleName(IUser user)
+        internal static string GetCustomColorRoleName(IUser user) //todo: [REFACTOR] this should be moved
             => $"{CustomColorRolePrefix} {user.Id}";
 
         internal static string GetIdFromCustomColorRoleName(string customColorRoleName)

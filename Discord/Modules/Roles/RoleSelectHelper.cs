@@ -6,7 +6,7 @@ namespace SolarisBot.Discord.Modules.Roles
 {
     internal static class RoleSelectHelper
     {
-        internal static async Task RespondInvalidIdentifierErrorEmbedAsync(this IDiscordInteraction interaction, string identifier)
+        internal static async Task RespondInvalidIdentifierErrorEmbedAsync(this IDiscordInteraction interaction, string identifier) //todo: [REFACTOR] Remove this
             => await interaction.ReplyErrorAsync($"Identifier **{identifier}** is invalid, identifiers can only contain letters, numbers, and spaces and must be between 2 and 20 characters long");
 
         internal static MessageComponent GenerateRoleGroupSelector(DbRoleGroup roleGroup)

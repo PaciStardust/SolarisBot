@@ -63,7 +63,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var bridgeNameTrimmed = bridgeName.Trim();
             if (!DiscordUtils.IsIdentifierValid(bridgeNameTrimmed))
-                return new Error<string>("Identifier is invalid"); //todo: [REFACTOR] shortcut this?
+                return new Error<string>(DiscordUtils.GetIdentifierError(bridgeNameTrimmed));
 
             using var dbCtx = _dbService.GetContext();
 
