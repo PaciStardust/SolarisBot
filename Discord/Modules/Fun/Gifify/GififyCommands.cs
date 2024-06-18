@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Modules.Fun
             [Summary(description: "Is feature enabled?")] bool enabled
         )
         {
-            var res = await _gififyService.ConfigureAsync(Context.Guild, enabled);
+            var res = await _gififyService.ConfigureGififyAsync(Context.Guild, enabled);
             await res.Match(
                 success => Interaction.ReplyAsync($"Gif conversion is currently **{(success.Value.GififyOn ? "enabled" : "disabled")}**"),
                 err => Interaction.ReplyErrorAsync(err.Value)
