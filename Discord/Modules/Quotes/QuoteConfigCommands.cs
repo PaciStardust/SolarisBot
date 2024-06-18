@@ -1,7 +1,5 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -11,13 +9,11 @@ namespace SolarisBot.Discord.Modules.Quotes
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(GuildPermission.ManageMessages)]
     public sealed class QuoteConfigCommands : SolarisInteractionModuleBase
     {
-        private readonly ILogger<QuoteConfigCommands> _logger;
-        private readonly DatabaseService _dbService;
+        private readonly QuoteService _quoteService;
 
-        internal QuoteConfigCommands(ILogger<QuoteConfigCommands> logger, DatabaseService dbService)
+        internal QuoteConfigCommands(QuoteService quoteService)
         {
-            _logger = logger;
-            _dbService = dbService;
+            _quoteService = quoteService;
         }
 
         [SlashCommand("config", "Enable quotes")]
@@ -26,15 +22,11 @@ namespace SolarisBot.Discord.Modules.Quotes
             [Summary(description: "Is feature enabled?")] bool enabled
         )
         {
-            using var dbCtx = _dbService.GetContext();
-            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-
-            guild.QuotesOn = enabled;
-
-            _logger.LogDebug("{intTag} Setting quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await dbCtx.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Quotes are currently **{(enabled ? "enabled" : "disabled")}**");
+            var res = await _quoteService.ConfigureQuotesAsync(Context.Guild, enabled);
+            await res.Match(
+                success => Interaction.ReplyAsync($"Quotes are currently **{(enabled ? "enabled" : "disabled")}**"),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
 
         [SlashCommand("wipe", "Wipe quotes from guild, make sure to search")]
@@ -60,19 +52,12 @@ namespace SolarisBot.Discord.Modules.Quotes
                 return;
             }
 
-            using var dbCtx = _dbService.GetContext();
-            var quotes = await dbCtx.GetQuotesAsync(Context.Guild.Id, authorId: authorIdParsed, creatorId: creatorIdParsed, content: content, offset: offset, limit: limit);
-            if (quotes.Length == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            _logger.LogDebug("{intTag} Wiping {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-            dbCtx.Quotes.RemoveRange(quotes);
-            await dbCtx.SaveChangesAsync();
-            _logger.LogDebug("{intTag} Wiped {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Wiped **{quotes.Length}** quotes from database");
+            var res = await _quoteService.WipeQuotesFromGuildAsync(Context.Guild, authorId: authorIdParsed, creatorId: creatorIdParsed, content: content, offset: offset, limit: limit);
+            await res.Match(
+                success => Interaction.ReplyAsync($"Wiped **{success.Value.Length}** quotes from database"),
+                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
     }
 }
