@@ -5,18 +5,17 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
-namespace SolarisBot.Discord.Modules.Roles
+namespace SolarisBot.Discord.Modules.Roles.CustomColor
 {
     [Module("roles/customcolor"), Group("cfg-customcolor", "[MANAGE ROLES ONLY] Set up custom color creation")]
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
     public sealed class CustomColorConfigCommands : SolarisInteractionModuleBase
     {
-        private readonly ILogger<CustomColorConfigCommands> _logger;
-        private readonly DatabaseService _dbService;
-        internal CustomColorConfigCommands(ILogger<CustomColorConfigCommands> logger, DatabaseService dbService)
+        private readonly CustomColorService _customColorService;
+
+        internal CustomColorConfigCommands(CustomColorService customColorService)
         {
-            _dbService = dbService;
-            _logger = logger;
+            _customColorService = customColorService;
         }
 
         [SlashCommand("config", "Set up custom color creation")]
@@ -25,15 +24,11 @@ namespace SolarisBot.Discord.Modules.Roles
             [Summary(description: "[Opt] Required role (none to disable)")] IRole? role = null
         )
         {
-            using var dbCtx = _dbService.GetContext();
-            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-
-            guild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
-
-            _logger.LogDebug("{intTag} Setting custom colors to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await dbCtx.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set custom colors to role={role} in guild {guild}", GetIntTag(), role?.Log() ?? "0", Context.Guild.Log());
-            await Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**");
+            var res = await _customColorService.ConfigCustomColorAsync(Context.Guild, role);
+            await res.Match(
+                success => Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**"),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
 
         [SlashCommand("delete-all", "Delete all custom color roles")]
