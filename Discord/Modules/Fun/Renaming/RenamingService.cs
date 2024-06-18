@@ -1,18 +1,18 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using System.Text.RegularExpressions;
 
-namespace SolarisBot.Discord.Modules.Fun
+namespace SolarisBot.Discord.Modules.Fun.Renaming
 {
     [Module("fun/renaming"), AutoLoadService]
-    internal sealed class RenamingService : IHostedService
+    internal sealed class RenamingService
     {
         private readonly ILogger<RenamingService> _logger;
         private readonly DiscordSocketClient _client;
@@ -23,20 +23,66 @@ namespace SolarisBot.Discord.Modules.Fun
             _logger = logger;
             _client = client;
             _dbService = dbService;
-        }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
             _client.MessageReceived += CheckForAutoRename;
-            return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        #region Commands
+        /// <summary>
+        /// Configures renaming in a guild
+        /// </summary>
+        /// <param name="guild">Guild to configure</param>
+        /// <param name="enabled">Enable feature?</param>
+        /// <param name="minTimeout">Minimum timeout for renaming</param>
+        /// <param name="maxTimeout">Maximum timeout for renaming</param>
+        /// <returns>Config on success / Exception</returns>
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigureRenamingAsync(IGuild guild, bool enabled, ulong minTimeout, ulong maxTimeout)
         {
-            _client.MessageReceived -= CheckForAutoRename;
-            return Task.CompletedTask;
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
+
+            dbGuild.JokeRenameOn = enabled;
+            dbGuild.JokeRenameTimeoutMax = maxTimeout;
+            dbGuild.JokeRenameTimeoutMin = minTimeout > maxTimeout ? maxTimeout : minTimeout;
+
+            _logger.LogDebug("Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+            return new Success<DbGuildConfig>(dbGuild);
         }
 
+        /// <summary>
+        /// Resets all cooldowns for a guild
+        /// </summary>
+        /// <param name="guild">Guild to reset</param>
+        /// <returns>All removed timeouts on success / None / Exception</returns>
+        internal async Task<OneOf<Success<DbJokeTimeout[]>, None, Error<Exception>>> ResetRenamingCooldownsAsync(IGuild guild)
+        {
+            using var dbCtx = _dbService.GetContext();
+            var jokeTimeouts = await dbCtx.JokeTimeouts.ForGuild(guild.Id).ToArrayAsync();
+            dbCtx.JokeTimeouts.RemoveRange(jokeTimeouts);
+
+            if (jokeTimeouts.Length == 0)
+                return new None();
+
+            _logger.LogDebug("Deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Deleted all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
+            return new Success<DbJokeTimeout[]>(jokeTimeouts);
+        }
+        #endregion
+
+        #region Message Handling
         private static readonly Regex _amVerification = new(@"\b(?:am(?!\s+i)|i'?m)\s+(.+)$", RegexOptions.IgnoreCase);
         /// <summary>
         /// Automatically renames a user after saying "I am..." when enabled
@@ -99,5 +145,6 @@ namespace SolarisBot.Discord.Modules.Fun
                 _logger.LogError(ex, "Failed changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
             }
         }
+        #endregion
     }
 }
