@@ -1,15 +1,16 @@
-﻿using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Discord;
+using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
-namespace SolarisBot.Discord.Modules.Roles
+namespace SolarisBot.Discord.Modules.Roles.AutoRole
 {
     [Module("roles/autorole"), AutoLoadService]
-    internal sealed class AutoRoleService : IHostedService
+    internal sealed class AutoRoleService
     {
         private readonly ILogger<AutoRoleService> _logger;
         private readonly DiscordSocketClient _client;
@@ -20,20 +21,37 @@ namespace SolarisBot.Discord.Modules.Roles
             _client = client;
             _dbService = dbService;
             _logger = logger;
-        }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
             _client.UserJoined += ApplyAutoRoleAsync;
-            return Task.CompletedTask;
+
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        #region Commands
+        /// <summary>
+        /// Configures auto role in guild
+        /// </summary>
+        /// <param name="guild">Guild to configure</param>
+        /// <param name="role">Role to apply</param>
+        /// <returns>GuildConfig on success / Exception</returns>
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigAutoRoleAsync(IGuild guild, IRole? role)
         {
-            _client.UserJoined -= ApplyAutoRoleAsync;
-            return Task.CompletedTask;
-        }
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
+            dbGuild.AutoRoleId = role?.Id ?? ulong.MinValue;
 
+            _logger.LogDebug("Setting auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed setting auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Set auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+            return new Success<DbGuildConfig>(dbGuild);
+        }
+        #endregion
+
+        #region OnJoin
         /// <summary>
         /// Automatically applies a role to a user on join when set up
         /// </summary>
@@ -55,5 +73,6 @@ namespace SolarisBot.Discord.Modules.Roles
                 _logger.LogError(ex, "Failed to apply auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
             }
         }
+        #endregion
     }
 }
