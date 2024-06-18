@@ -1,22 +1,22 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using System.Text.RegularExpressions;
 
-namespace SolarisBot.Discord.Modules.Fun
+namespace SolarisBot.Discord.Modules.Fun.Spellcheck
 {
     [Module("fun/spellcheck"), AutoLoadService]
-    internal sealed class SpellcheckService : IHostedService
+    internal sealed class SpellcheckService
     {
         private readonly ILogger<SpellcheckService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly DatabaseService _dbService;
-        private readonly HashSet<string> _words = new();
+        private readonly HashSet<string> _words = [];
         private readonly BotConfig _botConfig;
 
         public SpellcheckService(ILogger<SpellcheckService> logger, DiscordSocketClient client, DatabaseService dbService, BotConfig botConfig)
@@ -25,16 +25,24 @@ namespace SolarisBot.Discord.Modules.Fun
             _client = client;
             _dbService = dbService;
             _botConfig = botConfig;
+
+            _client.Ready += OnClientReady;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// Loads the dictionary and subscribes to spellcheck message handöer
+        /// </summary>
+        /// <returns></returns>
+        private Task OnClientReady()
         {
             try
             {
+                _logger.LogDebug("Loading dictionary for spellcheck");
                 var dictPath = Path.Combine(Utils.PathConfigDirectory, _botConfig.DictionaryFile);
                 var words = File.ReadLines(dictPath);
                 foreach (var item in words)
                     _words.Add(item);
+                _logger.LogDebug("Loaded dictionary for spellcheck");
             }
             catch (Exception ex)
             {
@@ -45,12 +53,33 @@ namespace SolarisBot.Discord.Modules.Fun
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        #region Commands
+        /// <summary>
+        /// Configures spellchecking in a guild
+        /// </summary>
+        /// <param name="guild">Guild to configure</param>
+        /// <param name="role">Role for spellchecking</param>
+        /// <returns>GuildConfig on success / Exception</returns>
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigureSpellcheckAsync(IGuild guild, IRole? role)
         {
-            _client.MessageReceived -= CheckForSpellErrorsAsync;
-            return Task.CompletedTask;
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
+            dbGuild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;
+
+            _logger.LogDebug("Setting spellcheck-role to role {role} for guild {guild}",role?.Log() ?? "0", guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed setting spellcheck-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Set spellcheck-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+            return new Success<DbGuildConfig>(dbGuild);
         }
 
+        #endregion
+
+        #region Message Handling
         private static readonly Regex _nonWordChecker = new(@"[^a-zA-Z]+");
         private static readonly Regex _specialFilter = new(@"(?:<[^>]+>|https?:\/\/[^ ]+)");
         /// <summary>
@@ -87,5 +116,6 @@ namespace SolarisBot.Discord.Modules.Fun
 
             await userMessage.ReplyAsync($"You misspelled the following: {string.Join(", ", errors)}");
         }
+        #endregion
     }
 }
