@@ -49,7 +49,7 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
-                _logger.LogError(err, "Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+                _logger.LogError(err, "Failed setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
                 return new Error<Exception>(err);
             }
             _logger.LogInformation("Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
@@ -74,7 +74,7 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
-                _logger.LogError(err, "Deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
+                _logger.LogError(err, "Failed deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
                 return new Error<Exception>(err);
             }
             _logger.LogInformation("Deleted all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
