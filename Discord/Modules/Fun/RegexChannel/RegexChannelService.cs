@@ -116,7 +116,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
-                _logger.LogDebug(err, "Failed removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
+                _logger.LogError(err, "Failed removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
                 return new Error<Exception>(err);
             }
             _logger.LogInformation("Removed {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
