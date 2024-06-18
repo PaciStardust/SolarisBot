@@ -51,17 +51,8 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
         /// <param name="targetUser">User losing letter</param>
         /// <param name="guild">Guild of execution</param>
         /// <returns>Original name of executor, of target, moved letter on success / Error sting / Exception</returns>
-        internal async Task<OneOf<Success<(string, string, char)>, Error<string>, Error<Exception>>> StealNicknameAsync(IUser executingUser, IUser targetUser, IGuild guild)
+        internal async Task<OneOf<Success<(string, string, char)>, Error<string>, Error<Exception>>> StealNicknameAsync(IUser executingUser, IUser targetUser)
         {
-            if (executingUser.Id == targetUser.Id)
-                return new Error<string>("You can not steal from yourself");
-            if (targetUser.IsBot || targetUser.IsWebhook)
-                return new Error<string>("You can only steal from humans");
-            if (targetUser.Id == guild.OwnerId)
-                return new Error<string>("You can not steal from guild owner");
-            if (executingUser.Id == guild.OwnerId)
-                return new Error<string>("Owners can not steal");
-
             if (executingUser is not IGuildUser executingGuildUser)
                 return new Error<string>("Could not convert executing user to guild user");
             var executingName = executingGuildUser.DisplayName;
@@ -73,6 +64,17 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
             var targetName = targetGuildUser.DisplayName;
             if (targetName.Length <= 1)
                 return new Error<string>("Target name is too short for stealing");
+
+            var guild = executingGuildUser.Guild;
+
+            if (executingUser.Id == targetUser.Id)
+                return new Error<string>("You can not steal from yourself");
+            if (targetUser.IsBot || targetUser.IsWebhook)
+                return new Error<string>("You can only steal from humans");
+            if (targetUser.Id == guild.OwnerId)
+                return new Error<string>("You can not steal from guild owner");
+            if (executingUser.Id == guild.OwnerId)
+                return new Error<string>("Owners can not steal");
 
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);

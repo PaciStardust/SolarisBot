@@ -30,7 +30,7 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
         [UserCommand("Steal Nickname"), SlashCommand("stealnick", "Steal a persons nick"), RequireBotPermission(GuildPermission.ManageNicknames)]
         public async Task StealNicknameUserAsync(IUser user)
         {
-            var res = await _snService.StealNicknameAsync(Context.User, user, Context.Guild);
+            var res = await _snService.StealNicknameAsync(Context.User, user);
             await res.Match(
                 success => Interaction.ReplyAsync($"**{success.Value.Item1}** *({Context.User.Mention})* stole the letter **{success.Value.Item3}** from **{success.Value.Item2}** *({user.Mention})*"),
                 error => Interaction.ReplyErrorAsync(error.Value),
