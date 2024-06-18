@@ -1,7 +1,5 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -34,50 +32,23 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         [SlashCommand("delete-all", "Delete all custom color roles")]
         public async Task DeleteAllCustomColorRolesAsync()
         {
-            var roles = Context.Guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
-            var roleCount = roles.Count();
-
-            if (roleCount == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            _logger.LogDebug("{intTag} Deleting {roleCount} custom color roles in guild {guild}", GetIntTag(), roleCount, Context.Guild.Log());
-            foreach (var role in roles)
-                await role.DeleteAsync();
-            _logger.LogInformation("{intTag} Deleted {roleCount} custom color roles in guild {guild}", GetIntTag(), roleCount, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Succssfully deleted all **{roleCount}** custom color roles");
+            var res = await _customColorService.DeleteCustomColorRolesForGuildAsync(Context.Guild);
+            await res.Match(
+                success => Interaction.ReplyAsync($"Succssfully deleted all **{success.Value.Length}** custom color roles"),
+                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
 
         [SlashCommand("delete-ownerless", "Delete all custom color roles without owner")]
         public async Task DeleteAllMissingCustomColorRolesAsync()
         {
-            var roles = Context.Guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
-
-            if (!roles.Any())
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            var guildUsers = await Context.Guild.GetUsersAsync();
-            var guildUserStringIds = guildUsers.Select(x => x.Id.ToString());
-            var rolesWithoutOwner = roles.Where(x => !guildUserStringIds.Contains(DiscordUtils.GetIdFromCustomColorRoleName(x.Name)));
-
-            var deleteRoleCount = rolesWithoutOwner.Count();
-
-            if (deleteRoleCount == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            _logger.LogDebug("{intTag} Deleting {roleCount} custom color roles without owner in guild {guild}", GetIntTag(), deleteRoleCount, Context.Guild.Log());
-            foreach (var role in rolesWithoutOwner)
-                await role.DeleteAsync();
-            _logger.LogInformation("{intTag} Deleted {roleCount} custom color roles without owner in guild {guild}", GetIntTag(), deleteRoleCount, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Succssfully deleted all **{deleteRoleCount}** custom color roles without owner");
+            var res = await _customColorService.DeleteOwnerlessCustomColorRolesForGuildAsync(Context.Guild);
+            await res.Match(
+                success => Interaction.ReplyAsync($"Succssfully deleted all **{success.Value.Length}** custom color roles without owner"),
+                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
     }
 }

@@ -7,7 +7,6 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using Discord.WebSocket;
-using Microsoft.VisualBasic;
 
 namespace SolarisBot.Discord.Modules.Roles.CustomColor
 {
@@ -146,6 +145,65 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             }
             _logger.LogInformation("Set custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
+        }
+
+        /// <summary>
+        /// Deletes all custom color roles within a guild
+        /// </summary>
+        /// <param name="guild">Guild for deletion</param>
+        /// <returns>Array of deleted roles on success / none / exception</returns>
+        internal async Task<OneOf<Success<IRole[]>, None, Error<Exception>>> DeleteCustomColorRolesForGuildAsync(IGuild guild)
+        {
+            var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix)).ToArray();
+            if (roles.Length == 0)
+                return new None();
+
+            try
+            {
+                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
+                foreach (var role in roles)
+                    await role.DeleteAsync();
+                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
+                return new Success<IRole[]>(roles);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
+                return new Error<Exception>(ex);
+            }
+        }
+
+        /// <summary>
+        /// Deletes all custom color roles without owner from a guild
+        /// </summary>
+        /// <param name="guild">Guild to delete from</param>
+        /// <returns>Array of deleted roles on success / none / exception</returns>
+        internal async Task<OneOf<Success<IRole[]>, None, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild)
+        {
+            var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
+            if (!roles.Any())
+                return new None();
+
+            var guildUsers = await guild.GetUsersAsync();
+            var guildUserStringIds = guildUsers.Select(x => x.Id.ToString());
+            var rolesWithoutOwner = roles.Where(x => !guildUserStringIds.Contains(DiscordUtils.GetIdFromCustomColorRoleName(x.Name))).ToArray();
+
+            if (rolesWithoutOwner.Length == 0)
+                return new None();
+
+            try
+            {
+                _logger.LogDebug("Deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
+                foreach (var role in rolesWithoutOwner)
+                    await role.DeleteAsync();
+                _logger.LogInformation("Deleted {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
+                return new Success<IRole[]>(rolesWithoutOwner);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
+                return new Error<Exception>(ex);
+            }
         }
         #endregion
     }
