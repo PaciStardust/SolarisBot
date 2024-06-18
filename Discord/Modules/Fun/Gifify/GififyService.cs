@@ -32,7 +32,7 @@ namespace SolarisBot.Discord.Modules.Fun.Gifify
         /// <param name="guild">Guild to configure</param>
         /// <param name="enabled">Feature enabled?</param>
         /// <returns>Successs / Exception</returns>
-        internal async Task<OneOf<Success, Error<Exception>>> ConfigureAsync(IGuild guild, bool enabled)
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigureAsync(IGuild guild, bool enabled)
         {
             using var dbCtx = _dbService.GetContext();
 
@@ -47,7 +47,7 @@ namespace SolarisBot.Discord.Modules.Fun.Gifify
                 return new Error<Exception>(err);
             }
             _logger.LogInformation("Setting gif conversion to {enabled} in guild {guild}", dbGuild.GififyOn, guild.Log());
-            return new Success();
+            return new Success<DbGuildConfig>(dbGuild);
         }
 
         /// <summary>

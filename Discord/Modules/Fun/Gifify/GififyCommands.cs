@@ -23,7 +23,7 @@ namespace SolarisBot.Discord.Modules.Fun
         {
             var res = await _gififyService.ConfigureAsync(Context.Guild, enabled);
             await res.Match(
-                success => Interaction.ReplyAsync($"Gif conversion is currently **{(enabled ? "enabled" : "disabled")}**"),
+                success => Interaction.ReplyAsync($"Gif conversion is currently **{(success.Value.GififyOn ? "enabled" : "disabled")}**"),
                 err => Interaction.ReplyErrorAsync(err.Value)
             );
         }
