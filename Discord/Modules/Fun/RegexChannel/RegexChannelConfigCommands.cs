@@ -2,11 +2,7 @@
 using Discord;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
-using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 {
@@ -52,9 +48,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
         [SlashCommand("list", "List all RegEx channels")]
         public async Task ListRegexChannelsAsync()
         {
-            using var dbCtx = _dbService.GetContext();
-
-            var regexChannels = await dbCtx.RegexChannels.ForGuild(Context.Guild.Id).ToArrayAsync();
+            var regexChannels = await _rcService.GetRegexChannelsAsync(Context.Guild.Id);
             if (regexChannels.Length == 0)
             {
                 await Interaction.ReplyErrorAsync(GenericError.NoResults);
@@ -79,25 +73,15 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
                 return;
             }
 
-            using var dbCtx = _dbService.GetContext();
+            var useChannelId = parsedTargetId is null;
+            var usedId = useChannelId ? Context.Channel.Id : parsedTargetId!.Value;
+            var res = await _rcService.DeleteRegexChannelAsync(useChannelId, usedId, Context.Guild);
 
-            var query = dbCtx.RegexChannels.ForGuild(Context.Guild.Id);
-            query = parsedTargetId is null
-                ? query.ForChannel(Context.Channel.Id)
-                : query.Where(x => x.RegexChannelId == parsedTargetId);
-
-            var regexChannels = await query.ToArrayAsync();
-            if (regexChannels.Length == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            dbCtx.RegexChannels.RemoveRange(regexChannels);
-            _logger.LogDebug("{intTag} Removing {channelCount} regex channels in guild {guild}", GetIntTag(), regexChannels.Length, Context.Guild.Log());
-            await dbCtx.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Removed {channelCount} regex channels in guild {guild}", GetIntTag(), regexChannels.Length, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Removed **{regexChannels.Length}** RegEx channel{(regexChannels.Length == 1 ? string.Empty : "s")}");
+            await res.Match(
+                success => Interaction.ReplyAsync($"Removed **{success.Value.Length}** RegEx channel{(success.Value.Length == 1 ? string.Empty : "s")}"),
+                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
     }
 }

@@ -2,15 +2,12 @@
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
 using OneOf;
 using OneOf.Types;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
-using System;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
 
 namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 {
@@ -31,6 +28,17 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
         }
 
         #region Commands
+        /// <summary>
+        /// Creates a regex channel
+        /// </summary>
+        /// <param name="channel">Target channel</param>
+        /// <param name="guild">Target guild</param>
+        /// <param name="regex">Regex to use</param>
+        /// <param name="punishmentRole">Role to apply on fail</param>
+        /// <param name="punishmentMsg">Message sent on fail</param>
+        /// <param name="deleteMsg">Delete failed message</param>
+        /// <param name="punishmentTimeout">Timeout duration on fail</param>
+        /// <returns>Created channel / Error</returns>
         internal async Task<OneOf<Success<DbRegexChannel>, Error<string>, Error<Exception>>> AddRegexChannel(IChannel channel, IGuild guild, string regex, IRole? punishmentRole, string punishmentMsg, bool deleteMsg, ulong punishmentTimeout)
         {
             using var dbCtx = _dbService.GetContext();
@@ -69,9 +77,58 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 
             return new Success<DbRegexChannel>(dbChannel);
         }
+
+        /// <summary>
+        /// Gets a list of all regex channels for a guild
+        /// </summary>
+        /// <param name="guildId">ID of guild</param>
+        /// <returns>Array of all regex channels</returns>
+        internal async Task<DbRegexChannel[]> GetRegexChannelsAsync(ulong guildId)
+        {
+            using var dbCtx = _dbService.GetContext();
+
+            var regexChannels = await dbCtx.RegexChannels.ForGuild(guildId).ToArrayAsync();
+            return regexChannels;
+        }
+
+        /// <summary>
+        /// Deletes a regexChannel associated with a an ID or a channel
+        /// </summary>
+        /// <param name="idIsChannel">Indicates if ID is for channel or DB</param>
+        /// <param name="targetId">Used ID</param>
+        /// <param name="guild">Guild to delete in</param>
+        /// <returns>Array of deleted channels / None / Error</returns>
+        internal async Task<OneOf<Success<DbRegexChannel[]>, None, Error<Exception>>> DeleteRegexChannelAsync(bool idIsChannel, ulong targetId, IGuild guild)
+        {
+            using var dbCtx = _dbService.GetContext();
+
+            var query = dbCtx.RegexChannels.ForGuild(guild.Id);
+            query = idIsChannel
+                ? query.ForChannel(targetId)
+                : query.Where(x => x.RegexChannelId == targetId);
+
+            var regexChannels = await query.ToArrayAsync();
+            if (regexChannels.Length == 0)
+                return new None();
+
+            dbCtx.RegexChannels.RemoveRange(regexChannels);
+            _logger.LogDebug("Removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogDebug(err, "Failed removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Removed {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
+            return new Success<DbRegexChannel[]>(regexChannels);
+        }
         #endregion
 
         #region Message Handling
+        /// <summary>
+        /// Checks if the message needs to be regex checked and then applies punishments if checks fail
+        /// </summary>
+        /// <param name="message">Message to check</param>
         private async Task CheckForRegexAsync(SocketMessage message)
         {
             if (message is not IUserMessage userMessage || message.Author.IsWebhook || message.Author.IsBot || message.Author is not IGuildUser gUser)
