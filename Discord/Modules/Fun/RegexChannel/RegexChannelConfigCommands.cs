@@ -39,7 +39,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             var res = await _rcService.AddRegexChannel(targetChannel, Context.Guild, regex, punishmentRole, punishmentMsg, deleteMsg, parsedPunishmentTimeout);
 
             await res.Match(
-                success => Interaction.ReplyAsync($"RegEx for **<#{success.Value.ChannelId}>** created\n\nRegex: **{regex}**\nRole: **{(punishmentRole is null ? "None" : $"{punishmentRole.Mention}")}**\nMessage: **{(string.IsNullOrWhiteSpace(success.Value.PunishmentMessage) ? "None" : $"\"{success.Value.PunishmentMessage}\"")}**\nTimeout: **{success.Value.PunishmentTimeout}**\nDelete: **{(success.Value.PunishmentDelete ? "Yes" : "No")}**"),
+                success => Interaction.ReplyAsync($"RegEx for **<#{success.Value.ChannelId}>** created\n\nRegex: **{success.Value.Regex}**\nRole: **{(punishmentRole is null ? "None" : $"{punishmentRole.Mention}")}**\nMessage: **{(string.IsNullOrWhiteSpace(success.Value.PunishmentMessage) ? "None" : $"\"{success.Value.PunishmentMessage}\"")}**\nTimeout: **{success.Value.PunishmentTimeout}**\nDelete: **{(success.Value.PunishmentDelete ? "Yes" : "No")}**"),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
