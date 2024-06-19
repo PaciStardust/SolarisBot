@@ -48,7 +48,7 @@ namespace SolarisBot.Discord.Modules.Reminders
         {
             var res = await _reminderService.CreateReminderInAsync(Context.Guild, Context.Channel, Context.User, text, days, minutes, hours);
             await res.Match(
-                success => Interaction.ReplyAsync($"Reminder #{success.Value.ReminderId}: **{text}**\n*(Reminding <t:{parsedTimestamp}:f>)*"),
+                success => Interaction.ReplyAsync($"Reminder #{success.Value.ReminderId}: **{text}**\n*(Reminding <t:{success.Value.RemindAt}:f>)*"),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
