@@ -1,7 +1,5 @@
 ﻿using Discord.Interactions;
 using Discord;
-using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
