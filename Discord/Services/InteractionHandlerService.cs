@@ -40,12 +40,13 @@ namespace SolarisBot.Discord.Services
             {
                 if (!type.IsSubclassOf(typeof(SolarisInteractionModuleBase))) continue;
                 var attribute = type.GetCustomAttribute<ModuleAttribute>();
+                var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
                 if (attribute?.IsDisabled(_config.DisabledModules) ?? false)
                 {
-                    _logger.LogDebug("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, attribute.ModuleName);
+                    _logger.LogDebug("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, moduleNamesText);
                     continue;
                 }
-                _logger.LogDebug("Adding InteractionModule {intModule} from module {module}", type.FullName, attribute?.ModuleName ?? "NONE");
+                _logger.LogDebug("Adding InteractionModule {intModule} from module {module}", type.FullName, moduleNamesText);
                 await _intService.AddModuleAsync(type, _services);
             }
 

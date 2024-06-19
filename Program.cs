@@ -85,12 +85,13 @@ namespace SolarisBot
                         bool isHosted = typeof(IHostedService).IsAssignableFrom(service);
 
                         var attribute = service.GetCustomAttribute<ModuleAttribute>();
+                        var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
                         if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
                         {
-                            logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, attribute.ModuleName);
+                            logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
                             continue;
                         }
-                        logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, attribute?.ModuleName ?? "NONE");
+                        logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
 
                         if (isHosted)
                             services.AddSingleton(typeof(IHostedService), service);
