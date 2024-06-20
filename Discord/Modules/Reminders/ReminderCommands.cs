@@ -17,7 +17,7 @@ namespace SolarisBot.Discord.Modules.Reminders
 
         #region Create
         [SlashCommand("create-ts", "Create a reminder using a timestamp")]
-        private async Task CreateReminderAsync
+        public async Task CreateReminderAsync
         (
             [Summary(description: "Reminder text")] string text,
             [Summary(description: "Hammertime/Unix timestamp for reminder")] string timestamp
