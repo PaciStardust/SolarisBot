@@ -1,7 +1,5 @@
 ﻿using Discord.Interactions;
 using Discord;
-using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -11,14 +9,10 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ModerateMembers), RequireUserPermission(GuildPermission.ModerateMembers)]
     internal class UserAnalysisConfigCommands : SolarisInteractionModuleBase
     {
-        private readonly ILogger<UserAnalysisConfigCommands> _logger;
-        private readonly DatabaseService _dbService;
-        private readonly BotConfig _config;
-        internal UserAnalysisConfigCommands(ILogger<UserAnalysisConfigCommands> logger, DatabaseService dbService, BotConfig config)
+        private readonly UserAnalysisService _userAnalysisService;
+        internal UserAnalysisConfigCommands(UserAnalysisService userAnalysisService)
         {
-            _dbService = dbService;
-            _logger = logger;
-            _config = config;
+            _userAnalysisService = userAnalysisService;
         }
 
         [SlashCommand("config", "Set up user analysis")]
@@ -30,31 +24,22 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             [Summary(description: "[Opt] Minimum points for ban")] int minBan = int.MaxValue
         )
         {
-            using var dbCtx = _dbService.GetContext();
-            var guild = await dbCtx.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-
-            guild.UserAnalysisChannelId = channel?.Id ?? ulong.MinValue;
-            guild.UserAnalysisWarnAt = minWarn;
-            guild.UserAnalysisKickAt = minKick;
-            guild.UserAnalysisBanAt = minBan;
-
-            _logger.LogDebug("{intTag} Setting userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minKick, minBan, Context.Guild.Log());
-            await dbCtx.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", GetIntTag(), channel?.Log() ?? "0", minWarn, minKick, minBan, Context.Guild.Log());
-            await Interaction.ReplyAsync($"User analysis is currently **{(channel is not null ? "enabled" : "disabled")}**\n\nChannel: **{(channel is null ? "None" : $"<#{channel.Id}>")}**\nWarn at: **{(minWarn == int.MaxValue ? "OFF" : minWarn)}**\nKick at: **{(minKick == int.MaxValue ? "OFF" : minKick)}**\nBan at: **{(minBan == int.MaxValue ? "OFF" : minBan)}**");
+            var res = await _userAnalysisService.ConfigUserAnalysisAsync(Context.Guild, channel, minWarn, minKick, minBan);
+            await res.Match(
+                success => Interaction.ReplyAsync($"User analysis is currently **{(channel is not null ? "enabled" : "disabled")}**\n\nChannel: **{(channel is null ? "None" : $"<#{channel.Id}>")}**\nWarn at: **{(minWarn == int.MaxValue ? "OFF" : minWarn)}**\nKick at: **{(minKick == int.MaxValue ? "OFF" : minKick)}**\nBan at: **{(minBan == int.MaxValue ? "OFF" : minBan)}**"),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
 
         [UserCommand("Analyze"), SlashCommand("analyze", "Analyze a user")]
         public async Task AnalyzeUserAsync(IUser user)
         {
-            if (user.IsBot || user.IsWebhook)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-            var gUser = GetGuildUser(user);
-            var embed = UserAnalysis.ForUser(gUser, _config).GenerateSummaryEmbed();
-            await Interaction.ReplyAsync(embed);
+            var res = _userAnalysisService.AnalyzeUser(user);
+            await res.Match(
+                success => Interaction.ReplyAsync(success.Value.GenerateSummaryEmbed()),
+                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value)
+            );
         }
 
         [ComponentInteraction("solaris_analysis_kick.*", true), RequireBotPermission(GuildPermission.KickMembers)]
@@ -67,28 +52,19 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 
         private async Task ModerateUserAsync(string userId, bool ban)
         {
-            var gUser = GetGuildUser(Context.User);
-            if ((!ban && !gUser.GuildPermissions.KickMembers) || (ban && !gUser.GuildPermissions.BanMembers))
+            if (!ulong.TryParse(userId, out var parsedUserId))
             {
-                await Interaction.ReplyErrorAsync($"You do not have permission to {(ban ? "ban" : "kick")} members");
+                await Interaction.ReplyInvalidParameterErrorAsync("user ID");
                 return;
             }
 
-            var targetUser = await Context.Guild.GetUserAsync(ulong.Parse(userId));
-            if (targetUser is null)
-            {
-                await Interaction.ReplyErrorAsync("User could not be found");
-                return;
-            }
-
-            var verb = ban ? "Bann" : "Kick";
-            _logger.LogDebug("{verb}ing user {targetUser} from guild {guild} via analysis result button triggered by {user}", verb, targetUser.Log(), Context.Guild.Log(), Context.User.Log());
-            if (ban)
-                await targetUser.BanAsync(reason: $"Banned by {Context.User.Log()} via analysis result button");
-            else
-                await targetUser.KickAsync($"Kicked by {Context.User.Log()} via analysis result button");
-            _logger.LogInformation("{verb}ed user {targetUser} from guild {guild} via analysis result button triggered by {user}", verb, targetUser.Log(), Context.Guild.Log(), Context.User.Log());
-            await Interaction.ReplyAsync($"User has been {verb.ToLower()}ed");
+            var res = await _userAnalysisService.ModerateUserAsync(Context.Guild, Context.User, parsedUserId, ban);
+            await res.Match(
+                success => Interaction.ReplyAsync($"User has been {(ban ? "ban" : "kick")}ed"),
+                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
     }
 }
