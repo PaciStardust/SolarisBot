@@ -13,6 +13,11 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             _regex = new Regex(Keyword, RegexOptions.IgnoreCase);
         }
 
+        /// <summary>
+        /// Checks if the supplied text does not match the rule
+        /// </summary>
+        /// <param name="text">Text to check against</param>
+        /// <returns>Credible?</returns>
         internal bool IsCredible(string text)
             => !_regex.IsMatch(text);
     }

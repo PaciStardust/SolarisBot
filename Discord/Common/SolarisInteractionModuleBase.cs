@@ -7,8 +7,8 @@ namespace SolarisBot.Discord.Common
     /// <summary>
     /// Extended InteractionModeuleBase with a few core functions
     /// </summary>
-    public abstract class SolarisInteractionModuleBase : InteractionModuleBase //todo: [REFACTOR] Move most functionality into services with short lifetime
-    { //todo: [REFACTOR] Document all methods?
+    public abstract class SolarisInteractionModuleBase : InteractionModuleBase
+    {
         /// <summary>
         /// Converts user to SGU
         /// </summary>
@@ -26,10 +26,5 @@ namespace SolarisBot.Discord.Common
         /// Returns the interaction
         /// </summary>
         protected IDiscordInteraction Interaction => Context.Interaction; //todo: [REFACTOR] REMOVAL
-
-        /// <summary>
-        /// Gets an interaction tag for logging
-        /// </summary>
-        protected string GetIntTag() => $"[Int {Context.Interaction.Id}]"; //todo: [REFACTOR] REMOVAL
     }
 }

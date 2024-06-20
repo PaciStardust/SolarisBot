@@ -18,6 +18,9 @@ namespace SolarisBot.Database
             _options = options.Options;
         }
 
+        /// <summary>
+        /// Initializes the service and migrates the DB
+        /// </summary>
         internal async Task ReadyAsync()
         {
             if (_initialized) return;
@@ -30,6 +33,10 @@ namespace SolarisBot.Database
         private DatabaseContext CreateContextInternal()
             => new(_options);
 
+        /// <summary>
+        /// Returns a new Database Context, do not forget to use "Using"
+        /// </summary>
+        /// <returns>New Context</returns>
         internal DatabaseContext GetContext()
         {
             if (!_initialized)
@@ -39,6 +46,9 @@ namespace SolarisBot.Database
         }
 
         #region Migration
+        /// <summary>
+        /// Migrates the DB
+        /// </summary>
         private async Task MigrateAsync(DatabaseContext dbCtx)
         {
             var versionQuery = await dbCtx.Database.SqlQueryRaw<int>("PRAGMA user_version").ToArrayAsync();

@@ -17,7 +17,6 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             _rcService = rcService;
         }
 
-        //todo: [FEATURE] service
         [SlashCommand("add", "Add a RegEx channel")]
         public async Task ConfigureRegexChannelAsync
         (

@@ -32,6 +32,12 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         //private const int _userOfflinePenalty = 50;
         //private const int _userInvisiblePenalty = 15;
 
+        /// <summary>
+        /// Does user analysis on a user
+        /// </summary>
+        /// <param name="user">User to analyze</param>
+        /// <param name="config">Config to use</param>
+        /// <returns>Analysis of user</returns>
         internal static UserAnalysis ForUser(SocketGuildUser user, BotConfig config)
         {
             var failedUsernameChecks = new List<KeywordCredibilityRule>();
@@ -87,6 +93,10 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             };
         }
 
+        /// <summary>
+        /// Calculates the credibility score
+        /// </summary>
+        /// <returns>Calculated score</returns>
         internal int CalculateScore()
         {
             var score = CalculateRuleScoreSum(FailedKeywordRulesUsername) + CalculateRuleScoreSum(FailedKeywordRulesGlobalname);
@@ -110,6 +120,11 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             return score;
         }
 
+        /// <summary>
+        /// Generates an embed summarizing the analysis
+        /// </summary>
+        /// <param name="score">Score if already calculated to avoid double calc</param>
+        /// <returns>Generated embed</returns>
         internal Embed GenerateSummaryEmbed(int? score = null)
         {
             var summaryStrings = new List<string>();
@@ -150,6 +165,10 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             return embed.Build();
         }
 
+        /// <summary>
+        /// Calculates the score from badges
+        /// </summary>
+        /// <returns>Calculated score</returns>
         internal int CalculateBadgeScore()
             => UserBadges == 0
             ? _noBadgesPenalty

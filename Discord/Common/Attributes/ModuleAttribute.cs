@@ -12,6 +12,11 @@
             ModuleNames = moduleNames;
         }
 
+        /// <summary>
+        /// Checks against a list of disabled modules if the module should be disabled
+        /// </summary>
+        /// <param name="disabledList">List of disabled modules</param>
+        /// <returns>Disabled?</returns>
         internal bool IsDisabled(IEnumerable<string> disabledList)
             => disabledList.Any(x => ModuleNames.Any(y => y.StartsWith(x, StringComparison.OrdinalIgnoreCase)));
     }

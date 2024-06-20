@@ -11,7 +11,7 @@ namespace SolarisBot.Discord.Services
     /// Service for handling removal and applying of roles
     /// </summary>
     [AutoLoadService]
-    internal sealed class RoleCleanupService : IHostedService
+    internal sealed class RoleCleanupService : IHostedService //todo: [REFACTOR] start with client.ready?
     {
         private readonly ILogger<RoleCleanupService> _logger;
         private readonly DiscordSocketClient _client;
@@ -36,6 +36,11 @@ namespace SolarisBot.Discord.Services
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Deletes leftover custom color role when removed from user
+        /// </summary>
+        /// <param name="oldData">User before removal</param>
+        /// <param name="newUser">User after removal</param>
         private async Task CheckForLeftoverCustomColorRoleOnRemovalAsync(Cacheable<SocketGuildUser, ulong> oldData, SocketGuildUser newUser)
         {
             var oldUser = oldData.Value;
@@ -49,6 +54,12 @@ namespace SolarisBot.Discord.Services
             await TryDeleteLeftoverCustomColorRoleAsync(removedRole, newUser, newUser.Guild);
         }
 
+        /// <summary>
+        /// Deletes leftover custom color role when user leaves guild
+        /// </summary>
+        /// <param name="guild">Guild user left</param>
+        /// <param name="user">User leaving guild</param>
+        /// <returns></returns>
         private async Task CheckForLeftoverCustomColorRoleOnLeftAsync(SocketGuild guild, SocketUser user)
         {
             var customColorRole = guild.Roles.FirstOrDefault(x => x.Name == DiscordUtils.GetCustomColorRoleName(user));

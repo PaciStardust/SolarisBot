@@ -299,7 +299,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="bridge">Bridge to remove</param>
         /// <param name="originChannel">Channel to notify of removal</param>
         /// <param name="missingChannelId">Channel that is missing</param>
-        private async Task RemoveMissingBridgeAsync(DbBridge bridge, IGuildChannel originChannel, ulong missingChannelId) //todo: [REFACTOR] Combine with other delete?
+        private async Task RemoveMissingBridgeAsync(DbBridge bridge, IGuildChannel originChannel, ulong missingChannelId)
         {
             using var tempCtx = _dbService.GetContext();
             tempCtx.Bridges.Remove(bridge);

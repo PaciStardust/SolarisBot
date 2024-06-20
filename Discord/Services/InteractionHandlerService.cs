@@ -10,7 +10,7 @@ using System.Reflection;
 namespace SolarisBot.Discord.Services
 {
     [AutoLoadService]
-    internal sealed class InteractionHandlerService : IHostedService
+    internal sealed class InteractionHandlerService : IHostedService //todo: [REFACTOR] Start with client.ready?
     {
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _intService;
@@ -31,6 +31,9 @@ namespace SolarisBot.Discord.Services
             _intService.Log += logMessage => logMessage.Log(_logger);
         }
 
+        /// <summary>
+        /// Loads in all interaction modules and registers them
+        /// </summary>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated += HandleInteractionCreated;
@@ -58,6 +61,9 @@ namespace SolarisBot.Discord.Services
         }
 
 #pragma warning disable IDE0051 // Remove unused private members
+        /// <summary>
+        /// Registers all interactions to main guild
+        /// </summary>
         private async Task RegisterInteractionsToMainAsync()
         {
             _logger.LogInformation("Ready in DEBUG");
@@ -69,6 +75,9 @@ namespace SolarisBot.Discord.Services
             }
         }
 
+        /// <summary>
+        /// Registers all interactions globally
+        /// </summary>
         private async Task RegisterInteractionsGloballyAsync()
         {
             _logger.LogInformation("Ready in RELEASE");
@@ -83,6 +92,11 @@ namespace SolarisBot.Discord.Services
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
+        /// <summary>
+        /// Stops the Interaction handler
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated -= HandleInteractionCreated;
