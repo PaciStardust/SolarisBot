@@ -15,7 +15,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
     {
         private readonly ILogger<UtilityRoleService> _logger;
         private readonly DatabaseService _dbService;
-        internal UtilityRoleService(ILogger<UtilityRoleService> logger, DatabaseService dbService)
+        public UtilityRoleService(ILogger<UtilityRoleService> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

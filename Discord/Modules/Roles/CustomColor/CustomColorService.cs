@@ -16,7 +16,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         private readonly ILogger<CustomColorService> _logger;
         private readonly DatabaseService _dbService;
 
-        internal CustomColorService(ILogger<CustomColorService> logger, DatabaseService dbService)
+        public CustomColorService(ILogger<CustomColorService> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;

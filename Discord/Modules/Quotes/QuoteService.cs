@@ -15,7 +15,8 @@ namespace SolarisBot.Discord.Modules.Quotes
         private readonly ILogger<QuoteService> _logger;
         private readonly DatabaseService _dbService;
         private readonly BotConfig _botConfig;
-        internal QuoteService(ILogger<QuoteService> logger, DatabaseService dbService, BotConfig botConfig)
+
+        public QuoteService(ILogger<QuoteService> logger, DatabaseService dbService, BotConfig botConfig)
         {
             _logger = logger;
             _botConfig = botConfig;

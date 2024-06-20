@@ -15,13 +15,19 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
     {
         private readonly ILogger<RoleSelectService> _logger;
         private readonly DatabaseService _dbService;
-        internal RoleSelectService(ILogger<RoleSelectService> logger, DatabaseService dbService)
+        public RoleSelectService(ILogger<RoleSelectService> logger, DatabaseService dbService)
         {
             _dbService = dbService;
             _logger = logger;
         }
 
         #region Commands
+        /// <summary>
+        /// Selects a role group for a user in a guild and checks for permission
+        /// </summary>
+        /// <param name="user">User to get group for</param>
+        /// <param name="identifier">Identifier for search</param>
+        /// <returns>Role group on success / None / Error string / Exception</returns>
         internal async Task<OneOf<Success<DbRoleGroup>, None, Error<string>, Error<Exception>>> SelectRoleGroupAsync(IUser user, string identifier)
         {
             if (user is not SocketGuildUser gUser)

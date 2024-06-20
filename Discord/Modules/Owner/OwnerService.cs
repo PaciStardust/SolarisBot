@@ -19,7 +19,7 @@ namespace SolarisBot.Discord.Modules.Owner
         private readonly DatabaseService _dbService;
         private readonly DiscordSocketClient _client;
 
-        internal OwnerService(BotConfig botConfig, ILogger<OwnerService> logger, StatisticsService stats, DatabaseService dbService, DiscordSocketClient client)
+        public OwnerService(BotConfig botConfig, ILogger<OwnerService> logger, StatisticsService stats, DatabaseService dbService, DiscordSocketClient client)
         {
             _botConfig = botConfig;
             _logger = logger;

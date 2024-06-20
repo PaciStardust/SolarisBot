@@ -13,7 +13,7 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
     {
         private readonly ILogger<StealNicknameService> _logger;
         private readonly DatabaseService _dbService;
-        internal StealNicknameService(ILogger<StealNicknameService> logger, DatabaseService dbService) //todo: [TESTING] Can these be internal
+        public StealNicknameService(ILogger<StealNicknameService> logger, DatabaseService dbService)
         {
             _logger = logger;
             _dbService = dbService;
