@@ -75,7 +75,7 @@ namespace SolarisBot.Discord.Common
         /// <summary>
         /// Respond with error embed by GET
         /// </summary>
-        internal static async Task ReplyErrorAsync(this IDiscordInteraction interaction, GenericError genericError)
+        internal static async Task ReplyErrorAsync(this IDiscordInteraction interaction, GenericError genericError) //todo: [REFACTOR] Is this needed?
         {
             var embed = EmbedFactory.Error(genericError);
             await interaction.ReplyAsync(embed, true);
@@ -84,10 +84,10 @@ namespace SolarisBot.Discord.Common
         /// <summary>
         /// Respond with an error indicating a role might be deleted
         /// </summary>
-        internal static Task ReplyDeletedRoleErrorAsync(this IDiscordInteraction interaction, string roleName)
+        internal static Task ReplyDeletedRoleErrorAsync(this IDiscordInteraction interaction, string roleName) //todo: [REFACTOR] Is this needed?
             => interaction.ReplyErrorAsync($"{roleName} role could not be found in guild, it might have been deleted");
 
-        internal static Task ReplyInvalidParameterErrorAsync(this IDiscordInteraction interaction, string parameterName)
+        internal static Task ReplyInvalidParameterErrorAsync(this IDiscordInteraction interaction, string parameterName) //todo: [REFACTOR] Is this needed?
             => interaction.ReplyErrorAsync($"Value for {parameterName} parameter is invalid");
 
         internal static async Task ReplyComponentAsync(this IDiscordInteraction interaction, MessageComponent component, string text = "", bool isEphemeral = false)

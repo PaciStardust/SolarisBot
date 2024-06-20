@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Newtonsoft.Json;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Utility

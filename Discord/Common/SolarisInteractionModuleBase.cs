@@ -15,7 +15,7 @@ namespace SolarisBot.Discord.Common
         /// <param name="user">User to convert</param>
         /// <returns>Converted user</returns>
         /// <exception cref="ArgumentException">Thows an argumentexception if proviced user is not from guild</exception>
-        protected static SocketGuildUser GetGuildUser(IUser user)
+        protected static SocketGuildUser GetGuildUser(IUser user) //todo: [REFACTOR] REMOVAL
         {
             if (user is SocketGuildUser gUser)
                 return gUser;
@@ -25,19 +25,11 @@ namespace SolarisBot.Discord.Common
         /// <summary>
         /// Returns the interaction
         /// </summary>
-        protected IDiscordInteraction Interaction => Context.Interaction;
+        protected IDiscordInteraction Interaction => Context.Interaction; //todo: [REFACTOR] REMOVAL
 
         /// <summary>
         /// Gets an interaction tag for logging
         /// </summary>
-        protected string GetIntTag() => $"[Int {Context.Interaction.Id}]";
-
-        /// <summary>
-        /// Gets a role by ID
-        /// </summary>
-        /// <param name="id">ID of role</param>
-        /// <returns>A role matching the ID or null if none could be found</returns>
-        protected IRole? FindRole(ulong id)
-            => Context.Guild.FindRole(id);
+        protected string GetIntTag() => $"[Int {Context.Interaction.Id}]"; //todo: [REFACTOR] REMOVAL
     }
 }
