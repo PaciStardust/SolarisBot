@@ -25,12 +25,12 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
         {
             if (!ulong.TryParse(minTimeout, out var parsedMinTimeout))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("min timeout");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("min timeout"));
                 return;
             }
             if (!ulong.TryParse(maxTimeout, out var parsedMaxTimeout))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("max timeout");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("max timeout"));
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
             var res = await _renamingService.ResetRenamingCooldownsAsync(Context.Guild);
             await res.Match(
                 success => Interaction.ReplyAsync($"Successfully deleted all **{success.Value.Length}** joke timeouts for this guild"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }

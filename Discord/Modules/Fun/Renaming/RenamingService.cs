@@ -60,15 +60,15 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
         /// Resets all cooldowns for a guild
         /// </summary>
         /// <param name="guild">Guild to reset</param>
-        /// <returns>All removed timeouts on success / None / Exception</returns>
-        internal async Task<OneOf<Success<DbJokeTimeout[]>, None, Error<Exception>>> ResetRenamingCooldownsAsync(IGuild guild)
+        /// <returns>All removed timeouts on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbJokeTimeout[]>, Error<string>, Error<Exception>>> ResetRenamingCooldownsAsync(IGuild guild)
         {
             using var dbCtx = _dbService.GetContext();
             var jokeTimeouts = await dbCtx.JokeTimeouts.ForGuild(guild.Id).ToArrayAsync();
             dbCtx.JokeTimeouts.RemoveRange(jokeTimeouts);
 
             if (jokeTimeouts.Length == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             _logger.LogDebug("Deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
