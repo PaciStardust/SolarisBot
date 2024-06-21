@@ -65,7 +65,7 @@ namespace SolarisBot.Discord.Modules.Fun.Gifify
 
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
             if (dbGuild is null || !dbGuild.GififyOn)
-                return new Error<string>("Gifify is not enabled in this guild");
+                return new Error<string>(StandardError.DisabledFeature("Gifify"));
 
             _logger.LogDebug("Converting image {image} to gif for guild {guild} - Downloading image", guild.Log(), image.Url);
             var bytes = await _httpClient.GetByteArrayAsync(image.Url);
