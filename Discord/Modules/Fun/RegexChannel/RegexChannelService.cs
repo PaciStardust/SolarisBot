@@ -97,8 +97,8 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
         /// <param name="idIsChannel">Indicates if ID is for channel or DB</param>
         /// <param name="targetId">Used ID</param>
         /// <param name="guild">Guild to delete in</param>
-        /// <returns>Array of deleted channels / None / Error</returns>
-        internal async Task<OneOf<Success<DbRegexChannel[]>, None, Error<Exception>>> DeleteRegexChannelAsync(bool idIsChannel, ulong targetId, IGuild guild)
+        /// <returns>Array of deleted channels / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbRegexChannel[]>, Error<string>, Error<Exception>>> DeleteRegexChannelAsync(bool idIsChannel, ulong targetId, IGuild guild)
         {
             using var dbCtx = _dbService.GetContext();
 
@@ -109,7 +109,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 
             var regexChannels = await query.ToArrayAsync();
             if (regexChannels.Length == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             dbCtx.RegexChannels.RemoveRange(regexChannels);
             _logger.LogDebug("Removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());

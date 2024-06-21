@@ -30,7 +30,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
         {
             if (!ulong.TryParse(punishmentTimeout, out var parsedPunishmentTimeout))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("punishment timeout");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("punishment timeout"));
                 return;
             }
 
@@ -50,7 +50,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             var regexChannels = await _rcService.GetRegexChannelsAsync(Context.Guild.Id);
             if (regexChannels.Length == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
 
@@ -68,7 +68,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             var parsedTargetId = Utils.ToUlongOrNull(targetId);
             if (targetId is not null && parsedTargetId is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("target ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("target ID"));
                 return;
             }
 
@@ -78,7 +78,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 
             await res.Match(
                 success => Interaction.ReplyAsync($"Removed **{success.Value.Length}** RegEx channel{(success.Value.Length == 1 ? string.Empty : "s")}"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(StandardError.NoResults),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
