@@ -26,7 +26,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             if (bridges.Length == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
 
@@ -44,12 +44,12 @@ namespace SolarisBot.Discord.Modules.Bridges
         {
             if (!ulong.TryParse(guildId, out var parsedGuildId) || parsedGuildId == 0)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("guild ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("guild ID"));
                 return;
             }
             if (!ulong.TryParse(channelId, out var parsedChannelId) || parsedChannelId == 0)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("channel ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("channel ID"));
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             var parsedBridgeId = Utils.ToUlongOrNull(bridgeId);
             if (bridgeId is not null && parsedBridgeId is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("bridge ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("bridge ID"));
                 return;
             }
 
@@ -81,7 +81,6 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             await serviceResult.Match(
                 success => Interaction.ReplyAsync($"Removed **{success.Value.Length}** bridge{(success.Value.Length == 1 ? string.Empty : "s")}"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );

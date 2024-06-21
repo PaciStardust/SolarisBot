@@ -63,7 +63,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var bridgeNameTrimmed = bridgeName.Trim();
             if (!DiscordUtils.IsIdentifierValid(bridgeNameTrimmed))
-                return new Error<string>(DiscordUtils.GetIdentifierError(bridgeNameTrimmed));
+                return new Error<string>(StandardError.InvalidIdentifier(bridgeNameTrimmed));
 
             using var dbCtx = _dbService.GetContext();
 
@@ -144,7 +144,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="channelId">Id of target channel</param>
         /// <param name="bridgeId">Specific Bridge to delete</param>
         /// <returns>Amount deleted on success, reason on failure</returns>
-        internal async Task<OneOf<Success<DbBridge[]>, None, Error<string>, Error<Exception>>> RemoveBridgesAsync(ulong guildId, ulong channelId, ulong? bridgeId)
+        internal async Task<OneOf<Success<DbBridge[]>, Error<string>, Error<Exception>>> RemoveBridgesAsync(ulong guildId, ulong channelId, ulong? bridgeId)
         {
             using var dbCtx = _dbService.GetContext();
 
@@ -155,7 +155,7 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             var bridges = await query.ToArrayAsync();
             if (bridges.Length == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             dbCtx.Bridges.RemoveRange(bridges);
             _logger.LogDebug("Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
@@ -193,7 +193,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         private async Task<OneOf<Success, Error<string>, Error<Exception>>> NotifyChannelOfBridgeCreationAsync(DbBridge dbBridge, IGuildChannel targetChannel, IGuildChannel executingChannel, IUser executingUser)
         {
             if (targetChannel is not IMessageChannel targetMessageChannel)
-                return new Error<string>($"Target channel with Id {targetChannel.Id} could not be converted to messageChannel");
+                return new Error<string>(StandardError.FailedConversion("target channel", "MessageChannel"));
 
             try
             {
@@ -219,15 +219,15 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <returns>Success / Error as string / Error as Exception</returns>
         internal async Task<OneOf<Success, Error<string>, Error<Exception>>> NotifyChannelOfBridgeDeletionAsync(DbBridge dbBridge, IGuildChannel targetChannel, IGuildChannel? executingChannel) 
         {
-            if (targetChannel is not IMessageChannel msgChannel)
-                return new Error<string>($"Channel with Id {targetChannel.Id} could not be converted to messageChannel");
+            if (targetChannel is not IMessageChannel targetMessageChannel)
+                return new Error<string>(StandardError.FailedConversion("target channel", "MessageChannel"));
 
             try
             {
                 _logger.LogDebug("Notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
                 var targetGroupA = dbBridge.ChannelAId == targetChannel.Guild.Id;
                 var notifyEmbed = EmbedFactory.Default($"Bridge {dbBridge.ToDiscordInfoString()} to channel {executingChannel?.ToDiscordInfoString() ?? (targetGroupA ? dbBridge.ChannelBId : dbBridge.ChannelAId).ToString()} in guild {executingChannel?.Guild.ToDiscordInfoString() ?? $"**{(targetGroupA ? dbBridge.GuildBId : dbBridge.GuildAId)}**"} has been broken");
-                await msgChannel.SendMessageAsync(embed: notifyEmbed);
+                await targetMessageChannel.SendMessageAsync(embed: notifyEmbed);
                 _logger.LogInformation("Notified channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
                 return new Success();
             }
