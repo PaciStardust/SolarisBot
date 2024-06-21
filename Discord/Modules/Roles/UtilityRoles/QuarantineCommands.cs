@@ -33,7 +33,6 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             var res = await _roleService.QuarantineUserAsync(Context.Guild, Context.User, user);
             await res.Match(
                 success => Interaction.ReplyAsync($"{user.Mention} {(success.Value ? "has been" : "is no longer")} quarantined"),
-                deletedRole => Interaction.ReplyDeletedRoleErrorAsync(deletedRole.Value),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );

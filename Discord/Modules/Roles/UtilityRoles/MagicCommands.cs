@@ -41,7 +41,6 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             var res = await _roleService.UseMagicAsync(Context.Guild);
             await res.Match(
                 success => Interaction.ReplyAsync($"Magic has been used, {success.Value.Mention} feels different now", success.Value.Color),
-                deletedRole => Interaction.ReplyDeletedRoleErrorAsync(deletedRole.Value),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );

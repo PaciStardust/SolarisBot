@@ -69,7 +69,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 return new Error<string>(StandardError.NoResults);
 
             if (user is not SocketGuildUser gUser)
-                return new Error<string>(StandardError.FailedConversion("User", "SocketGuildUser")); //todo: [REFACTOR] Unify?
+                return new Error<string>(StandardError.FailedConversion("target user", "SocketGuildUser")); //todo: [REFACTOR] Unify?
 
             var analysis = UserAnalysis.ForUser(gUser, _config);
             return new Success<UserAnalysis>(analysis);
@@ -86,7 +86,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         internal async Task<OneOf<Success, Error<string>, Error<Exception>>> ModerateUserAsync(IGuild guild, IUser executingUser, ulong targetUserId, bool ban)
         {
             if (executingUser is not SocketGuildUser executingGuildUser)
-                return new Error<string>(StandardError.FailedConversion("executing User", "SocketGuildUser"));
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
             if ((!ban && !executingGuildUser.GuildPermissions.KickMembers) || (ban && !executingGuildUser.GuildPermissions.BanMembers))
                 return new Error<string>($"You do not have permission to {(ban ? "ban" : "kick")} members");

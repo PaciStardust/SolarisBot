@@ -1,6 +1,4 @@
-﻿
-
-namespace SolarisBot.Discord.Common
+﻿namespace SolarisBot.Discord.Common
 {
     internal static class StandardError
     {
@@ -11,5 +9,11 @@ namespace SolarisBot.Discord.Common
 
         internal static string FailedConversion(string from, string to)
             => $"Unable to convert {from} to {to}";
+
+        internal static string DeletedRole(string roleName)
+            => $"{roleName} role could not be found in guild, it might have been deleted";
+
+        internal static string DisabledFeature(string featureName)
+            => $"{featureName} is not enabled in this guild";
     }
 }

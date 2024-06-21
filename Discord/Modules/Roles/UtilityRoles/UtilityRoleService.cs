@@ -56,17 +56,17 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
         /// </summary>
         /// <param name="guild">Guild to use magic in</param>
         /// <returns>Modified role on success / DeletedRole / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole>, DeletedRole<string>, Error<string>, Error<Exception>>> UseMagicAsync(IGuild guild)
+        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> UseMagicAsync(IGuild guild)
         {
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
 
             if (dbGuild is null || dbGuild.MagicRoleId == ulong.MinValue)
-                return new Error<string>("Magic is not enabled in this guild");
+                return new Error<string>(StandardError.DisabledFeature("Magic"));
 
             var role = guild.FindRole(dbGuild.MagicRoleId);
             if (role is null)
-                return new DeletedRole<string>("Magic");
+                return new Error<string>(StandardError.DeletedRole("Magic"));
 
             var currentTime = Utils.GetCurrentUnix();
             if (currentTime < dbGuild.MagicRoleNextUse)
@@ -156,25 +156,25 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
         /// <param name="executingUser">User executing vouch</param>
         /// <param name="targetUser">User targeted by vouch</param>
         /// <returns>Success / DeletedRole / Error string / Exception</returns>
-        internal async Task<OneOf<Success, DeletedRole<string>, Error<string>, Error<Exception>>> VouchUserAsync(IGuild guild, IUser executingUser, IUser targetUser)
+        internal async Task<OneOf<Success, Error<string>, Error<Exception>>> VouchUserAsync(IGuild guild, IUser executingUser, IUser targetUser)
         {
             if (executingUser is not SocketGuildUser executingGuildUser)
-                return new Error<string>("Could not convert executing user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
             if (targetUser is not SocketGuildUser targetGuildUser)
-                return new Error<string>("Could not convert target user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("target user", "SocketGuildUser"));
 
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
 
             if (dbGuild is null || !dbGuild.VouchingOn)
-                return new Error<string>("Vouching is not enabled in this guild");
+                return new Error<string>(StandardError.DisabledFeature("Vouching"));
 
             if (guild.FindRole(dbGuild.VouchPermissionRoleId) is null) //todo: [LOGGING] Is logging needed if one of these fails?
-                return new DeletedRole<string>("Vouch permission");
+                return new Error<string>(StandardError.DeletedRole("Vouch permission"));
             if (executingGuildUser.FindRole(dbGuild.VouchPermissionRoleId) is null)
                 return new Error<string>($"You do not have the required role <@&{dbGuild.VouchPermissionRoleId}>");
             if (guild.FindRole(dbGuild.VouchRoleId) is null)
-                return new DeletedRole<string>("Vouch");
+                return new Error<string>(StandardError.DeletedRole("Vouch"));
             if (targetGuildUser.FindRole(dbGuild.VouchRoleId) is not null)
                 return new Error<string>($"{targetGuildUser.Mention} has already been vouched");
 
@@ -225,20 +225,20 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
         /// <param name="executingUser">User quarantining</param>
         /// <param name="targetUser">User being quarantined</param>
         /// <returns>Has user been quarantined? / DeletedRole / Error string / Exception</returns>
-        internal async Task<OneOf<Success<bool>, DeletedRole<string>, Error<string>, Error<Exception>>> QuarantineUserAsync(IGuild guild, IUser executingUser, IUser targetUser)
+        internal async Task<OneOf<Success<bool>, Error<string>, Error<Exception>>> QuarantineUserAsync(IGuild guild, IUser executingUser, IUser targetUser)
         {
             if (executingUser is not SocketGuildUser executingGuildUser)
-                return new Error<string>("Could not convert executing user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
             if (targetUser is not SocketGuildUser targetGuildUser)
-                return new Error<string>("Could not convert target user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("target user", "SocketGuildUser"));
 
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
 
             if (dbGuild is null || dbGuild.QuarantineRoleId == ulong.MinValue)
-                return new Error<string>("Quarantine is not enabled in this guild");
+                return new Error<string>(StandardError.DisabledFeature("Quarantine"));
             if (guild.FindRole(dbGuild.QuarantineRoleId) is null)
-                return new DeletedRole<string>("Quarantine");
+                return new Error<string>(StandardError.DeletedRole("Quarantine"));
 
             if (targetGuildUser.FindRole(dbGuild.QuarantineRoleId) is not null)
             {

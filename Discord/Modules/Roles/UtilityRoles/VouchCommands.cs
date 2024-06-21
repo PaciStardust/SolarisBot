@@ -35,7 +35,6 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             var res = await _roleService.VouchUserAsync(Context.Guild, Context.User, user);
             await res.Match(
                 success => Interaction.ReplyAsync($"Vouched for {user.Mention}, welcome to the server!"),
-                deletedRole => Interaction.ReplyDeletedRoleErrorAsync(deletedRole.Value),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
