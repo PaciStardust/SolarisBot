@@ -62,7 +62,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         /// Analyzes a user
         /// </summary>
         /// <param name="user">User to analyze</param>
-        /// <returns>Analysis on success / None / Error string</returns>
+        /// <returns>Analysis on success / Error string</returns>
         internal OneOf<Success<UserAnalysis>, Error<string>> AnalyzeUser(IUser user)
         {
             if (user.IsBot || user.IsWebhook)
@@ -82,7 +82,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         /// <param name="executingUser">User executing moderation</param>
         /// <param name="targetUserId">Id of user being targeted</param>
         /// <param name="ban">Should the action be a ban?</param>
-        /// <returns>Success / None / Error string / Exception</returns>
+        /// <returns>Success / Error string / Exception</returns>
         internal async Task<OneOf<Success, Error<string>, Error<Exception>>> ModerateUserAsync(IGuild guild, IUser executingUser, ulong targetUserId, bool ban)
         {
             if (executingUser is not SocketGuildUser executingGuildUser)

@@ -55,7 +55,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
         /// Uses magic in a guild
         /// </summary>
         /// <param name="guild">Guild to use magic in</param>
-        /// <returns>Modified role on success / DeletedRole / Error string / Exception</returns>
+        /// <returns>Modified role on success / Error string / Exception</returns>
         internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> UseMagicAsync(IGuild guild)
         {
             using var dbCtx = _dbService.GetContext();
@@ -155,7 +155,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
         /// <param name="guild">Guild for vouching</param>
         /// <param name="executingUser">User executing vouch</param>
         /// <param name="targetUser">User targeted by vouch</param>
-        /// <returns>Success / DeletedRole / Error string / Exception</returns>
+        /// <returns>Success / Error string / Exception</returns>
         internal async Task<OneOf<Success, Error<string>, Error<Exception>>> VouchUserAsync(IGuild guild, IUser executingUser, IUser targetUser)
         {
             if (executingUser is not SocketGuildUser executingGuildUser)
@@ -224,7 +224,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
         /// <param name="guild">Guild to quarantine in</param>
         /// <param name="executingUser">User quarantining</param>
         /// <param name="targetUser">User being quarantined</param>
-        /// <returns>Has user been quarantined? / DeletedRole / Error string / Exception</returns>
+        /// <returns>Has user been quarantined? / Error string / Exception</returns>
         internal async Task<OneOf<Success<bool>, Error<string>, Error<Exception>>> QuarantineUserAsync(IGuild guild, IUser executingUser, IUser targetUser)
         {
             if (executingUser is not SocketGuildUser executingGuildUser)
