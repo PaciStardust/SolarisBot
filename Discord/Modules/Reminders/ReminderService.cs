@@ -52,7 +52,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
             if (dbGuild is null || !dbGuild.RemindersOn)
-                return new Error<string>("Reminders are not enabled in this guild");
+                return new Error<string>(StandardError.DisabledFeature("Reminders"));
 
             var userReminders = await dbCtx.Reminders.ForUser(user.Id).ToArrayAsync();
             if (userReminders.Length >= _botConfig.MaxRemindersPerUser)
@@ -107,7 +107,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed converting reminder time");
-                return new Error<string>("Failed to convert reminder time");
+                return new Error<string>(StandardError.FailedConversion("provided time", "usable format"));
             }
         }
 
@@ -128,13 +128,13 @@ namespace SolarisBot.Discord.Modules.Reminders
         /// </summary>
         /// <param name="user">Id of user</param>
         /// <param name="reminderId">Id of reminder</param>
-        /// <returns>Deleted reminder on success / None / Exception</returns>
-        internal async Task<OneOf<Success<DbReminder>, None, Error<Exception>>> DeleteReminderAsync(IUser user, ulong reminderId)
+        /// <returns>Deleted reminder on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbReminder>, Error<string>, Error<Exception>>> DeleteReminderAsync(IUser user, ulong reminderId)
         {
             using var dbCtx = _dbService.GetContext();
             var reminder = await dbCtx.Reminders.ForUser(user.Id).FirstOrDefaultAsync(x => x.ReminderId == reminderId);
             if (reminder is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             _logger.LogDebug("Deleting reminder {reminder} from user {user} in DB", reminder, user.Log());
             dbCtx.Reminders.Remove(reminder);
@@ -178,8 +178,8 @@ namespace SolarisBot.Discord.Modules.Reminders
         /// </summary>
         /// <param name="guild">Id of guild</param>
         /// <param name="channel">Id of channel</param>
-        /// <returns>Wiped reminders on success / None / Exception</returns>
-        internal async Task<OneOf<Success<DbReminder[]>, None, Error<Exception>>> WipeRemindersAsync(IGuild guild, IChannel? channel)
+        /// <returns>Wiped reminders on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbReminder[]>, Error<string>, Error<Exception>>> WipeRemindersAsync(IGuild guild, IChannel? channel)
         {
             using var dbCtx = _dbService.GetContext();
             var query = dbCtx.Reminders.ForGuild(guild.Id);
@@ -188,7 +188,7 @@ namespace SolarisBot.Discord.Modules.Reminders
 
             var reminders = await query.ToArrayAsync();
             if (reminders.Length == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             _logger.LogDebug("Wiping {reminders} reminders from guild {guild}", reminders.Length, guild.Log());
             dbCtx.Reminders.RemoveRange(reminders);

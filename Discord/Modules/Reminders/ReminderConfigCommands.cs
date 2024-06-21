@@ -37,7 +37,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             var res = await _reminderService.WipeRemindersAsync(Context.Guild, channel);
             await res.Match(
                 success => Interaction.ReplyAsync($"Wiped **{success.Value.Length}** reminders from database"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }

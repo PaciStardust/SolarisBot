@@ -25,7 +25,7 @@ namespace SolarisBot.Discord.Modules.Reminders
         {
             if (!ulong.TryParse(timestamp, out var parsedTimestamp))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("timestamp");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("timestamp"));
                 return;
             }
 
@@ -62,7 +62,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             var reminders = await _reminderService.GetRemindersForUserAsync(Context.User.Id);
             if (reminders.Length == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
 
@@ -78,14 +78,14 @@ namespace SolarisBot.Discord.Modules.Reminders
         {
             if (!ulong.TryParse(reminderId, out var parsedReminderId))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("reminder ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("reminder ID"));
                 return;
             }
 
             var res = await _reminderService.DeleteReminderAsync(Context.User, parsedReminderId);
             await res.Match(
                 success => Interaction.ReplyAsync($"Deleted reminder #{success.Value.ReminderId}", isEphemeral: true),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
