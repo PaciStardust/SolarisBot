@@ -63,13 +63,13 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         /// </summary>
         /// <param name="user">User to analyze</param>
         /// <returns>Analysis on success / None / Error string</returns>
-        internal OneOf<Success<UserAnalysis>, None, Error<string>> AnalyzeUser(IUser user)
+        internal OneOf<Success<UserAnalysis>, Error<string>> AnalyzeUser(IUser user)
         {
             if (user.IsBot || user.IsWebhook)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             if (user is not SocketGuildUser gUser)
-                return new Error<string>("Unable to convert user to socket guild user"); //todo: [REFACTOR] Unify?
+                return new Error<string>(StandardError.FailedConversion("User", "SocketGuildUser")); //todo: [REFACTOR] Unify?
 
             var analysis = UserAnalysis.ForUser(gUser, _config);
             return new Success<UserAnalysis>(analysis);
@@ -83,17 +83,17 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         /// <param name="targetUserId">Id of user being targeted</param>
         /// <param name="ban">Should the action be a ban?</param>
         /// <returns>Success / None / Error string / Exception</returns>
-        internal async Task<OneOf<Success, None, Error<string>, Error<Exception>>> ModerateUserAsync(IGuild guild, IUser executingUser, ulong targetUserId, bool ban)
+        internal async Task<OneOf<Success, Error<string>, Error<Exception>>> ModerateUserAsync(IGuild guild, IUser executingUser, ulong targetUserId, bool ban)
         {
             if (executingUser is not SocketGuildUser executingGuildUser)
-                return new Error<string>("Unable to convert executing user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("executing User", "SocketGuildUser"));
 
             if ((!ban && !executingGuildUser.GuildPermissions.KickMembers) || (ban && !executingGuildUser.GuildPermissions.BanMembers))
                 return new Error<string>($"You do not have permission to {(ban ? "ban" : "kick")} members");
 
             var targetGuildUser = await guild.GetUserAsync(targetUserId);
             if (targetGuildUser is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             var verb = ban ? "Bann" : "Kick";
             try

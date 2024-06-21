@@ -15,7 +15,7 @@ namespace SolarisBot.Discord.Modules.Utility
         {
             if (user is not SocketGuildUser gUser)
             {
-                await Interaction.ReplyErrorAsync("Could not convert user to socket guild user");
+                await Interaction.ReplyErrorAsync(StandardError.FailedConversion("User", "SocketGuildUser"));
                 return;
             }
 
@@ -31,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Utility
 
             if (strings.Count == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
 

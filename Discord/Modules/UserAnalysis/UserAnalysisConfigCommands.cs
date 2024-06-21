@@ -37,7 +37,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var res = _userAnalysisService.AnalyzeUser(user);
             await res.Match(
                 success => Interaction.ReplyAsync(success.Value.GenerateSummaryEmbed()),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value)
             );
         }
@@ -61,7 +60,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var res = await _userAnalysisService.ModerateUserAsync(Context.Guild, Context.User, parsedUserId, ban);
             await res.Match(
                 success => Interaction.ReplyAsync($"User has been {(ban ? "ban" : "kick")}ed"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
