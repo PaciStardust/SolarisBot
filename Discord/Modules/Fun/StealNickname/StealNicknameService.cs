@@ -54,13 +54,13 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
         internal async Task<OneOf<Success<(string, string, char)>, Error<string>, Error<Exception>>> StealNicknameAsync(IUser executingUser, IUser targetUser)
         {
             if (executingUser is not IGuildUser executingGuildUser)
-                return new Error<string>("Could not convert executing user to guild user");
+                return new Error<string>(StandardError.FailedConversion("executing user", "GuildUser"));
             var executingName = executingGuildUser.DisplayName;
             if (executingName.Length >= 32) //Max length for nicknames
                 return new Error<string>("Your name is too long for stealing");
 
             if (targetUser is not IGuildUser targetGuildUser)
-                return new Error<string>("Could not convert target user to guild user");
+                return new Error<string>(StandardError.FailedConversion("target user", "GuildUser"));
             var targetName = targetGuildUser.DisplayName;
             if (targetName.Length <= 1)
                 return new Error<string>("Target name is too short for stealing");
