@@ -27,19 +27,19 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         /// </summary>
         /// <param name="user">User to get group for</param>
         /// <param name="identifier">Identifier for search</param>
-        /// <returns>Role group on success / None / Error string / Exception</returns>
-        internal async Task<OneOf<Success<DbRoleGroup>, None, Error<string>, Error<Exception>>> SelectRoleGroupAsync(IUser user, string identifier)
+        /// <returns>Role group on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbRoleGroup>, Error<string>, Error<Exception>>> SelectRoleGroupAsync(IUser user, string identifier)
         {
             if (user is not SocketGuildUser gUser)
-                return new Error<string>("Unable to convert user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
             var roleGroupMatch = await GetRoleGroupForIdentifierAsync(gUser.Guild.Id, identifier.Trim());
 
             if (roleGroupMatch is null || roleGroupMatch.RoleConfigs.Count == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             if (roleGroupMatch!.RequiredRoleId != ulong.MinValue && !gUser.Roles.Select(x => x.Id).Contains(roleGroupMatch.RequiredRoleId))
-                return new Error<string>($"You do not have the required role <@&{roleGroupMatch.RequiredRoleId}>");
+                return new Error<string>(StandardError.RoleRequired(roleGroupMatch.RequiredRoleId));
 
             return new Success<DbRoleGroup>(roleGroupMatch);
         }
@@ -50,11 +50,11 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         /// <param name="user">User executing the event</param>
         /// <param name="rgid">Role group ID</param>
         /// <param name="selections">Selections made by user</param>
-        /// <returns>A result embed on success / None / Error string / Exception</returns>
-        internal async Task<OneOf<Success<Embed>, None, Error<string>, Error<Exception>>> HandleRoleSelectorInteractionAsync(IUser user, string rgid, string[] selections)
+        /// <returns>A result embed on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<Embed>, Error<string>, Error<Exception>>> HandleRoleSelectorInteractionAsync(IUser user, string rgid, string[] selections)
         {
             if (user is not SocketGuildUser gUser)
-                return new Error<string>("Unable to convert user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
             if (selections.Length == 0)
                 return new Error<string>("No selections have been made");
@@ -65,10 +65,10 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             using var dbCtx = _dbService.GetContext();
             var roleGroup = await dbCtx.RoleGroups.ForGuildWithRoles(gUser.Guild.Id).FirstOrDefaultAsync(x => x.RoleGroupId == parsedGid);
             if (roleGroup is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             if (roleGroup.RequiredRoleId != ulong.MinValue && gUser.FindRole(roleGroup.RequiredRoleId) is null)
-                return new Error<string>($"You do not have the required role <@&{roleGroup.RequiredRoleId}>");
+                return new Error<string>(StandardError.RoleRequired(roleGroup.RequiredRoleId));
 
             var dbRoles = roleGroup.RoleConfigs;
             var invalidRoles = new List<string>();
@@ -93,11 +93,11 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         /// <param name="user">User to assign roles to</param>
         /// <param name="roleConfigs">RoleConfigs to assing</param>
         /// <param name="rolesInvalid">Invalid supplied roles</param>
-        /// <returns>An embed summarizing the result on success / None / Error string / Exception</returns>
-        private async Task<OneOf<Success<Embed>, None, Error<string>, Error<Exception>>> AssignRolesToUser(IUser user, IEnumerable<DbRoleConfig>? roleConfigs = null, IEnumerable<string>? rolesInvalid = null)
+        /// <returns>An embed summarizing the result on success / Error string / Exception</returns>
+        private async Task<OneOf<Success<Embed>, Error<string>, Error<Exception>>> AssignRolesToUser(IUser user, IEnumerable<DbRoleConfig>? roleConfigs = null, IEnumerable<string>? rolesInvalid = null)
         {
             if (user is not SocketGuildUser gUser)
-                return new Error<string>("Unable to convert user to socket guild user"); //todo: [REFACTOR] unify
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser")); //todo: [REFACTOR] unify
 
             var groupFields = new List<EmbedFieldBuilder>();
 
@@ -188,7 +188,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             }
 
             if (groupFields.Count == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             var embedBuilder = EmbedFactory.Builder()
                 .WithTitle("Roles Updated")
@@ -216,7 +216,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var identifierTrimmed = identifier.Trim();
             var descriptionTrimmed = description.Trim();
             if (!DiscordUtils.IsIdentifierValid(identifierTrimmed))
-                return new Error<string>(DiscordUtils.GetIdentifierError(identifierTrimmed));
+                return new Error<string>(StandardError.InvalidIdentifier(identifierTrimmed));
             if (descriptionTrimmed.Length > 200)
                 return new Error<string>("Descriptions must be 200 characters or shorter");
 
@@ -250,14 +250,14 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         /// </summary>
         /// <param name="guild">Guild to delete from</param>
         /// <param name="identifier">Identifier of group</param>
-        /// <returns>Deleted role group on success / None / Error string / Exception</returns>
-        internal async Task<OneOf<Success<DbRoleGroup>, None, Error<string>, Error<Exception>>> DeleteRoleGroupAsync(IGuild guild, string identifier)
+        /// <returns>Deleted role group on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbRoleGroup>, Error<string>, Error<Exception>>> DeleteRoleGroupAsync(IGuild guild, string identifier)
         {
             using var dbCtx = _dbService.GetContext();
             var identifierSearch = identifier.Trim().ToLower();
             var match = await dbCtx.RoleGroups.ForGuild(guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == identifierSearch); //No ordinal because EF
             if (match is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             dbCtx.RoleGroups.Remove(match);
 
@@ -280,8 +280,8 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         /// <param name="group">Group to register to</param>
         /// <param name="identifier">Identifier of role</param>
         /// <param name="description">Description</param>
-        /// <returns>Created role config on success / None / Error string / Exception</returns>
-        internal async Task<OneOf<Success<DbRoleConfig>, None, Error<string>, Error<Exception>>> RegisterRoleAsync(IGuild guild, IRole role, string group, string identifier, string description)
+        /// <returns>Created role config on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbRoleConfig>, Error<string>, Error<Exception>>> RegisterRoleAsync(IGuild guild, IRole role, string group, string identifier, string description)
         {
             if (string.IsNullOrWhiteSpace(identifier))
                 identifier = role.Name;
@@ -292,7 +292,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
 
             var identifierValid = DiscordUtils.IsIdentifierValid(identifierTrimmed);
             if (!identifierValid || !DiscordUtils.IsIdentifierValid(groupSearch))
-                return new Error<string>(DiscordUtils.GetIdentifierError(identifierValid ? groupSearch : identifierTrimmed));
+                return new Error<string>(StandardError.InvalidIdentifier(identifierValid ? groupSearch : identifierTrimmed));
             if (descriptionTrimmed.Length > 200)
                 return new Error<string>("Descriptions must be 200 characters or shorter");
 
@@ -302,7 +302,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
 
             var roleGroup = await dbCtx.RoleGroups.ForGuildWithRoles(guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
             if (roleGroup is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             if (roleGroup.RoleConfigs.FirstOrDefault(x => x.Identifier.Equals(identifierTrimmed, StringComparison.OrdinalIgnoreCase)) is not null)
                 return new Error<string>("A Role with that identifier is already registered");
@@ -334,8 +334,8 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         /// <param name="guild">Guild to unregister in</param>
         /// <param name="group">Group to unregister from</param>
         /// <param name="identifier">Identifier of role</param>
-        /// <returns>Deleted role config on success / None / Exception</returns>
-        internal async Task<OneOf<Success<DbRoleConfig>, None, Error<Exception>>> UnregisterRoleAsync(IGuild guild, string group, string identifier)
+        /// <returns>Deleted role config on success / Exception</returns>
+        internal async Task<OneOf<Success<DbRoleConfig>, Error<string>, Error<Exception>>> UnregisterRoleAsync(IGuild guild, string group, string identifier)
         {
             var groupSearch = group.Trim().ToLower();
             var identifierSearch = identifier.Trim();
@@ -344,7 +344,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var dbGroup = await dbCtx.RoleGroups.ForGuildWithRoles(guild.Id).FirstOrDefaultAsync(x => x.Identifier.ToLower() == groupSearch); //No ordinal because EF
             var dbRole = dbGroup?.RoleConfigs.FirstOrDefault(x => x.Identifier.Equals(identifierSearch, StringComparison.OrdinalIgnoreCase));
             if (dbRole is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             dbCtx.RoleConfigs.Remove(dbRole);
 

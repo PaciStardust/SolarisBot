@@ -15,5 +15,11 @@
 
         internal static string DisabledFeature(string featureName)
             => $"{featureName} is not enabled in this guild";
+
+        internal static string RoleRequired(ulong roleId)
+            => $"You do not have the required role <@&{roleId}>";
+
+        internal static string InvalidIdentifier(string identifier)
+            => $"Identifier {identifier} is invalid, identifiers can only contain letters, numbers, and spaces and must be between 2 and 20 characters long";
     }
 }

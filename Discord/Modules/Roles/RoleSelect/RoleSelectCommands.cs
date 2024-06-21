@@ -82,7 +82,6 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var res = await _rsService.SelectRoleGroupAsync(Context.User, identifier);
             await res.Match(
                 success => Interaction.ReplyComponentAsync(RoleSelectService.GenerateRoleGroupSelector(success.Value), $"Roles in group {success.Value.Identifier}:", true),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
@@ -94,7 +93,6 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var res = await _rsService.HandleRoleSelectorInteractionAsync(Context.User, rgid, selections);
             await res.Match(
                 success => Interaction.ReplyAsync(success.Value, isEphemeral: true),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );

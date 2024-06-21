@@ -68,7 +68,6 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var res = await _rsService.DeleteRoleGroupAsync(Context.Guild, identifier);
             await res.Match(
                 success => Interaction.ReplyAsync($"The role group with the identifier **\"{success.Value.Identifier}\"** has been deleted"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
@@ -86,7 +85,6 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var res = await _rsService.RegisterRoleAsync(Context.Guild, role, group, identifier, description);
             await res.Match(
                 success => Interaction.ReplyAsync($"Role **\"{success.Value.Identifier}\"** registered\n\nGroup: **{success.Value.Identifier}**\nRole: **{role.Mention}**\nDescription: **{(string.IsNullOrWhiteSpace(success.Value.Description) ? "None" : success.Value.Description)}**"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
@@ -102,7 +100,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var res = await _rsService.UnregisterRoleAsync(Context.Guild, group, identifier);
             await res.Match(
                 success => Interaction.ReplyAsync($"A role with the identifier **\"{success.Value.Identifier}\"** has been unregistered"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
