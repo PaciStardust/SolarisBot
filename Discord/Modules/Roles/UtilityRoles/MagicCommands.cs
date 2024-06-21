@@ -24,7 +24,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
         {
             if (!ulong.TryParse(timeout, out var parsedTimeout))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("timeout");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("timeout"));
                 return;
             }
 

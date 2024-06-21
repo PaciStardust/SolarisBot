@@ -53,7 +53,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         {
             if (!ulong.TryParse(userId, out var parsedUserId))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("user ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("user ID"));
                 return;
             }
 

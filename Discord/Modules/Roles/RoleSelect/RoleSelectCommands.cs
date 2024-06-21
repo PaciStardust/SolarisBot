@@ -21,7 +21,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var roleGroups = await _rsService.GetRoleGroupsForGuildAsync(Context.Guild.Id);
             if (roleGroups.Length == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
 
@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
 
             if (groupFields.Count == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
 
