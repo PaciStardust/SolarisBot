@@ -42,7 +42,8 @@ namespace SolarisBot
 
             logger.Information("Build complete, starting host");
 
-            await host.Services.GetRequiredService<DatabaseService>().ReadyAsync(); //todo: [REFACTOR] Move this?
+            //Starting DbService before all else
+            await host.Services.GetRequiredService<DatabaseService>().ReadyAsync();
 
             await host.RunAsync();
         }
@@ -61,7 +62,7 @@ namespace SolarisBot
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton<DatabaseService>(); //todo: [REFACTOR] make this automatic at some point
+                    services.AddSingleton<DatabaseService>();
 
                     services.AddHttpClient();
 
@@ -75,37 +76,9 @@ namespace SolarisBot
 
                     //Fix for constructor of interaction service being broken (Provided by Discord.NET discord)
                     services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
-
-                    foreach (var service in assembly.GetTypes())
-                    {
-                        var autoLoadAttribute = service.GetCustomAttribute<AutoLoadServiceAttribute>();
-                        if (autoLoadAttribute is null)
-                            continue;
-
-                        bool isHosted = typeof(IHostedService).IsAssignableFrom(service);
-
-                        var attribute = service.GetCustomAttribute<ModuleAttribute>();
-                        var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
-                        if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
-                        {
-                            logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
-                            continue;
-                        }
-                        logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
-
-                        if (isHosted)
-                            services.AddSingleton(typeof(IHostedService), service);
-                        else
-                        {
-                            switch (autoLoadAttribute.Lifetime)
-                            {
-                                case Lifetime.Transient: services.AddTransient(service); break;
-                                case Lifetime.Scoped: services.AddScoped(service); break;
-                                default: services.AddSingleton(service); break;
-                            }
-                        }
-                    }
                     services.AddHostedService<DiscordClientService>();
+
+                    LoadServicesFromAssembly(services, assembly, botConfig, logger);
                 })
                 .UseSerilog(logger)
                 .Build();
@@ -136,6 +109,42 @@ namespace SolarisBot
             botConfig.SaveAt(Utils.PathConfigFile);
 
             return botConfig;
+        }
+
+        /// <summary>
+        /// Loads services into servicecollection from assembly
+        /// </summary>
+        private static void LoadServicesFromAssembly(IServiceCollection services, Assembly assembly, BotConfig botConfig, ILogger logger)
+        {
+            foreach (var service in assembly.GetTypes())
+            {
+                var autoLoadAttribute = service.GetCustomAttribute<AutoLoadServiceAttribute>();
+                if (autoLoadAttribute is null)
+                    continue;
+
+                bool isHosted = typeof(IHostedService).IsAssignableFrom(service);
+
+                var attribute = service.GetCustomAttribute<ModuleAttribute>();
+                var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
+                if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
+                {
+                    logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
+                    continue;
+                }
+                logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
+
+                if (isHosted)
+                    services.AddSingleton(typeof(IHostedService), service);
+                else
+                {
+                    switch (autoLoadAttribute.Lifetime)
+                    {
+                        case Lifetime.Transient: services.AddTransient(service); break;
+                        case Lifetime.Scoped: services.AddScoped(service); break;
+                        default: services.AddSingleton(service); break;
+                    }
+                }
+            }
         }
         #endregion
     }
