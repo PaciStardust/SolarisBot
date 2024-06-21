@@ -69,7 +69,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 return new Error<string>(StandardError.NoResults);
 
             if (user is not SocketGuildUser gUser)
-                return new Error<string>(StandardError.FailedConversion("target user", "SocketGuildUser")); //todo: [REFACTOR] Unify?
+                return new Error<string>(StandardError.FailedConversion("target user", "SocketGuildUser"));
 
             var analysis = UserAnalysis.ForUser(gUser, _config);
             return new Success<UserAnalysis>(analysis);

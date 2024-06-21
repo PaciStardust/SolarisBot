@@ -62,19 +62,6 @@ namespace SolarisBot.Discord.Common
         /// </summary>
         internal static Embed Error(Exception exception)
             => Error(exception.GetType().Name, exception.Message);
-
-        /// <summary>
-        /// Generates a generic embed error based on GenericError
-        /// </summary>
-        internal static Embed Error(GenericError genericError)
-        {
-            var data = genericError switch
-            {
-                GenericError.NoResults => "Request yielded no results",
-                _ => "An unknown error occured"
-            };
-            return Error(data);
-        }
         #endregion
     }
 

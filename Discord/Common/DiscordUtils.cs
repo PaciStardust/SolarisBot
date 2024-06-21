@@ -78,14 +78,6 @@ namespace SolarisBot.Discord.Common
         /// <returns>Is valid?</returns>
         internal static bool IsIdentifierValid(string identifier)
             => _nameVerificator.IsMatch(identifier);
-
-        /// <summary>
-        /// Returns an error for an invalid identifier
-        /// </summary>
-        /// <param name="identifier">Invalid identifier</param>
-        /// <returns>Error message</returns>
-        internal static string GetIdentifierError(string identifier) //todo: [REFACTOR] Unify
-            => $"Identifier **{identifier}** is invalid, identifiers can only contain letters, numbers, and spaces and must be between 2 and 20 characters long";
         #endregion
 
         #region Roles

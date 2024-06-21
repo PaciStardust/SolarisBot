@@ -97,7 +97,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         private async Task<OneOf<Success<Embed>, Error<string>, Error<Exception>>> AssignRolesToUser(IUser user, IEnumerable<DbRoleConfig>? roleConfigs = null, IEnumerable<string>? rolesInvalid = null)
         {
             if (user is not SocketGuildUser gUser)
-                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser")); //todo: [REFACTOR] unify
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
             var groupFields = new List<EmbedFieldBuilder>();
 
