@@ -29,11 +29,11 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="guild">Guild to create role in</param>
         /// <param name="user">User to apply role to</param>
         /// <param name="color">Color of role</param>
-        /// <returns>Created role on success / Name of deleted role / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole>, DeletedRole<string>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, Color color)
+        /// <returns>Created role on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, Color color)
         {
             if (user is not SocketGuildUser gUser)
-                return new Error<string>("Could not convert user to socket guild user");
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
             var generatedRoleName = DiscordUtils.GetCustomColorRoleName(gUser);
             var customColorRole = guild.Roles.FirstOrDefault(x => x.Name == generatedRoleName);
@@ -43,11 +43,11 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
                 using var dbCtx = _dbService.GetContext();
                 var permissionRole = (await dbCtx.GetGuildByIdAsync(guild.Id))?.CustomColorPermissionRoleId;
                 if (permissionRole is null || permissionRole == ulong.MinValue)
-                    return new Error<string>("Custom color roles are not enabled in this guild");
+                    return new Error<string>(StandardError.DisabledFeature("Custom color"));
                 if (guild.FindRole(permissionRole.Value) is null)
-                    return new DeletedRole<string>("Custom color");
+                    return new Error<string>(StandardError.DeletedRole("Custom color"));
                 if (gUser.FindRole(permissionRole.Value) is null)
-                    return new Error<string>($"You do not have the required role <@&{permissionRole}>");
+                    return new Error<string>(StandardError.RoleRequired(permissionRole.Value));
 
                 try
                 {
@@ -99,14 +99,14 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// </summary>
         /// <param name="guild">Guild to delete role from</param>
         /// <param name="user">Owner of role</param>
-        /// <returns>Success / None / Exception</returns>
-        internal async Task<OneOf<Success, None, Error<Exception>>> DeleteCustomColorRole(IGuild guild, IUser user)
+        /// <returns>Success / Error string / Exception</returns>
+        internal async Task<OneOf<Success, Error<string>, Error<Exception>>> DeleteCustomColorRole(IGuild guild, IUser user)
         {
             var roleName = DiscordUtils.GetCustomColorRoleName(user);
             var role = guild.Roles.FirstOrDefault(x => x.Name == roleName);
 
             if (role is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             try
             {
@@ -152,11 +152,11 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// </summary>
         /// <param name="guild">Guild for deletion</param>
         /// <returns>Array of deleted roles on success / none / exception</returns>
-        internal async Task<OneOf<Success<IRole[]>, None, Error<Exception>>> DeleteCustomColorRolesForGuildAsync(IGuild guild)
+        internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteCustomColorRolesForGuildAsync(IGuild guild)
         {
             var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix)).ToArray();
             if (roles.Length == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             try
             {
@@ -177,19 +177,19 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// Deletes all custom color roles without owner from a guild
         /// </summary>
         /// <param name="guild">Guild to delete from</param>
-        /// <returns>Array of deleted roles on success / none / exception</returns>
-        internal async Task<OneOf<Success<IRole[]>, None, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild)
+        /// <returns>Array of deleted roles on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild)
         {
             var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
             if (!roles.Any())
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             var guildUsers = await guild.GetUsersAsync();
             var guildUserStringIds = guildUsers.Select(x => x.Id.ToString());
             var rolesWithoutOwner = roles.Where(x => !guildUserStringIds.Contains(GetIdFromCustomColorRoleName(x.Name))).ToArray();
 
             if (rolesWithoutOwner.Length == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             try
             {

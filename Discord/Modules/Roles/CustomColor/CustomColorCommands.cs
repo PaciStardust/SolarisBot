@@ -50,7 +50,6 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             var res = await _customColorService.CreateCustomColorRole(Context.Guild, Context.User, color);
             await res.Match(
                 success => Interaction.ReplyAsync($"Custom color role has been set to {success.Value.Mention}", color, isEphemeral: true),
-                deletedRole => Interaction.ReplyDeletedRoleErrorAsync(deletedRole.Value),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
@@ -64,7 +63,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             var res = await _customColorService.DeleteCustomColorRole(Context.Guild, Context.User);
             await res.Match(
                 success => Interaction.ReplyAsync("Deleted your custom color role", isEphemeral: true),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
