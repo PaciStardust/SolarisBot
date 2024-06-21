@@ -10,7 +10,7 @@ using System.Reflection;
 namespace SolarisBot.Discord.Services
 {
     [AutoLoadService]
-    internal sealed class InteractionHandlerService : IHostedService //todo: [REFACTOR] Start with client.ready?
+    internal sealed class InteractionHandlerService : IHostedService
     {
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _intService;
