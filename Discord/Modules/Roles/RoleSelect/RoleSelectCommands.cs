@@ -15,8 +15,11 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             _rsService = rsService;
         }
 
-        [SlashCommand("view", "View all roles and groups")] //todo: [FEATURE] Make this hidden?
-        public async Task ViewRolesAsync()
+        [SlashCommand("view", "View all roles and groups")]
+        public async Task ViewRolesAsync
+        (
+            [Summary(description: "[Opt] Visibility of result")] bool visible = false
+        )
         {
             var roleGroups = await _rsService.GetRoleGroupsForGuildAsync(Context.Guild.Id);
             if (roleGroups.Length == 0)
@@ -70,7 +73,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                 .WithFields(groupFields)
                 .WithFooter($"Use \"/roles select *[groupname/rolename]*\" to pick roles from a group");
 
-            await Interaction.ReplyAsync(embedBuilder.Build());
+            await Interaction.ReplyAsync(embedBuilder.Build(), visible);
         }
 
         [SlashCommand("select", "Select roles from a group"), RequireBotPermission(GuildPermission.ManageRoles)]

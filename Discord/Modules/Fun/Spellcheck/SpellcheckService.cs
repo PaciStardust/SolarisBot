@@ -50,6 +50,7 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
             }
 
             _client.MessageReceived += CheckForSpellErrorsAsync;
+            _client.MessageUpdated += CheckForSpellErrorsOnEditAsync;
             return Task.CompletedTask;
         }
 
@@ -85,7 +86,7 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
         /// <summary>
         /// Annoys user for spelling mistakes lol
         /// </summary>
-        private async Task CheckForSpellErrorsAsync(SocketMessage message) //todo: [FEATURE] On edit?
+        private async Task CheckForSpellErrorsAsync(SocketMessage message)
         {
             if (message is not IUserMessage userMessage || message.Author.IsWebhook || message.Author.IsBot || message.Author is not IGuildUser gUser)
                 return;
@@ -116,6 +117,12 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
 
             await userMessage.ReplyAsync($"You misspelled the following: {string.Join(", ", errors)}");
         }
+
+        /// <summary>
+        /// Annoys user for spelling mistakes lol
+        /// </summary>
+        private Task CheckForSpellErrorsOnEditAsync(Cacheable<IMessage, ulong> oldMessage, SocketMessage newMessage, ISocketMessageChannel channel)
+            => CheckForSpellErrorsAsync(newMessage);
         #endregion
     }
 }

@@ -59,7 +59,6 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
         }
 
         [SlashCommand("remove", "Remove RegEx channels")]
-        //todo: [FEATURE] Channel ID option to avoid leftovers
         public async Task DeleteRegexChannelsAsync
         (
             [Summary(description: "[Opt] Id to delete")] string? targetId = null

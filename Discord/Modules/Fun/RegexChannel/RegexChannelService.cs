@@ -24,7 +24,8 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             _client = client;
             _dbService = dbService;
 
-            _client.MessageReceived += CheckForRegexAsync; //todo: [FEATURE] On edit?
+            _client.MessageReceived += CheckForRegexAsync;
+            _client.MessageUpdated += CheckForRegexOnEditAsync;
         }
 
         #region Commands
@@ -164,7 +165,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
                     else
                     {
                         _logger.LogDebug("Responding to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
-                        await userMessage.ReplyAsync($"You {regexChannel.PunishmentMessage}");
+                        await userMessage.ReplyAsync(regexChannel.PunishmentMessage);
                         _logger.LogInformation("Responded to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     }
                 }
@@ -224,6 +225,15 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
                 }
             }
         }
+
+        /// <summary>
+        /// Checks if the message needs to be regex checked and then applies punishments if checks fail
+        /// </summary>
+        /// <param name="oldMessage">Old message</param>
+        /// <param name="newMessage">New message</param>
+        /// <param name="channel">Channel</param>
+        private Task CheckForRegexOnEditAsync(Cacheable<IMessage, ulong> oldMessage, SocketMessage newMessage, ISocketMessageChannel channel)
+            => CheckForRegexAsync(newMessage);
         #endregion
     }
 }
