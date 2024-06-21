@@ -5,7 +5,7 @@
         internal const string NoResults = "Request yielded no results";
 
         internal static string InvalidParameter(string parameterName)
-            => $"Value for {parameterName} parameter is invalid";
+            => $"Value for parameter {parameterName} is invalid";
 
         internal static string FailedConversion(string from, string to)
             => $"Unable to convert {from} to {to}";
