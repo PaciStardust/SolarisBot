@@ -39,7 +39,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             var upperHex = hex.ToUpper();
             if (!_hexCodeValidator.IsMatch(upperHex) || !uint.TryParse(upperHex, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out var colorNumber))
             {
-                await Interaction.ReplyErrorAsync($"Failed to convert **{upperHex}** to hex code");
+                await Interaction.ReplyErrorAsync(StandardError.FailedConversion(upperHex, "hex code"));
                 return;
             }
             await SetRoleColorAsync(new(colorNumber));
