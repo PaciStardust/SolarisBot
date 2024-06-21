@@ -19,6 +19,9 @@ namespace SolarisBot.Discord.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Starts the discord client
+        /// </summary>
         public async Task StartAsync(CancellationToken cToken)
         {
             _client.Log += OnLog;
@@ -28,6 +31,9 @@ namespace SolarisBot.Discord.Services
             await _client.StartAsync();
         }
 
+        /// <summary>
+        /// Stops the discord client
+        /// </summary>
         public async Task StopAsync(CancellationToken cToken)
         {
             _client.Log -= OnLog;
@@ -37,9 +43,15 @@ namespace SolarisBot.Discord.Services
             await _client.StopAsync();
         }
 
+        /// <summary>
+        /// Converts logging
+        /// </summary>
         private Task OnLog(LogMessage logMessage)
             => logMessage.Log(_logger);
 
+        /// <summary>
+        /// Action to do when logging
+        /// </summary>
         private async Task OnReadyAsync()
         {
             try

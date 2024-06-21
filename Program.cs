@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -42,6 +41,10 @@ namespace SolarisBot
             var host = CreateHost(configuration, botConfig, logger, assembly);
 
             logger.Information("Build complete, starting host");
+
+            //Starting DbService before all else
+            await host.Services.GetRequiredService<DatabaseService>().ReadyAsync();
+
             await host.RunAsync();
         }
 
@@ -54,17 +57,12 @@ namespace SolarisBot
                 .AddEnvironmentVariables()
                 .Build();
 
-        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger, Assembly assembly)
-            => Host.CreateDefaultBuilder()
+        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger, Assembly assembly) //todo: [FEATURE] Backups of database, counting?
+            => Host.CreateDefaultBuilder() 
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
                 {
-                    var dbPath = Path.Combine(Utils.PathConfigDirectory, botConfig.DatabaseFile);
-                    services.AddDbContext<DatabaseContext>(options => options.UseSqlite
-                    (
-                        $"Data Source={dbPath};Pooling=false"),
-                        ServiceLifetime.Transient
-                    ); //todo: [FEATURE] Backups of database, counting?
+                    services.AddSingleton<DatabaseService>();
 
                     services.AddHttpClient();
 
@@ -72,41 +70,15 @@ namespace SolarisBot
                     services.AddSingleton(new DiscordSocketClient(new()
                     {
                         GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent | GatewayIntents.GuildMembers,
-                        UseInteractionSnowflakeDate = false
+                        UseInteractionSnowflakeDate = false,
+                        DefaultRetryMode = RetryMode.RetryRatelimit
                     }));
 
                     //Fix for constructor of interaction service being broken (Provided by Discord.NET discord)
                     services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()));
-
-                    foreach (var service in assembly.GetTypes())
-                    {
-                        var autoLoadAttribute = service.GetCustomAttribute<AutoLoadServiceAttribute>();
-                        if (autoLoadAttribute is null)
-                            continue;
-
-                        bool isHosted = typeof(IHostedService).IsAssignableFrom(service);
-
-                        var attribute = service.GetCustomAttribute<ModuleAttribute>();
-                        if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
-                        {
-                            logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, attribute.ModuleName);
-                            continue;
-                        }
-                        logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, attribute?.ModuleName ?? "NONE");
-
-                        if (isHosted)
-                            services.AddSingleton(typeof(IHostedService), service);
-                        else
-                        {
-                            switch (autoLoadAttribute.Lifetime)
-                            {
-                                case Lifetime.Transient: services.AddTransient(service); break;
-                                case Lifetime.Scoped: services.AddScoped(service); break;
-                                default: services.AddSingleton(service); break;
-                            }
-                        }
-                    }
                     services.AddHostedService<DiscordClientService>();
+
+                    LoadServicesFromAssembly(services, assembly, botConfig, logger);
                 })
                 .UseSerilog(logger)
                 .Build();
@@ -137,6 +109,42 @@ namespace SolarisBot
             botConfig.SaveAt(Utils.PathConfigFile);
 
             return botConfig;
+        }
+
+        /// <summary>
+        /// Loads services into servicecollection from assembly
+        /// </summary>
+        private static void LoadServicesFromAssembly(IServiceCollection services, Assembly assembly, BotConfig botConfig, ILogger logger)
+        {
+            foreach (var service in assembly.GetTypes())
+            {
+                var autoLoadAttribute = service.GetCustomAttribute<AutoLoadServiceAttribute>();
+                if (autoLoadAttribute is null)
+                    continue;
+
+                bool isHosted = typeof(IHostedService).IsAssignableFrom(service);
+
+                var attribute = service.GetCustomAttribute<ModuleAttribute>();
+                var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
+                if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
+                {
+                    logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
+                    continue;
+                }
+                logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
+
+                if (isHosted)
+                    services.AddSingleton(typeof(IHostedService), service);
+                else
+                {
+                    switch (autoLoadAttribute.Lifetime)
+                    {
+                        case Lifetime.Transient: services.AddTransient(service); break;
+                        case Lifetime.Scoped: services.AddScoped(service); break;
+                        default: services.AddSingleton(service); break;
+                    }
+                }
+            }
         }
         #endregion
     }

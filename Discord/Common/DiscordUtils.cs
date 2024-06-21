@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Common
 {
-    internal static class DiscordUtils
+    internal static class DiscordUtils //todo: [FEATURE] logging all executed commands, sorting this?
     {
         #region Extention Methods
         /// <summary>
@@ -70,6 +70,12 @@ namespace SolarisBot.Discord.Common
 
         #region Naming
         private static readonly Regex _nameVerificator = new(@"\A[A-Za-z \d]{2,20}\Z");
+
+        /// <summary>
+        /// Checks if an identifier is valid
+        /// </summary>
+        /// <param name="identifier">Identifier to check</param>
+        /// <returns>Is valid?</returns>
         internal static bool IsIdentifierValid(string identifier)
             => _nameVerificator.IsMatch(identifier);
         #endregion
@@ -77,11 +83,13 @@ namespace SolarisBot.Discord.Common
         #region Roles
         internal const string CustomColorRolePrefix = "Solaris Custom Color";
 
-        internal static string GetCustomColorRoleName(IUser user)
+        /// <summary>
+        /// Gets a custom color role name from a user id
+        /// </summary>
+        /// <param name="user">User to generate name from</param>
+        /// <returns>Generated name</returns>
+        internal static string GetCustomColorRoleName(IUser user) //todo: [FEATURE] Store these in DB instead?
             => $"{CustomColorRolePrefix} {user.Id}";
-
-        internal static string GetIdFromCustomColorRoleName(string customColorRoleName)
-            => customColorRoleName.Replace($"{CustomColorRolePrefix} ", string.Empty);
 
         /// <summary>
         /// Gets a role by ID

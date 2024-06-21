@@ -1,6 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Newtonsoft.Json;
+using Discord.WebSocket;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Utility
@@ -13,7 +13,11 @@ namespace SolarisBot.Discord.Modules.Utility
         [SlashCommand("get-pfp", "Get a users PFP"), UserCommand("Get PFP")]
         public async Task GetUserPfpAsync(IUser user)
         {
-            var gUser = GetGuildUser(user);
+            if (user is not SocketGuildUser gUser)
+            {
+                await Interaction.ReplyErrorAsync(StandardError.FailedConversion("target user", "SocketGuildUser"));
+                return;
+            }
 
             var strings = new List<string>();
 
@@ -27,7 +31,7 @@ namespace SolarisBot.Discord.Modules.Utility
 
             if (strings.Count == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
 

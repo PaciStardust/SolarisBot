@@ -6,13 +6,18 @@
     [AttributeUsage(AttributeTargets.Class)]
     internal sealed class ModuleAttribute : Attribute
     {
-        internal string ModuleName { get; }
-        internal ModuleAttribute(string moduleName)
+        internal string[] ModuleNames { get; }
+        internal ModuleAttribute(params string[] moduleNames)
         {
-            ModuleName = moduleName;
+            ModuleNames = moduleNames;
         }
 
+        /// <summary>
+        /// Checks against a list of disabled modules if the module should be disabled
+        /// </summary>
+        /// <param name="disabledList">List of disabled modules</param>
+        /// <returns>Disabled?</returns>
         internal bool IsDisabled(IEnumerable<string> disabledList)
-            => disabledList.Any(x => ModuleName.StartsWith(x, StringComparison.OrdinalIgnoreCase));
+            => disabledList.Any(x => ModuleNames.Any(y => y.StartsWith(x, StringComparison.OrdinalIgnoreCase)));
     }
 }

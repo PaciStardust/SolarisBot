@@ -1,7 +1,5 @@
 ﻿using Discord;
 using Discord.Interactions;
-using Microsoft.Extensions.Logging;
-using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -11,12 +9,11 @@ namespace SolarisBot.Discord.Modules.Quotes
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageMessages), RequireUserPermission(GuildPermission.ManageMessages)]
     public sealed class QuoteConfigCommands : SolarisInteractionModuleBase
     {
-        private readonly ILogger<QuoteConfigCommands> _logger;
-        private readonly DatabaseContext _dbContext;
-        internal QuoteConfigCommands(ILogger<QuoteConfigCommands> logger, DatabaseContext dbctx)
+        private readonly QuoteService _quoteService;
+
+        internal QuoteConfigCommands(QuoteService quoteService)
         {
-            _dbContext = dbctx;
-            _logger = logger;
+            _quoteService = quoteService;
         }
 
         [SlashCommand("config", "Enable quotes")]
@@ -25,14 +22,11 @@ namespace SolarisBot.Discord.Modules.Quotes
             [Summary(description: "Is feature enabled?")] bool enabled
         )
         {
-            var guild = await _dbContext.GetOrCreateTrackedGuildAsync(Context.Guild.Id);
-
-            guild.QuotesOn = enabled;
-
-            _logger.LogDebug("{intTag} Setting quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("{intTag} Set quotes to {enabled} in guild {guild}", GetIntTag(), enabled, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Quotes are currently **{(enabled ? "enabled" : "disabled")}**");
+            var res = await _quoteService.ConfigureQuotesAsync(Context.Guild, enabled);
+            await res.Match(
+                success => Interaction.ReplyAsync($"Quotes are currently **{(enabled ? "enabled" : "disabled")}**"),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
 
         [SlashCommand("wipe", "Wipe quotes from guild, make sure to search")]
@@ -48,28 +42,22 @@ namespace SolarisBot.Discord.Modules.Quotes
             var authorIdParsed = Utils.ToUlongOrNull(authorId);
             if (authorId is not null && authorIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("author ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("author ID"));
                 return;
             }
             var creatorIdParsed = Utils.ToUlongOrNull(creatorId);
             if (creatorId is not null && creatorIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("creator ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("creator ID"));
                 return;
             }
 
-            var quotes = await _dbContext.GetQuotesAsync(Context.Guild.Id, authorId: authorIdParsed, creatorId: creatorIdParsed, content: content, offset: offset, limit: limit);
-            if (quotes.Length == 0)
-            {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
-                return;
-            }
-
-            _logger.LogDebug("{intTag} Wiping {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-            _dbContext.Quotes.RemoveRange(quotes);
-            await _dbContext.SaveChangesAsync();
-            _logger.LogDebug("{intTag} Wiped {quotes} from guild {guild}", GetIntTag(), quotes.Length, Context.Guild.Log());
-            await Interaction.ReplyAsync($"Wiped **{quotes.Length}** quotes from database");
+            var res = await _quoteService.WipeQuotesFromGuildAsync(Context.Guild, authorId: authorIdParsed, creatorId: creatorIdParsed, content: content, offset: offset, limit: limit);
+            await res.Match(
+                success => Interaction.ReplyAsync($"Wiped **{success.Value.Length}** quotes from database"),
+                error => Interaction.ReplyErrorAsync(error.Value),
+                exception => Interaction.ReplyErrorAsync(exception.Value)
+            );
         }
     }
 }

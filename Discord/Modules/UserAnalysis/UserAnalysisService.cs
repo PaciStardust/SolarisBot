@@ -1,8 +1,8 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OneOf;
+using OneOf.Types;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
@@ -10,39 +10,121 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.UserAnalysis
 {
     [Module("useranalysis"), AutoLoadService]
-    internal class UserAnalysisService : IHostedService
+    internal class UserAnalysisService
     {
         private readonly ILogger<UserAnalysisService> _logger;
         private readonly DiscordSocketClient _client;
         private readonly BotConfig _config;
-        private readonly IServiceProvider _services;
+        private readonly DatabaseService _dbService;
 
-        public UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, DatabaseContext dbCtx, BotConfig config, IServiceProvider services)
+        public UserAnalysisService(ILogger<UserAnalysisService> logger, DiscordSocketClient client, BotConfig config, DatabaseService dbService)
         {
             _logger = logger;
             _client = client;
             _config = config;
-            _services = services;
-        }
+            _dbService = dbService;
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
             _client.UserJoined += EvaluateUserCredibilityAsync;
-            return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        #region Commands
+        /// <summary>
+        /// Configures user analasys in a guild
+        /// </summary>
+        /// <param name="guild">Guild to configure</param>
+        /// <param name="channel">Channel for notifications</param>
+        /// <param name="minWarn">Minimum points for automatic warn</param>
+        /// <param name="minKick">Minimum points for automatic kick</param>
+        /// <param name="minBan">Minimum points for automatic ban</param>
+        /// <returns>GuildConfig on success / Exception</returns>
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigUserAnalysisAsync(IGuild guild, IChannel? channel, int minWarn, int minKick, int minBan)
         {
-            _client.UserJoined -= EvaluateUserCredibilityAsync;
-            return Task.CompletedTask;
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
+
+            dbGuild.UserAnalysisChannelId = channel?.Id ?? ulong.MinValue;
+            dbGuild.UserAnalysisWarnAt = minWarn;
+            dbGuild.UserAnalysisKickAt = minKick;
+            dbGuild.UserAnalysisBanAt = minBan;
+
+            _logger.LogDebug("Setting userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", channel?.Log() ?? "0", minWarn, minKick, minBan, guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed setting userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", channel?.Log() ?? "0", minWarn, minKick, minBan, guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Set userAnalysis to channel={analysisChannel}, minWarn={minWarn}, minKick={minKick}, minBan={minBan} in guild {guild}", channel?.Log() ?? "0", minWarn, minKick, minBan, guild.Log());
+            return new Success<DbGuildConfig>(dbGuild);
         }
 
+        /// <summary>
+        /// Analyzes a user
+        /// </summary>
+        /// <param name="user">User to analyze</param>
+        /// <returns>Analysis on success / Error string</returns>
+        internal OneOf<Success<UserAnalysis>, Error<string>> AnalyzeUser(IUser user)
+        {
+            if (user.IsBot || user.IsWebhook)
+                return new Error<string>(StandardError.NoResults);
+
+            if (user is not SocketGuildUser gUser)
+                return new Error<string>(StandardError.FailedConversion("target user", "SocketGuildUser"));
+
+            var analysis = UserAnalysis.ForUser(gUser, _config);
+            return new Success<UserAnalysis>(analysis);
+        }
+
+        /// <summary>
+        /// Kicks or bans a user from a guild
+        /// </summary>
+        /// <param name="guild">Guild to ban from</param>
+        /// <param name="executingUser">User executing moderation</param>
+        /// <param name="targetUserId">Id of user being targeted</param>
+        /// <param name="ban">Should the action be a ban?</param>
+        /// <returns>Success / Error string / Exception</returns>
+        internal async Task<OneOf<Success, Error<string>, Error<Exception>>> ModerateUserAsync(IGuild guild, IUser executingUser, ulong targetUserId, bool ban)
+        {
+            if (executingUser is not SocketGuildUser executingGuildUser)
+                return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
+
+            if ((!ban && !executingGuildUser.GuildPermissions.KickMembers) || (ban && !executingGuildUser.GuildPermissions.BanMembers))
+                return new Error<string>($"You do not have permission to {(ban ? "ban" : "kick")} members");
+
+            var targetGuildUser = await guild.GetUserAsync(targetUserId);
+            if (targetGuildUser is null)
+                return new Error<string>(StandardError.NoResults);
+
+            var verb = ban ? "Bann" : "Kick";
+            try
+            {
+                _logger.LogDebug("{verb}ing user {targetUser} from guild {guild} via analysis result button triggered by {user}", verb, targetGuildUser.Log(), guild.Log(), executingGuildUser.Log());
+                if (ban)
+                    await targetGuildUser.BanAsync(reason: $"Banned by {executingGuildUser.Log()} via analysis result button");
+                else
+                    await targetGuildUser.KickAsync($"Kicked by {executingGuildUser.Log()} via analysis result button");
+                _logger.LogInformation("{verb}ed user {targetUser} from guild {guild} via analysis result button triggered by {user}", verb, targetGuildUser.Log(), targetGuildUser.Log(), executingGuildUser.Log());
+                return new Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed {verb}ing user {targetUser} from guild {guild} via analysis result button triggered by {user}", verb.ToLower(), targetGuildUser.Log(), guild.Log(), executingGuildUser.Log());
+                return new Error<Exception>(ex);
+            }
+        }
+        #endregion
+
+        #region Join Handling
+        /// <summary>
+        /// Evaluates the credibility of a user and may automatically moderate them
+        /// </summary>
+        /// <param name="user">User to evaluate</param>
         private async Task EvaluateUserCredibilityAsync(SocketGuildUser user)
         {
             if (user.IsWebhook || user.IsBot)
                 return;
 
-            var dbCtx = _services.GetRequiredService<DatabaseContext>();
+            using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
             if (dbGuild is null || dbGuild.UserAnalysisChannelId == ulong.MinValue)
                 return;
@@ -80,6 +162,13 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             }
         }
 
+        /// <summary>
+        /// Automatically moderates a user based on score
+        /// </summary>
+        /// <param name="targetUser">User to moderate</param>
+        /// <param name="analysisScore">Score of user</param>
+        /// <param name="dbGuild">Guild for action</param>
+        /// <returns>Response and Action Taken</returns>
         private async Task<(string, ModerationAction)> AutomaticallyModerateUser(SocketGuildUser targetUser, int analysisScore, DbGuildConfig dbGuild)
         {
             //Establishing needed action
@@ -143,5 +232,6 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             Kick,
             Ban
         }
+        #endregion
     }
 }

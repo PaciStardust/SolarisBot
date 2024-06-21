@@ -31,6 +31,9 @@ namespace SolarisBot.Discord.Services
             _intService.Log += logMessage => logMessage.Log(_logger);
         }
 
+        /// <summary>
+        /// Loads in all interaction modules and registers them
+        /// </summary>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated += HandleInteractionCreated;
@@ -40,12 +43,13 @@ namespace SolarisBot.Discord.Services
             {
                 if (!type.IsSubclassOf(typeof(SolarisInteractionModuleBase))) continue;
                 var attribute = type.GetCustomAttribute<ModuleAttribute>();
+                var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
                 if (attribute?.IsDisabled(_config.DisabledModules) ?? false)
                 {
-                    _logger.LogDebug("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, attribute.ModuleName);
+                    _logger.LogDebug("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, moduleNamesText);
                     continue;
                 }
-                _logger.LogDebug("Adding InteractionModule {intModule} from module {module}", type.FullName, attribute?.ModuleName ?? "NONE");
+                _logger.LogDebug("Adding InteractionModule {intModule} from module {module}", type.FullName, moduleNamesText);
                 await _intService.AddModuleAsync(type, _services);
             }
 
@@ -57,6 +61,9 @@ namespace SolarisBot.Discord.Services
         }
 
 #pragma warning disable IDE0051 // Remove unused private members
+        /// <summary>
+        /// Registers all interactions to main guild
+        /// </summary>
         private async Task RegisterInteractionsToMainAsync()
         {
             _logger.LogInformation("Ready in DEBUG");
@@ -68,6 +75,9 @@ namespace SolarisBot.Discord.Services
             }
         }
 
+        /// <summary>
+        /// Registers all interactions globally
+        /// </summary>
         private async Task RegisterInteractionsGloballyAsync()
         {
             _logger.LogInformation("Ready in RELEASE");
@@ -82,6 +92,11 @@ namespace SolarisBot.Discord.Services
         }
 #pragma warning restore IDE0051 // Remove unused private members
 
+        /// <summary>
+        /// Stops the Interaction handler
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _client.InteractionCreated -= HandleInteractionCreated;

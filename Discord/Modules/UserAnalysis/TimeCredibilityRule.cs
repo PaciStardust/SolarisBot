@@ -9,6 +9,11 @@
             MinimumAge = minimumAge;
         }
 
+        /// <summary>
+        /// Checks if the supplied age does not match the rule
+        /// </summary>
+        /// <param name="age">Age to check against</param>
+        /// <returns>Credible?</returns>
         internal bool IsCredible(TimeSpan age)
             => age >= MinimumAge;
     }
