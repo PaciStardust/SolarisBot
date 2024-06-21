@@ -40,7 +40,7 @@ namespace SolarisBot.Discord.Modules.Quotes
             using var dbCtx = _dbService.GetContext();
             var guild = await dbCtx.GetGuildByIdAsync(sourceGuild.Id, x => x.Include(y => y.Quotes));
             if (guild is null || !guild.QuotesOn)
-                return new Error<string>("Quotes are not enabled in this guild");
+                return new Error<string>(StandardError.DisabledFeature("Quotes"));
 
             //Check for duplicates
             if (guild.Quotes.Any(x => x.MessageId == targetMessage.Id || x.AuthorId == targetMessage.Author.Id && x.Text == targetMessage.CleanContent && x.GuildId == sourceGuild.Id))
@@ -78,17 +78,17 @@ namespace SolarisBot.Discord.Modules.Quotes
         /// </summary>
         /// <param name="executingUser">User deleting the quote</param>
         /// <param name="quoteId">Id of quote to delete</param>
-        /// <returns>Deleted quote on success / None / Error string / Exception</returns>
-        internal async Task<OneOf<Success<DbQuote>, None, Error<string>, Error<Exception>>> DeleteQuoteByIdAsync(IUser executingUser, ulong quoteId)
+        /// <returns>Deleted quote on success / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbQuote>, Error<string>, Error<Exception>>> DeleteQuoteByIdAsync(IUser executingUser, ulong quoteId)
         {
             if (executingUser is not IGuildUser executingGuildUser)
-                return new Error<string>("Executing user could not be converted to guild user");
+                return new Error<string>(StandardError.FailedConversion("executing user", "GuildUser"));
             bool isAdmin = executingGuildUser.GuildPermissions.ManageMessages;
 
             using var dbCtx = _dbService.GetContext();
             var dbQuote = await dbCtx.Quotes.FirstOrDefaultAsync(x => x.QuoteId == quoteId && (x.AuthorId == executingUser.Id || x.CreatorId == executingUser.Id || isAdmin && executingGuildUser.Guild.Id == x.GuildId));
             if (dbQuote is null)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             _logger.LogDebug("Removing quote {quote}", dbQuote);
             dbCtx.Quotes.Remove(dbQuote);
@@ -133,14 +133,14 @@ namespace SolarisBot.Discord.Modules.Quotes
         /// </summary>
         /// <param name="guildId">Id of Guild</param>
         /// <returns>Quote on success / None</returns>
-        internal async Task<OneOf<Success<DbQuote>, None>> GetRandomQuoteAsync(ulong guildId)
+        internal async Task<OneOf<Success<DbQuote>, Error<string>>> GetRandomQuoteAsync(ulong guildId)
         {
             using var dbCtx = _dbService.GetContext();
             var quotesQuery = dbCtx.Quotes.ForGuild(guildId);
 
             var quoteNum = await quotesQuery.CountAsync();
             if (quoteNum == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             var quote = await quotesQuery.Skip(Utils.Faker.Random.Int(0, quoteNum - 1)).FirstAsync();
             return new Success<DbQuote>(quote);
@@ -180,13 +180,13 @@ namespace SolarisBot.Discord.Modules.Quotes
         /// <param name="content">Content of Quote</param>
         /// <param name="offset">Search offset</param>
         /// <param name="limit">Search limit</param>
-        /// <returns>Array of wiped quotes</returns>
-        internal async Task<OneOf<Success<DbQuote[]>, None, Error<Exception>>> WipeQuotesFromGuildAsync(IGuild guild, ulong? authorId, ulong? creatorId, string? content, int offset, int limit)
+        /// <returns>Array of wiped quotes / Error string / Exception</returns>
+        internal async Task<OneOf<Success<DbQuote[]>, Error<string>, Error<Exception>>> WipeQuotesFromGuildAsync(IGuild guild, ulong? authorId, ulong? creatorId, string? content, int offset, int limit)
         {
             using var dbCtx = _dbService.GetContext();
             var quotes = await GetQuotesAsync(guild.Id, authorId: authorId, creatorId: creatorId, content: content, offset: offset, limit: limit);
             if (quotes.Length == 0)
-                return new None();
+                return new Error<string>(StandardError.NoResults);
 
             _logger.LogDebug("Wiping {quotes} from guild {guild}", quotes.Length, guild.Log());
             dbCtx.Quotes.RemoveRange(quotes);

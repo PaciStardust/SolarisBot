@@ -42,20 +42,20 @@ namespace SolarisBot.Discord.Modules.Quotes
             var authorIdParsed = Utils.ToUlongOrNull(authorId);
             if (authorId is not null && authorIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("author ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("author ID"));
                 return;
             }
             var creatorIdParsed = Utils.ToUlongOrNull(creatorId);
             if (creatorId is not null && creatorIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("creator ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("creator ID"));
                 return;
             }
 
             var res = await _quoteService.WipeQuotesFromGuildAsync(Context.Guild, authorId: authorIdParsed, creatorId: creatorIdParsed, content: content, offset: offset, limit: limit);
             await res.Match(
                 success => Interaction.ReplyAsync($"Wiped **{success.Value.Length}** quotes from database"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
+                error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }

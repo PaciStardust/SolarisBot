@@ -34,14 +34,13 @@ namespace SolarisBot.Discord.Modules.Quotes
         {
             if (!ulong.TryParse(quoteId, out var parsedQuoteId))
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("quote ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("quote ID"));
                 return;
             }
 
             var res = await _quoteService.DeleteQuoteByIdAsync(Context.User, parsedQuoteId);
             await res.Match(
                 success => Interaction.ReplyAsync($"Quote with ID **{parsedQuoteId}** has been deleted"),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
@@ -61,26 +60,26 @@ namespace SolarisBot.Discord.Modules.Quotes
             var authorIdParsed = Utils.ToUlongOrNull(authorId);
             if (authorId is not null && authorIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("author ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("author ID"));
                 return;
             }
             var creatorIdParsed = Utils.ToUlongOrNull(creatorId);
             if (creatorId is not null && creatorIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("creator ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("creator ID"));
                 return;
             }
             var quoteIdParsed = Utils.ToUlongOrNull(quoteId);
             if (quoteId is not null && quoteIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("quote ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("quote ID"));
                 return;
             }
 
             var quotes = await _quoteService.SearchQuotesForGuildAsync(Context.Guild.Id, authorId: authorIdParsed, creatorId: creatorIdParsed, quoteId: quoteIdParsed, content: content, offset: offset, showFirst: showFirst);
             if (quotes.Length == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
             else if (showFirst)
@@ -103,20 +102,20 @@ namespace SolarisBot.Discord.Modules.Quotes
             var authorIdParsed = Utils.ToUlongOrNull(authorId);
             if (authorId is not null && authorIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("author ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("author ID"));
                 return;
             }
             var quoteIdParsed = Utils.ToUlongOrNull(quoteId);
             if (quoteId is not null && quoteIdParsed is null)
             {
-                await Interaction.ReplyInvalidParameterErrorAsync("quote ID");
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("quote ID"));
                 return;
             }
 
             var quotes = await _quoteService.SearchQuotesForUserAsync(Context.User.Id, authorId: authorIdParsed, quoteId: quoteIdParsed, content: content, offset: offset);
             if (quotes.Length == 0)
             {
-                await Interaction.ReplyErrorAsync(GenericError.NoResults);
+                await Interaction.ReplyErrorAsync(StandardError.NoResults);
                 return;
             }
             await Interaction.ReplyAsync("Quote Search Results", GenerateQuotesList(quotes));
@@ -128,7 +127,7 @@ namespace SolarisBot.Discord.Modules.Quotes
             var res = await _quoteService.GetRandomQuoteAsync(Context.Guild.Id);
             await res.Match(
                 success => Interaction.ReplyAsync(GetQuoteEmbed(success.Value)),
-                none => Interaction.ReplyErrorAsync(GenericError.NoResults)
+                error => Interaction.ReplyErrorAsync(error.Value)
             );
         }
 
