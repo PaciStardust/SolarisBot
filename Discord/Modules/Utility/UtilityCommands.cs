@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Utility
@@ -12,7 +13,11 @@ namespace SolarisBot.Discord.Modules.Utility
         [SlashCommand("get-pfp", "Get a users PFP"), UserCommand("Get PFP")]
         public async Task GetUserPfpAsync(IUser user)
         {
-            var gUser = GetGuildUser(user);
+            if (user is not SocketGuildUser gUser)
+            {
+                await Interaction.ReplyErrorAsync("Could not convert user to socket guild user");
+                return;
+            }
 
             var strings = new List<string>();
 

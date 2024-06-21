@@ -100,14 +100,6 @@ namespace SolarisBot.Discord.Common
             => $"{CustomColorRolePrefix} {user.Id}";
 
         /// <summary>
-        /// Gets the ID od a user from the name of a custom color role
-        /// </summary>
-        /// <param name="customColorRoleName">Role name</param>
-        /// <returns>UserId as string</returns>
-        internal static string GetIdFromCustomColorRoleName(string customColorRoleName) //todo: [REFACTOR] this should be moved
-            => customColorRoleName.Replace($"{CustomColorRolePrefix} ", string.Empty);
-
-        /// <summary>
         /// Gets a role by ID
         /// </summary>
         /// <param name="id">ID of role</param>

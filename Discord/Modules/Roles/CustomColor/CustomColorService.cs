@@ -186,7 +186,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
 
             var guildUsers = await guild.GetUsersAsync();
             var guildUserStringIds = guildUsers.Select(x => x.Id.ToString());
-            var rolesWithoutOwner = roles.Where(x => !guildUserStringIds.Contains(DiscordUtils.GetIdFromCustomColorRoleName(x.Name))).ToArray();
+            var rolesWithoutOwner = roles.Where(x => !guildUserStringIds.Contains(GetIdFromCustomColorRoleName(x.Name))).ToArray();
 
             if (rolesWithoutOwner.Length == 0)
                 return new None();
@@ -205,6 +205,14 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
                 return new Error<Exception>(ex);
             }
         }
+
+        /// <summary>
+        /// Gets the ID od a user from the name of a custom color role
+        /// </summary>
+        /// <param name="customColorRoleName">Role name</param>
+        /// <returns>UserId as string</returns>
+        private static string GetIdFromCustomColorRoleName(string customColorRoleName)
+            => customColorRoleName.Replace($"{DiscordUtils.CustomColorRolePrefix} ", string.Empty);
         #endregion
     }
 }
