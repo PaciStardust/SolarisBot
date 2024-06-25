@@ -46,8 +46,11 @@ namespace SolarisBot.Database
         [ForeignKey(nameof(DbRegexChannel.GuildId))]
         public virtual ICollection<DbRegexChannel> RegexChannels { get; set; } = new HashSet<DbRegexChannel>();
 
-        [ForeignKey(nameof(DbRegexChannel.GuildId))]
+        [ForeignKey(nameof(DbCustomColorRole.GuildId))]
         public virtual ICollection<DbCustomColorRole> CustomColorRoles { get; set; } = new HashSet<DbCustomColorRole>();
+
+        [ForeignKey(nameof(DbVouchAction.GuildId))]
+        public virtual ICollection<DbVouchAction> VouchActions { get; set; } = new HashSet<DbVouchAction>();
 
         public DbGuildConfig() { } //To avoid defaults not setting
 
