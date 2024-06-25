@@ -1,5 +1,8 @@
-﻿namespace SolarisBot.Database.Models
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace SolarisBot.Database.Models
 {
+    [PrimaryKey(nameof(CustomColorRoleId))]
     public class DbCustomColorRole : DbModelBase
     {
         public ulong CustomColorRoleId { get; set; } = ulong.MinValue;
