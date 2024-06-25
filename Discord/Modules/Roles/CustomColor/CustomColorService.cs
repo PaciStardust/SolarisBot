@@ -251,14 +251,6 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
                 return new Error<Exception>(ex);
             }
         }
-
-        /// <summary>
-        /// Gets the ID od a user from the name of a custom color role
-        /// </summary>
-        /// <param name="customColorRoleName">Role name</param>
-        /// <returns>UserId as string</returns>
-        private static string GetIdFromCustomColorRoleName(string customColorRoleName) //todo: remove
-            => customColorRoleName.Replace($"{DiscordUtils.CustomColorRolePrefix} ", string.Empty);
         #endregion
     }
 }
