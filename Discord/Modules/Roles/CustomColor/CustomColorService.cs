@@ -34,9 +34,6 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <returns>Created role on success / Error string / Exception</returns>
         internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, string identifier, Color color)
         {
-            if (!DiscordUtils.IsIdentifierValid(identifier))
-                return new Error<string>(StandardError.InvalidIdentifier(identifier));
-
             if (user is not SocketGuildUser gUser)
                 return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
@@ -158,9 +155,6 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <returns>GuildConfig on success / Exception</returns>
         internal async Task<OneOf<Success<DbGuildConfig>, Error<string>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role, string indicator)
         {
-            if (!DiscordUtils.IsIdentifierValid(indicator))
-                return new Error<string>(StandardError.InvalidIdentifier(indicator));
-
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
