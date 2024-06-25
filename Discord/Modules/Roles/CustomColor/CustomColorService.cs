@@ -30,7 +30,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="user">User to apply role to</param>
         /// <param name="color">Color of role</param>
         /// <returns>Created role on success / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, Color color)
+        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, Color color) //todo: rework
         {
             if (user is not SocketGuildUser gUser)
                 return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
@@ -100,7 +100,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="guild">Guild to delete role from</param>
         /// <param name="user">Owner of role</param>
         /// <returns>Success / Error string / Exception</returns>
-        internal async Task<OneOf<Success, Error<string>, Error<Exception>>> DeleteCustomColorRole(IGuild guild, IUser user)
+        internal async Task<OneOf<Success, Error<string>, Error<Exception>>> DeleteCustomColorRole(IGuild guild, IUser user) //todo: rework
         {
             var roleName = DiscordUtils.GetCustomColorRoleName(user);
             var role = guild.Roles.FirstOrDefault(x => x.Name == roleName);
@@ -130,7 +130,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="guild">Guild to configure</param>
         /// <param name="role">Permission role</param>
         /// <returns>GuildConfig on success / Exception</returns>
-        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role)
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role) //todo: add option for indicator?
         {
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
@@ -178,7 +178,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// </summary>
         /// <param name="guild">Guild to delete from</param>
         /// <returns>Array of deleted roles on success / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild)
+        internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild) //todo: rework
         {
             var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
             if (!roles.Any())
@@ -211,7 +211,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// </summary>
         /// <param name="customColorRoleName">Role name</param>
         /// <returns>UserId as string</returns>
-        private static string GetIdFromCustomColorRoleName(string customColorRoleName)
+        private static string GetIdFromCustomColorRoleName(string customColorRoleName) //todo: remove
             => customColorRoleName.Replace($"{DiscordUtils.CustomColorRolePrefix} ", string.Empty);
         #endregion
     }
