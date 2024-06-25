@@ -32,8 +32,11 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="user">User to apply role to</param>
         /// <param name="color">Color of role</param>
         /// <returns>Created role on success / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, string name, Color color)
+        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, string identifier, Color color)
         {
+            if (!DiscordUtils.IsIdentifierValid(identifier))
+                return new Error<string>(StandardError.InvalidIdentifier(identifier));
+
             if (user is not SocketGuildUser gUser)
                 return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
@@ -50,7 +53,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             var customColorRoleDb = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ForUser(user.Id).FirstOrDefaultAsync();
 
             var customColorRoleDiscord = customColorRoleDb is null ? null : guild.FindRole(customColorRoleDb.RoleId);
-            var roleName = string.IsNullOrWhiteSpace(dbGuild.CustomColorIndicator) ? name : $"{dbGuild.CustomColorIndicator} {name}";
+            var roleName = string.IsNullOrWhiteSpace(dbGuild.CustomColorIndicator) ? identifier : $"{dbGuild.CustomColorIndicator} {identifier}";
             if (customColorRoleDiscord is null)
             {
                 try
@@ -153,7 +156,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="guild">Guild to configure</param>
         /// <param name="role">Permission role</param>
         /// <returns>GuildConfig on success / Exception</returns>
-        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role, string indicator) //todo: add option for indicator?
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role) //todo: add option for indicator?
         {
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
