@@ -164,6 +164,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
+            dbGuild.CustomColorIndicator = indicator;
 
             _logger.LogDebug("Setting custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
