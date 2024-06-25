@@ -26,7 +26,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         {
             var res = await _customColorService.ConfigCustomColorAsync(Context.Guild, role, indicator);
             await res.Match(
-                success => Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**\nCreation Role: **{(string.IsNullOrWhiteSpace(indicator) ? "None" : indicator)}**"),
+                success => Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**\nIndicator: **{(string.IsNullOrWhiteSpace(indicator) ? "None" : indicator)}**"),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
