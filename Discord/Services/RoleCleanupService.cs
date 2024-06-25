@@ -71,11 +71,17 @@ namespace SolarisBot.Discord.Services
         /// <returns></returns>
         private async Task CheckForLeftoverCustomColorRoleOnLeftAsync(SocketGuild guild, SocketUser user)
         {
-            var customColorRole = guild.Roles.FirstOrDefault(x => x.Name == DiscordUtils.GetCustomColorRoleName(user));
-            if (customColorRole is null)
+            using var dbCtx = _dbService.GetContext();
+            var dbRole = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ForUser(user.Id).FirstOrDefaultAsync();
+
+            if (dbRole is null)
                 return;
 
-            await TryDeleteLeftoverCustomColorRoleAsync(customColorRole, user, guild);
+            var discordRole = guild.Roles.Where(x => x.Id == dbRole.RoleId).FirstOrDefault();
+            if (discordRole is null)
+                return;
+
+            await TryDeleteLeftoverCustomColorRoleAsync(discordRole, user, guild);
         }
 
         /// <summary>
