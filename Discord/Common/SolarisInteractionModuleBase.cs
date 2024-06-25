@@ -7,7 +7,7 @@ namespace SolarisBot.Discord.Common
     /// <summary>
     /// Extended InteractionModeuleBase with a few core functions
     /// </summary>
-    public abstract class SolarisInteractionModuleBase : InteractionModuleBase
+    public abstract class SolarisInteractionModuleBase : InteractionModuleBase //todo: [FEATURE] Link autoconversion
     {
         /// <summary>
         /// Returns the interaction

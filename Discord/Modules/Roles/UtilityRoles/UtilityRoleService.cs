@@ -11,7 +11,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
 {
     [Module("roles/magic", "roles/vouch", "roles/quarantine"), AutoLoadService]
-    internal class UtilityRoleService
+    internal class UtilityRoleService //todo: [FEATURE] Vouch Tree
     {
         private readonly ILogger<UtilityRoleService> _logger;
         private readonly DatabaseService _dbService;

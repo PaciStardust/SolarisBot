@@ -10,7 +10,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Quotes
 {
     [Module("quotes"), AutoLoadService]
-    internal class QuoteService
+    internal class QuoteService //todo: [FEATURE] Custom Quotes
     {
         private readonly ILogger<QuoteService> _logger;
         private readonly DatabaseService _dbService;
