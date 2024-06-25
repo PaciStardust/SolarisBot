@@ -1,7 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SolarisBot.Database;
+using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -11,15 +14,17 @@ namespace SolarisBot.Discord.Services
     /// Service for handling removal and applying of roles
     /// </summary>
     [AutoLoadService]
-    internal sealed class RoleCleanupService : IHostedService //todo: rework
+    internal sealed class RoleCleanupService : IHostedService
     {
         private readonly ILogger<RoleCleanupService> _logger;
         private readonly DiscordSocketClient _client;
+        private readonly DatabaseService _dbService;
 
-        public RoleCleanupService(ILogger<RoleCleanupService> logger, DiscordSocketClient client)
+        public RoleCleanupService(ILogger<RoleCleanupService> logger, DiscordSocketClient client, DatabaseService dbService)
         {
             _client = client;
             _logger = logger;
+            _dbService = dbService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -48,10 +53,14 @@ namespace SolarisBot.Discord.Services
                 return;
 
             var removedRole = oldUser.Roles.FirstOrDefault(x => !newUser.Roles.Contains(x));
-            if (removedRole is null || removedRole.Name != DiscordUtils.GetCustomColorRoleName(newUser))
+            if (removedRole is null)
                 return;
 
-            await TryDeleteLeftoverCustomColorRoleAsync(removedRole, newUser, newUser.Guild);
+            using var dbCtx = _dbService.GetContext();
+            var matchFound = await dbCtx.CustomColorRoles.Where(x => x.RoleId == removedRole.Id).ForGuild(newUser.Guild.Id).ForUser(newUser.Id).AnyAsync();
+
+            if (matchFound)
+                await TryDeleteLeftoverCustomColorRoleAsync(removedRole, newUser, newUser.Guild);
         }
 
         /// <summary>
