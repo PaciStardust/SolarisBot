@@ -156,8 +156,11 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="guild">Guild to configure</param>
         /// <param name="role">Permission role</param>
         /// <returns>GuildConfig on success / Exception</returns>
-        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role) //todo: add option for indicator?
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<string>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role, string indicator)
         {
+            if (!DiscordUtils.IsIdentifierValid(indicator))
+                return new Error<string>(StandardError.InvalidIdentifier(indicator));
+
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
