@@ -102,11 +102,11 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
                 return;
 
             using var dbCtx = _dbService.GetContext();
-            var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId, x => x.Include(y => y.JokeTimeouts));
+            var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
             if (guild is null || guild.JokeRenameOn == false)
                 return;
 
-            var timeOut = guild.JokeTimeouts.Where(x => x.UserId == gUser.Id).FirstOrDefault(); //todo: [OPTIMIZE] unoptimized?
+            var timeOut = await dbCtx.JokeTimeouts.ForGuild(gUser.GuildId).ForUser(gUser.Id).FirstOrDefaultAsync();
             var currTime = Utils.GetCurrentUnix();
             if (timeOut is not null && timeOut.NextUse > currTime)
                 return;

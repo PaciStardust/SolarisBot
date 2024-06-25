@@ -38,16 +38,16 @@ namespace SolarisBot.Discord.Modules.Quotes
                 return new Error<string>($"Message is too long to quote, message has **{msgLen - _botConfig.MaxQuoteCharacters}** characters too many *(Max is {_botConfig.MaxQuoteCharacters})*");
 
             using var dbCtx = _dbService.GetContext();
-            var guild = await dbCtx.GetGuildByIdAsync(sourceGuild.Id, x => x.Include(y => y.Quotes));
+            var guild = await dbCtx.GetGuildByIdAsync(sourceGuild.Id);
             if (guild is null || !guild.QuotesOn)
                 return new Error<string>(StandardError.DisabledFeature("Quotes"));
 
             //Check for duplicates
-            if (guild.Quotes.Any(x => x.MessageId == targetMessage.Id || x.AuthorId == targetMessage.Author.Id && x.Text == targetMessage.CleanContent && x.GuildId == sourceGuild.Id))
+            if (await dbCtx.Quotes.ForGuild(sourceGuild.Id).AnyAsync(x => x.MessageId == targetMessage.Id || x.AuthorId == targetMessage.Author.Id && x.Text == targetMessage.CleanContent && x.GuildId == sourceGuild.Id))
                 return new Error<string>("Message has already been quoted");
 
             //Check if user has available slots
-            if (guild.Quotes.Count(x => x.CreatorId == executingUser.Id) >= _botConfig.MaxQuotesPerUser)
+            if ((await dbCtx.Quotes.ForGuild(sourceGuild.Id).CountAsync(x => x.CreatorId == executingUser.Id)) >= _botConfig.MaxQuotesPerUser)
                 return new Error<string>($"You already have **{_botConfig.MaxQuotesPerUser}** Quotes on this server, please delete some to create more");
 
             var dbQuote = new DbQuote()
@@ -62,7 +62,7 @@ namespace SolarisBot.Discord.Modules.Quotes
             };
 
             _logger.LogDebug("Adding quote {quote} by user {user} to guild {guild}", dbQuote, executingUser.Log(), sourceGuild.Log());
-            guild.Quotes.Add(dbQuote);
+            dbCtx.Quotes.Add(dbQuote);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {

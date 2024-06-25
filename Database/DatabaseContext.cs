@@ -4,7 +4,7 @@ namespace SolarisBot.Database
 {
     internal sealed class DatabaseContext : DbContext
     {
-        public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { } //Todo: [OPTIMIZE] Use select statements, better updates?
+        public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
 
         public DbSet<DbGuildConfig> GuildConfigs { get; set; }
         public DbSet<DbJokeTimeout> JokeTimeouts { get; set; }
