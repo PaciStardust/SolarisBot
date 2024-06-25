@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SolarisBot.Database.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
@@ -10,6 +11,7 @@ namespace SolarisBot.Database
         public ulong VouchRoleId { get; set; } = ulong.MinValue;
         public ulong VouchPermissionRoleId { get; set; } = ulong.MinValue;
         public ulong CustomColorPermissionRoleId { get; set; } = ulong.MinValue;
+        public string CustomColorIndicator {  get; set; } = string.Empty;
         public bool JokeRenameOn { get; set; } = false;
         public ulong JokeRenameTimeoutMin { get; set; } = ulong.MinValue;
         public ulong JokeRenameTimeoutMax { get; set; } = ulong.MinValue;
@@ -29,16 +31,24 @@ namespace SolarisBot.Database
         public int UserAnalysisKickAt { get; set; } = int.MaxValue;
         public int UserAnalysisBanAt { get; set; } = int.MaxValue;
 
+        //todo: [REFACTOR] Removal of these?
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
+
         [ForeignKey(nameof(DbQuote.GuildId))]
         public virtual ICollection<DbQuote> Quotes { get; set; } = new HashSet<DbQuote>();
+
         [ForeignKey(nameof(DbJokeTimeout.GuildId))]
         public virtual ICollection<DbJokeTimeout> JokeTimeouts { get; set; } = new HashSet<DbJokeTimeout>();
+
         [ForeignKey(nameof(DbReminder.GuildId))]
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
+
         [ForeignKey(nameof(DbRegexChannel.GuildId))]
         public virtual ICollection<DbRegexChannel> RegexChannels { get; set; } = new HashSet<DbRegexChannel>();
+
+        [ForeignKey(nameof(DbRegexChannel.GuildId))]
+        public virtual ICollection<DbCustomColorRole> CustomColorRoles { get; set; } = new HashSet<DbCustomColorRole>();
 
         public DbGuildConfig() { } //To avoid defaults not setting
 

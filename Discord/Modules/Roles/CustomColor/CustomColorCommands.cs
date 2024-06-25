@@ -22,17 +22,19 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         [SlashCommand("set-color-rgb", "Set your custom role color via RGB (Requires permission role)"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task SetRoleColorByRgb
         (
+            [Summary(description: "Name of role")] string name,
             [Summary(description: "Red amount")] byte red,
             [Summary(description: "Green amount")] byte green,
             [Summary(description: "Blue amount")] byte blue
         )
-            => await SetRoleColorAsync(new(red, green, blue));
+            => await SetRoleColorAsync(name, new(red, green, blue));
 
         private static readonly Regex _hexCodeValidator = new(@"[A-F0-9]{6}");
 
         [SlashCommand("set-color-hex", "Set your custom role color via Hex (Requires permission role)"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task SetRoleColorByHex
         (
+            [Summary(description: "Name of role")] string name,
             [Summary(description: "Hex color code (without #)"), MinLength(6), MaxLength(6)] string hex
         )
         {
@@ -42,12 +44,12 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
                 await Interaction.ReplyErrorAsync(StandardError.FailedConversion(upperHex, "hex code"));
                 return;
             }
-            await SetRoleColorAsync(new(colorNumber));
+            await SetRoleColorAsync(name, new(colorNumber));
         }
 
-        private async Task SetRoleColorAsync(Color color)
+        private async Task SetRoleColorAsync(string identifier, Color color)
         {
-            var res = await _customColorService.CreateCustomColorRole(Context.Guild, Context.User, color);
+            var res = await _customColorService.CreateCustomColorRole(Context.Guild, Context.User, identifier, color);
             await res.Match(
                 success => Interaction.ReplyAsync($"Custom color role has been set to {success.Value.Mention}", color, isEphemeral: true),
                 error => Interaction.ReplyErrorAsync(error.Value),

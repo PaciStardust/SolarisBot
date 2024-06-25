@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SolarisBot.Database.Models;
 
 namespace SolarisBot.Database
 {
@@ -14,6 +15,7 @@ namespace SolarisBot.Database
         public DbSet<DbReminder> Reminders { get; set; }
         public DbSet<DbBridge> Bridges { get; set; }
         public DbSet<DbRegexChannel> RegexChannels { get; set; }
+        public DbSet<DbCustomColorRole> CustomColorRoles { get; set; }
 
         /// <summary>
         /// Attempts to save changes to the database

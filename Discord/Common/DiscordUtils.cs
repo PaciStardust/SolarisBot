@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Common
 {
-    internal static class DiscordUtils //todo: [FEATURE] logging all executed commands, sorting this?
+    internal static class DiscordUtils //todo: [FEATURE] logging all executed commands
     {
         #region Extention Methods
         /// <summary>
@@ -81,16 +81,6 @@ namespace SolarisBot.Discord.Common
         #endregion
 
         #region Roles
-        internal const string CustomColorRolePrefix = "Solaris Custom Color";
-
-        /// <summary>
-        /// Gets a custom color role name from a user id
-        /// </summary>
-        /// <param name="user">User to generate name from</param>
-        /// <returns>Generated name</returns>
-        internal static string GetCustomColorRoleName(IUser user) //todo: [FEATURE] Store these in DB instead?
-            => $"{CustomColorRolePrefix} {user.Id}";
-
         /// <summary>
         /// Gets a role by ID
         /// </summary>

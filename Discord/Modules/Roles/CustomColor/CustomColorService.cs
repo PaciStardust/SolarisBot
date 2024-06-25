@@ -7,6 +7,8 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using Discord.WebSocket;
+using SolarisBot.Database.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace SolarisBot.Discord.Modules.Roles.CustomColor
 {
@@ -30,34 +32,39 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="user">User to apply role to</param>
         /// <param name="color">Color of role</param>
         /// <returns>Created role on success / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, Color color)
+        internal async Task<OneOf<Success<IRole>, Error<string>, Error<Exception>>> CreateCustomColorRole(IGuild guild, IUser user, string identifier, Color color)
         {
+            if (!DiscordUtils.IsIdentifierValid(identifier))
+                return new Error<string>(StandardError.InvalidIdentifier(identifier));
+
             if (user is not SocketGuildUser gUser)
                 return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
-            var generatedRoleName = DiscordUtils.GetCustomColorRoleName(gUser);
-            var customColorRole = guild.Roles.FirstOrDefault(x => x.Name == generatedRoleName);
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetGuildByIdAsync(guild.Id);
 
-            if (customColorRole is null)
+            if (dbGuild is null || dbGuild.CustomColorPermissionRoleId == ulong.MinValue)
+                return new Error<string>(StandardError.DisabledFeature("Custom color"));
+            if (guild.FindRole(dbGuild.CustomColorPermissionRoleId) is null)
+                return new Error<string>(StandardError.DeletedRole("Custom color"));
+            if (gUser.FindRole(dbGuild.CustomColorPermissionRoleId) is null)
+                return new Error<string>(StandardError.RoleRequired(dbGuild.CustomColorPermissionRoleId));
+
+            var customColorRoleDb = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ForUser(user.Id).FirstOrDefaultAsync();
+
+            var customColorRoleDiscord = customColorRoleDb is null ? null : guild.FindRole(customColorRoleDb.RoleId);
+            var roleName = string.IsNullOrWhiteSpace(dbGuild.CustomColorIndicator) ? identifier : $"{dbGuild.CustomColorIndicator} {identifier}";
+            if (customColorRoleDiscord is null)
             {
-                using var dbCtx = _dbService.GetContext();
-                var permissionRole = (await dbCtx.GetGuildByIdAsync(guild.Id))?.CustomColorPermissionRoleId;
-                if (permissionRole is null || permissionRole == ulong.MinValue)
-                    return new Error<string>(StandardError.DisabledFeature("Custom color"));
-                if (guild.FindRole(permissionRole.Value) is null)
-                    return new Error<string>(StandardError.DeletedRole("Custom color"));
-                if (gUser.FindRole(permissionRole.Value) is null)
-                    return new Error<string>(StandardError.RoleRequired(permissionRole.Value));
-
                 try
-                {
-                    _logger.LogDebug("Creating custom color role {roleName} for user {user} in guild {guild}", generatedRoleName, gUser.Log(), guild.Log());
-                    customColorRole = await guild.CreateRoleAsync(generatedRoleName, color: color, isMentionable: false);
-                    _logger.LogInformation("Created custom color role {role} for user {user} in guild {guild}", customColorRole.Log(), gUser.Log(), guild.Log());
+                {    
+                    _logger.LogDebug("Creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), guild.Log());
+                    customColorRoleDiscord = await guild.CreateRoleAsync(roleName, color: color, isMentionable: false);
+                    _logger.LogInformation("Created custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed creating custom color role {roleName} for user {user} in guild {guild}", generatedRoleName, gUser.Log(), guild.Log());
+                    _logger.LogError(ex, "Failed creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), guild.Log());
                     return new Error<Exception>(ex);
                 }
             }
@@ -65,33 +72,49 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             {
                 try
                 {
-                    _logger.LogDebug("Modifying custom color role {role} for user {user} in guild {guild}", customColorRole.Log(), gUser.Log(), guild.Log());
-                    await customColorRole.ModifyAsync(x => x.Color = color);
-                    _logger.LogInformation("Modified custom color role {role} for user {user} in guild {guild}", customColorRole.Log(), gUser.Log(), guild.Log());
+                    _logger.LogDebug("Modifying custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    await customColorRoleDiscord.ModifyAsync(x => { x.Color = color; x.Name = roleName; });
+                    _logger.LogInformation("Modified custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed modifying custom color role {role} for user {user} in guild {guild}", customColorRole.Log(), gUser.Log(), guild.Log());
+                    _logger.LogError(ex, "Failed modifying custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                     return new Error<Exception>(ex);
                 }
             }
 
-            if (!gUser.Roles.Contains(customColorRole))
+            _logger.LogDebug("Saving custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+            customColorRoleDb ??= new()
+            {
+                GuildId = guild.Id,
+                UserId = gUser.Id,
+            };
+            customColorRoleDb.RoleId = customColorRoleDiscord.Id;
+            dbCtx.CustomColorRoles.Update(customColorRoleDb);
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed saving custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Saved custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+
+            if (!gUser.Roles.Contains(customColorRoleDiscord))
             {
                 try
                 {
-                    _logger.LogDebug("Adding custom color role {role} to user {user} in guild {guild}", customColorRole.Log(), gUser.Log(), guild.Log());
-                    await gUser.AddRoleAsync(customColorRole);
-                    _logger.LogInformation("Added custom color role {role} to user {user} in guild {guild}", customColorRole.Log(), gUser.Log(), guild.Log());
+                    _logger.LogDebug("Adding custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    await gUser.AddRoleAsync(customColorRoleDiscord);
+                    _logger.LogInformation("Added custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed adding custom color role {role} to user {user} in guild {guild}", customColorRole.Log(), gUser.Log(), guild.Log());
+                    _logger.LogError(ex, "Failed adding custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                     return new Error<Exception>(ex);
                 }
             }
 
-            return new Success<IRole>(customColorRole);
+            return new Success<IRole>(customColorRoleDiscord);
         }
 
         /// <summary>
@@ -102,22 +125,25 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <returns>Success / Error string / Exception</returns>
         internal async Task<OneOf<Success, Error<string>, Error<Exception>>> DeleteCustomColorRole(IGuild guild, IUser user)
         {
-            var roleName = DiscordUtils.GetCustomColorRoleName(user);
-            var role = guild.Roles.FirstOrDefault(x => x.Name == roleName);
+            using var dbCtx = _dbService.GetContext();
+            var dbRole = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ForUser(user.Id).FirstOrDefaultAsync();
+            if (dbRole is null)
+                return new Error<string>(StandardError.NoResults);
 
-            if (role is null)
+            var discordRole = guild.FindRole(dbRole.RoleId);
+            if (discordRole is null)
                 return new Error<string>(StandardError.NoResults);
 
             try
             {
-                _logger.LogDebug("Deleting custom color role {role} from {guild}", role.Log(), guild.Log());
-                await role.DeleteAsync();
-                _logger.LogInformation("Deleted custom color role {role} from {guild}", role.Log(), guild.Log());
+                _logger.LogDebug("Deleting custom color role {role} from {guild}", discordRole.Log(), guild.Log());
+                await discordRole.DeleteAsync();
+                _logger.LogInformation("Deleted custom color role {role} from {guild}", discordRole.Log(), guild.Log());
                 return new Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting custom color role {role} from {guild}", role.Log(), guild.Log());
+                _logger.LogError(ex, "Failed deleting custom color role {role} from {guild}", discordRole.Log(), guild.Log());
                 return new Error<Exception>(ex);
             }
         }
@@ -130,11 +156,15 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <param name="guild">Guild to configure</param>
         /// <param name="role">Permission role</param>
         /// <returns>GuildConfig on success / Exception</returns>
-        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role)
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<string>, Error<Exception>>> ConfigCustomColorAsync(IGuild guild, IRole? role, string indicator)
         {
+            if (!DiscordUtils.IsIdentifierValid(indicator))
+                return new Error<string>(StandardError.InvalidIdentifier(indicator));
+
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
+            dbGuild.CustomColorIndicator = indicator;
 
             _logger.LogDebug("Setting custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
@@ -154,21 +184,24 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <returns>Array of deleted roles on success / none / exception</returns>
         internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteCustomColorRolesForGuildAsync(IGuild guild)
         {
-            var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix)).ToArray();
-            if (roles.Length == 0)
+            using var dbCtx = _dbService.GetContext();
+            var dbRoles = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ToArrayAsync();
+            var discordRoles = guild.Roles.Where(x => dbRoles.Any(y => y.RoleId == x.Id)).ToArray();
+
+            if (discordRoles.Length == 0)
                 return new Error<string>(StandardError.NoResults);
 
             try
             {
-                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
-                foreach (var role in roles)
+                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
+                foreach (var role in discordRoles)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
-                return new Success<IRole[]>(roles);
+                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
+                return new Success<IRole[]>(discordRoles);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
+                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
                 return new Error<Exception>(ex);
             }
         }
@@ -178,41 +211,49 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// </summary>
         /// <param name="guild">Guild to delete from</param>
         /// <returns>Array of deleted roles on success / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild)
+        internal async Task<OneOf<Success<List<IRole>>, Error<string>, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild)
         {
-            var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
-            if (!roles.Any())
+            using var dbCtx = _dbService.GetContext();
+            var dbRoles = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ToArrayAsync();
+
+            var dbRolesInDiscord = new List<(DbCustomColorRole, IRole)>();
+            foreach(var dbRole in dbRoles)
+            {
+                var roleMatch = guild.FindRole(dbRole.RoleId);
+                if (roleMatch is not null)
+                    dbRolesInDiscord.Add((dbRole, roleMatch));
+            }
+
+            if (dbRolesInDiscord.Count == 0)
                 return new Error<string>(StandardError.NoResults);
 
             var guildUsers = await guild.GetUsersAsync();
-            var guildUserStringIds = guildUsers.Select(x => x.Id.ToString());
-            var rolesWithoutOwner = roles.Where(x => !guildUserStringIds.Contains(GetIdFromCustomColorRoleName(x.Name))).ToArray();
+            var rolesWithoutOwner = new List<IRole>();
+            foreach (var (dbRole, discordRole) in dbRolesInDiscord)
+            {
+                var guildUser = guildUsers.FirstOrDefault(x => x.Id == dbRole.UserId);
+                if (guildUser is not null && guildUser.RoleIds.Any(x => x == discordRole.Id))
+                    continue;
+                rolesWithoutOwner.Add(discordRole);
+            }
 
-            if (rolesWithoutOwner.Length == 0)
+            if (rolesWithoutOwner.Count == 0)
                 return new Error<string>(StandardError.NoResults);
 
             try
             {
-                _logger.LogDebug("Deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
+                _logger.LogDebug("Deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
                 foreach (var role in rolesWithoutOwner)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
-                return new Success<IRole[]>(rolesWithoutOwner);
+                _logger.LogInformation("Deleted {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
+                return new Success<List<IRole>>(rolesWithoutOwner);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
+                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
                 return new Error<Exception>(ex);
             }
         }
-
-        /// <summary>
-        /// Gets the ID od a user from the name of a custom color role
-        /// </summary>
-        /// <param name="customColorRoleName">Role name</param>
-        /// <returns>UserId as string</returns>
-        private static string GetIdFromCustomColorRoleName(string customColorRoleName)
-            => customColorRoleName.Replace($"{DiscordUtils.CustomColorRolePrefix} ", string.Empty);
         #endregion
     }
 }

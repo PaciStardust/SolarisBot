@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Interactions;
+using OneOf.Types;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -19,12 +20,14 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         [SlashCommand("config", "Set up custom color creation")]
         public async Task ConfigureCustomColorAsync
         (
-            [Summary(description: "[Opt] Required role (none to disable)")] IRole? role = null
+            [Summary(description: "[Opt] Required role (none to disable)")] IRole? role = null,
+            [Summary(description: "[Opt] Indicator")] string indicator = ""
         )
         {
-            var res = await _customColorService.ConfigCustomColorAsync(Context.Guild, role);
+            var res = await _customColorService.ConfigCustomColorAsync(Context.Guild, role, indicator);
             await res.Match(
-                success => Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**"),
+                success => Interaction.ReplyAsync($"Custom color creation is currently **{(role is not null ? "enabled" : "disabled")}**\n\nCreation Role: **{role?.Mention ?? "None"}**\nIndicator: **{(string.IsNullOrWhiteSpace(indicator) ? "None" : indicator)}**"),
+                error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
@@ -45,7 +48,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         {
             var res = await _customColorService.DeleteOwnerlessCustomColorRolesForGuildAsync(Context.Guild);
             await res.Match(
-                success => Interaction.ReplyAsync($"Succssfully deleted all **{success.Value.Length}** custom color roles without owner"),
+                success => Interaction.ReplyAsync($"Succssfully deleted all **{success.Value.Count}** custom color roles without owner"),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );

@@ -1,7 +1,10 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SolarisBot.Database;
+using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -15,11 +18,13 @@ namespace SolarisBot.Discord.Services
     {
         private readonly ILogger<RoleCleanupService> _logger;
         private readonly DiscordSocketClient _client;
+        private readonly DatabaseService _dbService;
 
-        public RoleCleanupService(ILogger<RoleCleanupService> logger, DiscordSocketClient client)
+        public RoleCleanupService(ILogger<RoleCleanupService> logger, DiscordSocketClient client, DatabaseService dbService)
         {
             _client = client;
             _logger = logger;
+            _dbService = dbService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -48,10 +53,14 @@ namespace SolarisBot.Discord.Services
                 return;
 
             var removedRole = oldUser.Roles.FirstOrDefault(x => !newUser.Roles.Contains(x));
-            if (removedRole is null || removedRole.Name != DiscordUtils.GetCustomColorRoleName(newUser))
+            if (removedRole is null)
                 return;
 
-            await TryDeleteLeftoverCustomColorRoleAsync(removedRole, newUser, newUser.Guild);
+            using var dbCtx = _dbService.GetContext();
+            var matchFound = await dbCtx.CustomColorRoles.Where(x => x.RoleId == removedRole.Id).ForGuild(newUser.Guild.Id).ForUser(newUser.Id).AnyAsync();
+
+            if (matchFound)
+                await TryDeleteLeftoverCustomColorRoleAsync(removedRole, newUser, newUser.Guild);
         }
 
         /// <summary>
@@ -62,11 +71,17 @@ namespace SolarisBot.Discord.Services
         /// <returns></returns>
         private async Task CheckForLeftoverCustomColorRoleOnLeftAsync(SocketGuild guild, SocketUser user)
         {
-            var customColorRole = guild.Roles.FirstOrDefault(x => x.Name == DiscordUtils.GetCustomColorRoleName(user));
-            if (customColorRole is null)
+            using var dbCtx = _dbService.GetContext();
+            var dbRole = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ForUser(user.Id).FirstOrDefaultAsync();
+
+            if (dbRole is null)
                 return;
 
-            await TryDeleteLeftoverCustomColorRoleAsync(customColorRole, user, guild);
+            var discordRole = guild.Roles.Where(x => x.Id == dbRole.RoleId).FirstOrDefault();
+            if (discordRole is null)
+                return;
+
+            await TryDeleteLeftoverCustomColorRoleAsync(discordRole, user, guild);
         }
 
         /// <summary>
