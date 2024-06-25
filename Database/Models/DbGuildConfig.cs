@@ -11,6 +11,7 @@ namespace SolarisBot.Database
         public ulong VouchRoleId { get; set; } = ulong.MinValue;
         public ulong VouchPermissionRoleId { get; set; } = ulong.MinValue;
         public ulong CustomColorPermissionRoleId { get; set; } = ulong.MinValue;
+        public string CustomColorIndicator {  get; set; } = string.Empty;
         public bool JokeRenameOn { get; set; } = false;
         public ulong JokeRenameTimeoutMin { get; set; } = ulong.MinValue;
         public ulong JokeRenameTimeoutMax { get; set; } = ulong.MinValue;
