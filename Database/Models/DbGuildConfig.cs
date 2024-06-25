@@ -31,6 +31,7 @@ namespace SolarisBot.Database
         public int UserAnalysisKickAt { get; set; } = int.MaxValue;
         public int UserAnalysisBanAt { get; set; } = int.MaxValue;
 
+        //todo: [REFACTOR] Removal of these?
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
 
