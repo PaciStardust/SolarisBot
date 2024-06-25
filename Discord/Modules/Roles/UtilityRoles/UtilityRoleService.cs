@@ -169,7 +169,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             if (dbGuild is null || !dbGuild.VouchingOn)
                 return new Error<string>(StandardError.DisabledFeature("Vouching"));
 
-            if (guild.FindRole(dbGuild.VouchPermissionRoleId) is null) //todo: [LOGGING] Is logging needed if one of these fails?
+            if (guild.FindRole(dbGuild.VouchPermissionRoleId) is null)
                 return new Error<string>(StandardError.DeletedRole("Vouch permission"));
             if (executingGuildUser.FindRole(dbGuild.VouchPermissionRoleId) is null)
                 return new Error<string>($"You do not have the required role <@&{dbGuild.VouchPermissionRoleId}>");
