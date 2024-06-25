@@ -48,7 +48,7 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         {
             var res = await _customColorService.DeleteOwnerlessCustomColorRolesForGuildAsync(Context.Guild);
             await res.Match(
-                success => Interaction.ReplyAsync($"Succssfully deleted all **{success.Value.Length}** custom color roles without owner"),
+                success => Interaction.ReplyAsync($"Succssfully deleted all **{success.Value.Count}** custom color roles without owner"),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );

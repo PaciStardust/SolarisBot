@@ -208,30 +208,46 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// </summary>
         /// <param name="guild">Guild to delete from</param>
         /// <returns>Array of deleted roles on success / Error string / Exception</returns>
-        internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild) //todo: rework
+        internal async Task<OneOf<Success<List<IRole>>, Error<string>, Error<Exception>>> DeleteOwnerlessCustomColorRolesForGuildAsync(IGuild guild)
         {
-            var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix));
-            if (!roles.Any())
+            using var dbCtx = _dbService.GetContext();
+            var dbRoles = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ToArrayAsync();
+
+            var dbRolesInDiscord = new List<(DbCustomColorRole, IRole)>();
+            foreach(var dbRole in dbRoles)
+            {
+                var roleMatch = guild.FindRole(dbRole.RoleId);
+                if (roleMatch is not null)
+                    dbRolesInDiscord.Add((dbRole, roleMatch));
+            }
+
+            if (dbRolesInDiscord.Count == 0)
                 return new Error<string>(StandardError.NoResults);
 
             var guildUsers = await guild.GetUsersAsync();
-            var guildUserStringIds = guildUsers.Select(x => x.Id.ToString());
-            var rolesWithoutOwner = roles.Where(x => !guildUserStringIds.Contains(GetIdFromCustomColorRoleName(x.Name))).ToArray();
+            var rolesWithoutOwner = new List<IRole>();
+            foreach (var (dbRole, discordRole) in dbRolesInDiscord)
+            {
+                var guildUser = guildUsers.FirstOrDefault(x => x.Id == dbRole.UserId);
+                if (guildUser is not null && guildUser.RoleIds.Any(x => x == discordRole.Id))
+                    continue;
+                rolesWithoutOwner.Add(discordRole);
+            }
 
-            if (rolesWithoutOwner.Length == 0)
+            if (rolesWithoutOwner.Count == 0)
                 return new Error<string>(StandardError.NoResults);
 
             try
             {
-                _logger.LogDebug("Deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
+                _logger.LogDebug("Deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
                 foreach (var role in rolesWithoutOwner)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
-                return new Success<IRole[]>(rolesWithoutOwner);
+                _logger.LogInformation("Deleted {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
+                return new Success<List<IRole>>(rolesWithoutOwner);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Length, guild.Log());
+                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
                 return new Error<Exception>(ex);
             }
         }
