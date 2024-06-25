@@ -184,21 +184,24 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
         /// <returns>Array of deleted roles on success / none / exception</returns>
         internal async Task<OneOf<Success<IRole[]>, Error<string>, Error<Exception>>> DeleteCustomColorRolesForGuildAsync(IGuild guild)
         {
-            var roles = guild.Roles.Where(x => x.Name.StartsWith(DiscordUtils.CustomColorRolePrefix)).ToArray();
-            if (roles.Length == 0)
+            using var dbCtx = _dbService.GetContext();
+            var dbRoles = await dbCtx.CustomColorRoles.ForGuild(guild.Id).ToArrayAsync();
+            var discordRoles = guild.Roles.Where(x => dbRoles.Any(y => y.RoleId == x.Id)).ToArray();
+
+            if (discordRoles.Length == 0)
                 return new Error<string>(StandardError.NoResults);
 
             try
             {
-                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
-                foreach (var role in roles)
+                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
+                foreach (var role in discordRoles)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
-                return new Success<IRole[]>(roles);
+                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
+                return new Success<IRole[]>(discordRoles);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles in guild {guild}", roles.Length, guild.Log());
+                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
                 return new Error<Exception>(ex);
             }
         }
