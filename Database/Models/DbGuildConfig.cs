@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SolarisBot.Database.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SolarisBot.Database
@@ -31,14 +32,21 @@ namespace SolarisBot.Database
 
         [ForeignKey(nameof(DbRoleGroup.GuildId))]
         public virtual ICollection<DbRoleGroup> RoleGroups { get; set; } = new HashSet<DbRoleGroup>();
+
         [ForeignKey(nameof(DbQuote.GuildId))]
         public virtual ICollection<DbQuote> Quotes { get; set; } = new HashSet<DbQuote>();
+
         [ForeignKey(nameof(DbJokeTimeout.GuildId))]
         public virtual ICollection<DbJokeTimeout> JokeTimeouts { get; set; } = new HashSet<DbJokeTimeout>();
+
         [ForeignKey(nameof(DbReminder.GuildId))]
         public virtual ICollection<DbReminder> Reminders { get; set; } = new HashSet<DbReminder>();
+
         [ForeignKey(nameof(DbRegexChannel.GuildId))]
         public virtual ICollection<DbRegexChannel> RegexChannels { get; set; } = new HashSet<DbRegexChannel>();
+
+        [ForeignKey(nameof(DbRegexChannel.GuildId))]
+        public virtual ICollection<DbCustomColorRole> CustomColorRoles { get; set; } = new HashSet<DbCustomColorRole>();
 
         public DbGuildConfig() { } //To avoid defaults not setting
 

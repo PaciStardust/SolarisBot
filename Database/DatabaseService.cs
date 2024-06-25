@@ -91,6 +91,9 @@ namespace SolarisBot.Database
 
                         "CREATE TABLE RegexChannels(RegexChannelId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, GuildId INTEGER NOT NULL DEFAULT 0, ChannelId INTEGER NOT NULL DEFAULT 0, Regex TEXT NULL DEFAULT \"\", AppliedRoleId INTEGER NOT NULL DEFAULT 0, PunishmentMessage TEXT NOT NULL DEFAULT \"\", PunishmentDelete BOOL NOT NULL DEFAULT 0, PunishmentTimeout INTEGER NOT NULL DEFAULT 0, CreatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), UpdatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), UNIQUE(ChannelId))",
                         "CREATE TRIGGER RegexChannelsSetModified AFTER UPDATE ON RegexChannels FOR EACH ROW BEGIN UPDATE RegexChannels SET UpdatedAt = strftime('%s', 'now') WHERE RegexChannelId = NEW.RegexChannelId; END",
+
+                        "CREATE TABLE CustomColorRoles(CustomColorRoleId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, GuildId INTEGER NOT NULL DEFAULT 0, RoleId INTEGER NOT NULL DEFAULT 0, UserId INTEGER NOT NULL DEFAULT 0, CreatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), UpdatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), UNIQUE(RoleId), UNIQUE(GuildId, UserId))",
+                        "CREATE TRIGGER CustomColorRolesSetModified AFTER UPDATE ON CustomColorRoles FOR EACH ROW BEGIN UPDATE CustomColorRoles SET UpdatedAt = strftime('%s', 'now') WHERE CustomColorRoleId = NEW.CustomColorRoleId; END",
                     });
                     migrationVersion = 1;
                 }
