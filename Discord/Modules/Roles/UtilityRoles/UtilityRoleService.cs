@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using OneOf;
 using OneOf.Types;
 using SolarisBot.Database;
+using SolarisBot.Database.Models;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
@@ -177,6 +178,22 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
                 return new Error<string>(StandardError.DeletedRole("Vouch"));
             if (targetGuildUser.FindRole(dbGuild.VouchRoleId) is not null)
                 return new Error<string>($"{targetGuildUser.Mention} has already been vouched");
+
+            _logger.LogDebug("Recording vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
+            var vouchAction = new DbVouchAction()
+            {
+                GuildId = guild.Id,
+                ExecutingUserId = executingGuildUser.Id,
+                TargetUserId = targetGuildUser.Id,
+            };
+            dbCtx.VouchActions.Add(vouchAction);
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed recording vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Recorded vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
 
             _logger.LogDebug("Giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
             try
