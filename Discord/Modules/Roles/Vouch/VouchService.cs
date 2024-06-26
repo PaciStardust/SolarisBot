@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using OneOf.Types;
@@ -107,6 +108,37 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             }
             _logger.LogInformation("Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
+        }
+
+        /// <summary>
+        /// Gets the vouching history of a user
+        /// </summary>
+        /// <param name="guild">Guild to search</param>
+        /// <param name="userId">User to search</param>
+        /// <param name="maxDepth">Maximum search depth</param>
+        /// <returns>A list of vouches in reverse chronological order on success / Error string</returns>
+        internal async Task<OneOf<Success<List<DbVouchAction>>, Error<string>>> GetVouchHistoryAsync(IGuild guild, ulong userId, int maxDepth) //todo: implement
+        {
+            if (maxDepth < 1)
+                return new Error<string>("Maximum depth for search can not be under 1");
+
+            using var dbCtx = _dbService.GetContext(); //todo: [TESTING] Should each vouch be requested individually or all at once?
+            var dbVouchActions = await dbCtx.VouchActions.ForGuild(guild.Id).ToArrayAsync();
+
+            var firstVouch = dbVouchActions.Where(x => x.TargetUserId == userId).OrderByDescending(x => x.VouchedAt).FirstOrDefault();
+            if (firstVouch is null)
+                return new Error<string>(StandardError.NoResults);
+            
+            var vouchHistory = new List<DbVouchAction>() { firstVouch };
+            while (vouchHistory.Count < maxDepth)
+            {
+                var previousVouch = dbVouchActions.Where(x => x.TargetUserId == vouchHistory[^1].ExecutingUserId && x.VouchedAt < vouchHistory[^1].VouchedAt).OrderByDescending(x => x.VouchedAt).FirstOrDefault();
+                if (previousVouch is null)
+                    break;
+                vouchHistory.Add(previousVouch);
+            }
+
+            return new Success<List<DbVouchAction>>(vouchHistory);
         }
         #endregion
     }

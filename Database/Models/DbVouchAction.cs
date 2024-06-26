@@ -16,4 +16,10 @@ namespace SolarisBot.Database.Models
         public ulong TargetUserId { get; set; } = ulong.MinValue;
         public ulong VouchedAt {  get; set; }
     }
+
+    internal static class DbVouchActionExtensions
+    {
+        internal static IQueryable<DbVouchAction> ForGuild(this IQueryable<DbVouchAction> query, ulong id)
+            => query.Where(x => x.GuildId == id);
+    }
 }
