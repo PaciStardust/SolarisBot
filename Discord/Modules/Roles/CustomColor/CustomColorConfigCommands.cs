@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Interactions;
-using OneOf.Types;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 

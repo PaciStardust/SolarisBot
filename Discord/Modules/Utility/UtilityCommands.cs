@@ -10,7 +10,7 @@ namespace SolarisBot.Discord.Modules.Utility
     {
         //So far we need no constructor here as this has no dependencies
 
-        [SlashCommand("get-pfp", "Get a users PFP"), UserCommand("Get PFP")]
+        [SlashCommand("get-pfp", "Get a users PFP")]
         public async Task GetUserPfpAsync(IUser user)
         {
             if (user is not SocketGuildUser gUser)
