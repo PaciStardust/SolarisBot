@@ -122,17 +122,17 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             if (maxDepth < 1)
                 return new Error<string>("Maximum depth for search can not be under 1");
 
-            using var dbCtx = _dbService.GetContext(); //todo: [TESTING] Should each vouch be requested individually or all at once?
-            var dbVouchActions = await dbCtx.VouchActions.ForGuild(guild.Id).ToArrayAsync();
+            using var dbCtx = _dbService.GetContext();
 
-            var firstVouch = dbVouchActions.Where(x => x.TargetUserId == userId).OrderByDescending(x => x.VouchedAt).FirstOrDefault();
+            var firstVouch = await dbCtx.VouchActions.ForGuild(guild.Id).Where(x => x.TargetUserId == userId).OrderByDescending(x => x.VouchedAt).FirstOrDefaultAsync();
             if (firstVouch is null)
                 return new Error<string>(StandardError.NoResults);
             
             var vouchHistory = new List<DbVouchAction>() { firstVouch };
             while (vouchHistory.Count < maxDepth)
             {
-                var previousVouch = dbVouchActions.Where(x => x.TargetUserId == vouchHistory[^1].ExecutingUserId && x.VouchedAt < vouchHistory[^1].VouchedAt).OrderByDescending(x => x.VouchedAt).FirstOrDefault();
+                var currentLastVouch = vouchHistory[^1];
+                var previousVouch = await dbCtx.VouchActions.ForGuild(guild.Id).Where(x => x.TargetUserId == currentLastVouch.ExecutingUserId && x.VouchedAt < currentLastVouch.VouchedAt).OrderByDescending(x => x.VouchedAt).FirstOrDefaultAsync();
                 if (previousVouch is null)
                     break;
                 vouchHistory.Add(previousVouch);
