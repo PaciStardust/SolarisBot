@@ -124,15 +124,16 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
 
             using var dbCtx = _dbService.GetContext();
 
-            var firstVouch = await dbCtx.VouchActions.ForGuild(guild.Id).Where(x => x.TargetUserId == userId).OrderByDescending(x => x.VouchedAt).FirstOrDefaultAsync();
+            var query = $"SELECT * FROM VouchActions WHERE GuildId = {guild.Id} AND TargetUserId = {userId} ORDER BY VouchedAt DESC";
+            var firstVouch = await dbCtx.VouchActions.FromSqlRaw(query).FirstOrDefaultAsync();
             if (firstVouch is null)
                 return new Error<string>(StandardError.NoResults);
             
             var vouchHistory = new List<DbVouchAction>() { firstVouch };
             while (vouchHistory.Count < maxDepth)
             {
-                var currentLastVouch = vouchHistory[^1];
-                var previousVouch = await dbCtx.VouchActions.ForGuild(guild.Id).Where(x => x.TargetUserId == currentLastVouch.ExecutingUserId && x.VouchedAt < currentLastVouch.VouchedAt).OrderByDescending(x => x.VouchedAt).FirstOrDefaultAsync();
+                query = $"SELECT * FROM VouchActions WHERE GuildId = {guild.Id} AND TargetUserId = {vouchHistory[^1].ExecutingUserId} AND VouchedAt < {vouchHistory[^1].VouchedAt} ORDER BY VouchedAt DESC";
+                var previousVouch = await dbCtx.VouchActions.FromSqlRaw(query).FirstOrDefaultAsync();
                 if (previousVouch is null)
                     break;
                 vouchHistory.Add(previousVouch);
