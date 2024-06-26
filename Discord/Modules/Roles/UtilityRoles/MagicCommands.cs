@@ -8,8 +8,8 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
     [Module("roles/magic")]
     public sealed class MagicCommands : SolarisInteractionModuleBase
     {
-        private readonly VouchService _roleService;
-        internal MagicCommands(VouchService roleService)
+        private readonly UtilityRoleService _roleService;
+        internal MagicCommands(UtilityRoleService roleService)
         {
             _roleService = roleService;
         }

@@ -8,8 +8,8 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
     [Module("roles/quarantine")]
     internal class QuarantineCommands : SolarisInteractionModuleBase
     {
-        private readonly VouchService _roleService;
-        internal QuarantineCommands(VouchService roleService)
+        private readonly UtilityRoleService _roleService;
+        internal QuarantineCommands(UtilityRoleService roleService)
         {
             _roleService = roleService;
         }
