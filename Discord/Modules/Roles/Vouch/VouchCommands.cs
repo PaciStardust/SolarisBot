@@ -3,14 +3,14 @@ using Discord.Interactions;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 
-namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
+namespace SolarisBot.Discord.Modules.Roles.Vouch
 {
     [Module("roles/vouch")]
     public sealed class VouchCommands : SolarisInteractionModuleBase
     {
-        private readonly UtilityRoleService _roleService;
+        private readonly VouchService _roleService;
 
-        internal VouchCommands(UtilityRoleService roleService) //todo: [FEATURE] Custom message
+        internal VouchCommands(VouchService roleService) //todo: [FEATURE] Custom message
         {
             _roleService = roleService;
         }
