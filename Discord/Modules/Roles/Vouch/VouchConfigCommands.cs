@@ -4,6 +4,7 @@ using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Common;
 using SolarisBot.Database.Models;
 using System.Text;
+using System;
 
 namespace SolarisBot.Discord.Modules.Roles.Vouch
 {
@@ -32,7 +33,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             );
         }
 
-        [UserCommand("Vouch History")]
+        [UserCommand("Vouch History")] //todo: [REFACTOR] Disable user commands?
         public async Task GetVouchHistoryUser(IUser user)
             => await GetHistoryAsync(user.Id, 10);
 
@@ -57,6 +58,20 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
                 return;
             }
             await GetHistoryAsync(parsedUserId, depth);
+        }
+
+        [SlashCommand("info", "View a users vouch info")]
+        public async Task GetVouchInfoAsync
+        (
+            [Summary(description: "Target user")] IUser user,
+            [Summary(description: "[Opt] Include missing")] bool missing = false
+        )
+        {
+            var res = await _vouchService.GetVouchInfoAsync(Context.Guild, user.Id, missing);
+            await res.Match(
+                success => Interaction.ReplyAsync(GenerateVouchInfoEmbed(success.Value.Item1, success.Value.Item2)),
+                error => Interaction.ReplyErrorAsync(error.Value)
+            );
         }
 
         #region Utils
@@ -89,6 +104,28 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
                 success => Interaction.ReplyAsync(GenerateVouchHistoryEmbed(success.Value)),
                 error => Interaction.ReplyErrorAsync(error.Value)
             );
+        }
+
+        /// <summary>
+        /// Responds with vouching info of specific user
+        /// </summary>
+        /// <param name="vouchedBy">Vouched by information</param>
+        /// <param name="hasVouched">List of users vouched</param>
+        /// <returns>Generated embed</returns>
+        private static Embed GenerateVouchInfoEmbed(DbVouchAction? vouchedBy, List<DbVouchAction> hasVouched)
+        {
+            var embedBuilder = EmbedFactory.Builder();
+
+            if (vouchedBy is not null)
+                embedBuilder.AddField("Vouched By", $"<@{vouchedBy.ExecutingUserId}> *({vouchedBy.ExecutingUserId})* @ <t:{vouchedBy.VouchedAt}:f>");
+
+            if (hasVouched.Count != 0)
+            {
+                var text = string.Join("\n", hasVouched.Select(x => $"<@{x.TargetUserId}> *({x.TargetUserId})* @ <t:{x.VouchedAt}:f>"));
+                embedBuilder.AddField("Has Vouched For", text);
+            }
+
+            return embedBuilder.Build();
         }
         #endregion
     }

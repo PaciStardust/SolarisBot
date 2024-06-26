@@ -148,7 +148,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         /// <param name="guild">Guild to search</param>
         /// <param name="userId">User to search</param>
         /// <returns>A tuple of user being vouched and user vouching others on success / Error string</returns>
-        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, bool excludeMissing = true) //todo: impl
+        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, bool includeMissing = false) //todo: impl
         {
             using var dbCtx = _dbService.GetContext();
 
@@ -158,7 +158,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             query = $"SELECT * FROM VouchActions WHERE GuildId = {guild.Id} AND ExecutingUserId = {userId} ORDER BY VouchedAt DESC";
             var hasVouched = await dbCtx.VouchActions.FromSqlRaw(query).ToListAsync();
 
-            if (excludeMissing)
+            if (!includeMissing)
             {
                 var hasVouchedFiltered = new List<DbVouchAction>();
                 foreach (var vouchAction in hasVouched)
