@@ -4,7 +4,6 @@ using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Common;
 using SolarisBot.Database.Models;
 using System.Text;
-using System;
 
 namespace SolarisBot.Discord.Modules.Roles.Vouch
 {

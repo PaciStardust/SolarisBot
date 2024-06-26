@@ -12,7 +12,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Roles.Vouch
 {
     [Module("roles/vouch"), AutoLoadService]
-    internal class VouchService //todo: [FEATURE] Vouch Tree
+    internal class VouchService
     {
         private readonly ILogger<VouchService> _logger;
         private readonly DatabaseService _dbService;
@@ -148,7 +148,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         /// <param name="guild">Guild to search</param>
         /// <param name="userId">User to search</param>
         /// <returns>A tuple of user being vouched and user vouching others on success / Error string</returns>
-        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, int limit, bool includeMissing = false) //todo: impl
+        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, int limit, bool includeMissing = false)
         {
             if (limit < 1)
                 return new Error<string>(StandardError.InvalidParameter("limit"));
