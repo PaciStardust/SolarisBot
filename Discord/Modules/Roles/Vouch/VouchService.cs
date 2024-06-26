@@ -147,8 +147,8 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         /// </summary>
         /// <param name="guild">Guild to search</param>
         /// <param name="userId">User to search</param>
-        /// <returns>A tuple of user being vouched and user vouching others on success / Error string</returns>
-        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, int limit, bool includeMissing = false)
+        /// <returns>A tuple of user being vouched, user vouching others and count of vouched for on success / Error string</returns>
+        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>, int)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, int limit, bool includeMissing = false)
         {
             if (limit < 1)
                 return new Error<string>(StandardError.InvalidParameter("limit"));
@@ -159,6 +159,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             var vouchedBy = await dbCtx.VouchActions.FromSqlRaw(query).FirstOrDefaultAsync();
 
             query = $"SELECT * FROM VouchActions WHERE GuildId = {guild.Id} AND ExecutingUserId = {userId} ORDER BY VouchedAt DESC";
+            var hasVouchedCount = await dbCtx.VouchActions.FromSqlRaw(query).CountAsync();
             var hasVouched = await dbCtx.VouchActions.FromSqlRaw(query).Take(limit).ToListAsync();
 
             if (!includeMissing)
@@ -175,7 +176,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             if (vouchedBy is null && hasVouched.Count == 0)
                 return new Error<string>(StandardError.NoResults);
             
-            return new Success<(DbVouchAction?, List<DbVouchAction>)>((vouchedBy, hasVouched));
+            return new Success<(DbVouchAction?, List<DbVouchAction>, int)>((vouchedBy, hasVouched, hasVouchedCount));
         }
         #endregion
     }

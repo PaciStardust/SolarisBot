@@ -69,7 +69,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         {
             var res = await _vouchService.GetVouchInfoAsync(Context.Guild, user.Id, limit, missing);
             await res.Match(
-                success => Interaction.ReplyAsync(GenerateVouchInfoEmbed(success.Value.Item1, success.Value.Item2)),
+                success => Interaction.ReplyAsync(GenerateVouchInfoEmbed(success.Value.Item1, success.Value.Item2, success.Value.Item3)),
                 error => Interaction.ReplyErrorAsync(error.Value)
             );
         }
@@ -112,7 +112,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         /// <param name="vouchedBy">Vouched by information</param>
         /// <param name="hasVouched">List of users vouched</param>
         /// <returns>Generated embed</returns>
-        private static Embed GenerateVouchInfoEmbed(DbVouchAction? vouchedBy, List<DbVouchAction> hasVouched)
+        private static Embed GenerateVouchInfoEmbed(DbVouchAction? vouchedBy, List<DbVouchAction> hasVouched, int originalCount)
         {
             var embedBuilder = EmbedFactory.Builder();
 
@@ -122,7 +122,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             if (hasVouched.Count != 0)
             {
                 var text = string.Join("\n", hasVouched.Select(x => $"<@{x.TargetUserId}> *({x.TargetUserId})* @ <t:{x.VouchedAt}:f>"));
-                embedBuilder.AddField("Has Vouched For", text);
+                embedBuilder.AddField($"Has Vouched For ({originalCount} Total)", text);
             }
 
             return embedBuilder.Build();
