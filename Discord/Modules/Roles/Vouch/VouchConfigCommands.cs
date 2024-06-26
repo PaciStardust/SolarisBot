@@ -2,6 +2,8 @@
 using Discord;
 using SolarisBot.Discord.Common.Attributes;
 using SolarisBot.Discord.Common;
+using SolarisBot.Database.Models;
+using System.Text;
 
 namespace SolarisBot.Discord.Modules.Roles.Vouch
 {
@@ -29,5 +31,40 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
+
+        
+
+        #region Utils
+        /// <summary>
+        /// Generates an embed for a vouch action history
+        /// </summary>
+        /// <param name="vouchActions">History to create embed for</param>
+        /// <returns>Generated embed</returns>
+        private static Embed GenerateVouchHistoryEmbed(List<DbVouchAction> vouchActions)
+        {
+            var sb = new StringBuilder($"> <@{vouchActions[0].TargetUserId}> *{vouchActions[0].TargetUserId}*");
+
+            foreach (var action in vouchActions) //todo: [REFACTOR] Check for newline errors on string.join and append
+            {
+                sb.Append($"\n> <@{action.ExecutingUserId}> *{action.ExecutingUserId}*");
+            }
+
+            return EmbedFactory.Default("Vouch History", sb.ToString());
+        }
+
+        /// <summary>
+        /// Responds with vouching history of specified user
+        /// </summary>
+        /// <param name="userId">Target user id</param>
+        /// <param name="maxDepth">Maximum search depth</param>
+        private async Task GetHistoryAsync(ulong userId, int maxDepth)
+        {
+            var res = await _vouchService.GetVouchHistoryAsync(Context.Guild, userId, maxDepth);
+            await res.Match(
+                success => Interaction.ReplyAsync(GenerateVouchHistoryEmbed(success.Value)),
+                error => Interaction.ReplyErrorAsync(error.Value)
+            );
+        }
+        #endregion
     }
 }
