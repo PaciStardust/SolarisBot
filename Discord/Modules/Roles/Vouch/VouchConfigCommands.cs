@@ -71,7 +71,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
 
             foreach (var action in vouchActions) //todo: [REFACTOR] Check for newline errors on string.join and append
             {
-                sb.Append($"\n:arrow_up:\n<@{action.ExecutingUserId}> *({action.ExecutingUserId})*");
+                sb.Append($"\n:arrow_up: @ <t:{action.VouchedAt}:f>\n<@{action.ExecutingUserId}> *({action.ExecutingUserId})*");
             }
 
             return EmbedFactory.Default("Vouch History", sb.ToString());
