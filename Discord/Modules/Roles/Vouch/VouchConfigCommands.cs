@@ -32,7 +32,32 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             );
         }
 
-        
+        [UserCommand("Vouch History")]
+        public async Task GetVouchHistoryUser(IUser user)
+            => await GetHistoryAsync(user.Id, 10);
+
+        [SlashCommand("history", "View a users vouch history")]
+        public async Task GetVouchHistoryCommand
+        (
+            [Summary(description: "Target user")] IUser user,
+            [Summary(description: "[Opt] Search depth"), MinValue(1)] int depth = 10
+        )
+            => await GetHistoryAsync(user.Id, depth);
+
+        [SlashCommand("history-id", "View a users vouch history")]
+        public async Task GetVouchHistoryCommand
+        (
+            [Summary(description: "Target user")] string userId,
+            [Summary(description: "[Opt] Search depth"), MinValue(1)] int depth = 10
+        )
+        {
+            if (!ulong.TryParse(userId, out var parsedUserId))
+            {
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("user ID"));
+                return;
+            }
+            await GetHistoryAsync(parsedUserId, depth);
+        }
 
         #region Utils
         /// <summary>
@@ -42,11 +67,11 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         /// <returns>Generated embed</returns>
         private static Embed GenerateVouchHistoryEmbed(List<DbVouchAction> vouchActions)
         {
-            var sb = new StringBuilder($"> <@{vouchActions[0].TargetUserId}> *{vouchActions[0].TargetUserId}*");
+            var sb = new StringBuilder($"<@{vouchActions[0].TargetUserId}> *({vouchActions[0].TargetUserId})*");
 
             foreach (var action in vouchActions) //todo: [REFACTOR] Check for newline errors on string.join and append
             {
-                sb.Append($"\n> <@{action.ExecutingUserId}> *{action.ExecutingUserId}*");
+                sb.Append($"\n:arrow_up:\n<@{action.ExecutingUserId}> *({action.ExecutingUserId})*");
             }
 
             return EmbedFactory.Default("Vouch History", sb.ToString());

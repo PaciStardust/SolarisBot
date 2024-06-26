@@ -117,7 +117,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         /// <param name="userId">User to search</param>
         /// <param name="maxDepth">Maximum search depth</param>
         /// <returns>A list of vouches in reverse chronological order on success / Error string</returns>
-        internal async Task<OneOf<Success<List<DbVouchAction>>, Error<string>>> GetVouchHistoryAsync(IGuild guild, ulong userId, int maxDepth) //todo: implement
+        internal async Task<OneOf<Success<List<DbVouchAction>>, Error<string>>> GetVouchHistoryAsync(IGuild guild, ulong userId, int maxDepth)
         {
             if (maxDepth < 1)
                 return new Error<string>("Maximum depth for search can not be under 1");
