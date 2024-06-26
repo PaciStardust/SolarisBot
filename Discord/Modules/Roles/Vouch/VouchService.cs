@@ -120,7 +120,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         internal async Task<OneOf<Success<List<DbVouchAction>>, Error<string>>> GetVouchHistoryAsync(IGuild guild, ulong userId, int maxDepth)
         {
             if (maxDepth < 1)
-                return new Error<string>("Maximum depth for search can not be under 1");
+                return new Error<string>(StandardError.InvalidParameter("max depth"));
 
             using var dbCtx = _dbService.GetContext();
 
@@ -148,15 +148,18 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         /// <param name="guild">Guild to search</param>
         /// <param name="userId">User to search</param>
         /// <returns>A tuple of user being vouched and user vouching others on success / Error string</returns>
-        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, bool includeMissing = false) //todo: impl
+        internal async Task<OneOf<Success<(DbVouchAction?, List<DbVouchAction>)>, Error<string>>> GetVouchInfoAsync(IGuild guild, ulong userId, int limit, bool includeMissing = false) //todo: impl
         {
+            if (limit < 1)
+                return new Error<string>(StandardError.InvalidParameter("limit"));
+
             using var dbCtx = _dbService.GetContext();
 
             var query = $"SELECT * FROM VouchActions WHERE GuildId = {guild.Id} AND TargetUserId = {userId} ORDER BY VouchedAt DESC";
             var vouchedBy = await dbCtx.VouchActions.FromSqlRaw(query).FirstOrDefaultAsync();
 
             query = $"SELECT * FROM VouchActions WHERE GuildId = {guild.Id} AND ExecutingUserId = {userId} ORDER BY VouchedAt DESC";
-            var hasVouched = await dbCtx.VouchActions.FromSqlRaw(query).ToListAsync();
+            var hasVouched = await dbCtx.VouchActions.FromSqlRaw(query).Take(limit).ToListAsync();
 
             if (!includeMissing)
             {

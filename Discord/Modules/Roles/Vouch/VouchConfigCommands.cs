@@ -64,10 +64,11 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         public async Task GetVouchInfoAsync
         (
             [Summary(description: "Target user")] IUser user,
-            [Summary(description: "[Opt] Include missing")] bool missing = false
+            [Summary(description: "[Opt] Include missing")] bool missing = false,
+            [Summary(description: "[Opt] Limit of vouch entries"), MinValue(1)] int limit = 10
         )
         {
-            var res = await _vouchService.GetVouchInfoAsync(Context.Guild, user.Id, missing);
+            var res = await _vouchService.GetVouchInfoAsync(Context.Guild, user.Id, limit, missing);
             await res.Match(
                 success => Interaction.ReplyAsync(GenerateVouchInfoEmbed(success.Value.Item1, success.Value.Item2)),
                 error => Interaction.ReplyErrorAsync(error.Value)
