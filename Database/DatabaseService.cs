@@ -94,6 +94,9 @@ namespace SolarisBot.Database
 
                         "CREATE TABLE CustomColorRoles(CustomColorRoleId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, GuildId INTEGER REFERENCES GuildConfigs(GuildId), RoleId INTEGER NOT NULL DEFAULT 0, UserId INTEGER NOT NULL DEFAULT 0, CreatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), UpdatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), UNIQUE(RoleId), UNIQUE(GuildId, UserId))",
                         "CREATE TRIGGER CustomColorRolesSetModified AFTER UPDATE ON CustomColorRoles FOR EACH ROW BEGIN UPDATE CustomColorRoles SET UpdatedAt = strftime('%s', 'now') WHERE CustomColorRoleId = NEW.CustomColorRoleId; END",
+
+                        "CREATE TABLE VouchActions(VouchActionId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, GuildId INTEGER REFERENCES GuildConfigs(GuildId), ExecutingUserId INTEGER NOT NULL DEFAULT 0, TargetUserId INTEGER NOT NULL DEFAULT 0, VouchedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), CreatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')), UpdatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')))",
+                        "CREATE TRIGGER VouchActionsSetModified AFTER UPDATE ON VouchActions FOR EACH ROW BEGIN UPDATE VouchActions SET UpdatedAt = strftime('%s', 'now') WHERE VouchActionId = NEW.VouchActionId; END",
                     });
                     migrationVersion = 1;
                 }
