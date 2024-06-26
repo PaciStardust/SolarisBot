@@ -21,32 +21,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             _logger = logger;
         }
 
-        /// <summary>
-        /// Configure vouching for a guild
-        /// </summary>
-        /// <param name="guild">Guild to configure</param>
-        /// <param name="permission">Vouch permission role</param>
-        /// <param name="vouch">Vouch role</param>
-        /// <returns>GuildConfig on success / Exception</returns>
-        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigVouchingAsync(IGuild guild, IRole? permission, IRole? vouch)
-        {
-            using var dbCtx = _dbService.GetContext();
-            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
-
-            dbGuild.VouchPermissionRoleId = permission?.Id ?? ulong.MinValue;
-            dbGuild.VouchRoleId = vouch?.Id ?? ulong.MinValue;
-
-            _logger.LogDebug("Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", guild.Log());
-            var (_, err) = await dbCtx.TrySaveChangesAsync();
-            if (err is not null)
-            {
-                _logger.LogError(err, "Failed setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", guild.Log());
-                return new Error<Exception>(err);
-            }
-            _logger.LogInformation("Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", guild.Log());
-            return new Success<DbGuildConfig>(dbGuild);
-        }
-
+        #region Commands
         /// <summary>
         /// Vouches for a user in a guild
         /// </summary>
@@ -105,5 +80,34 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             _logger.LogInformation("Gave vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
             return new Success();
         }
+        #endregion
+
+        #region Commands - Config
+        /// <summary>
+        /// Configure vouching for a guild
+        /// </summary>
+        /// <param name="guild">Guild to configure</param>
+        /// <param name="permission">Vouch permission role</param>
+        /// <param name="vouch">Vouch role</param>
+        /// <returns>GuildConfig on success / Exception</returns>
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigVouchingAsync(IGuild guild, IRole? permission, IRole? vouch)
+        {
+            using var dbCtx = _dbService.GetContext();
+            var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
+
+            dbGuild.VouchPermissionRoleId = permission?.Id ?? ulong.MinValue;
+            dbGuild.VouchRoleId = vouch?.Id ?? ulong.MinValue;
+
+            _logger.LogDebug("Setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", guild.Log());
+            var (_, err) = await dbCtx.TrySaveChangesAsync();
+            if (err is not null)
+            {
+                _logger.LogError(err, "Failed setting vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", guild.Log());
+                return new Error<Exception>(err);
+            }
+            _logger.LogInformation("Set vouching to permission={vouchPermission}, vouch={vouch} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", guild.Log());
+            return new Success<DbGuildConfig>(dbGuild);
+        }
+        #endregion
     }
 }
