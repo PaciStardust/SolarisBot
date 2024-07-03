@@ -14,6 +14,7 @@ namespace SolarisBot.Database.Models
         public ulong InteractionId { get; set; } = ulong.MinValue;
         public bool Success { get; set; } = false;
         public string ModuleName { get; set; } = string.Empty;
+        public string CommandGroupName { get; set; } = string.Empty;
         public string CommandName { get; set; } = string.Empty;
         public string MethodName { get; set; } = string.Empty;
         public string Arguments { get; set; } = string.Empty;

@@ -147,7 +147,8 @@ namespace SolarisBot.Discord.Services
                 UserId = context.Interaction.User.Id,
                 InteractionId = context.Interaction.Id,
                 Success = result.IsSuccess,
-                ModuleName = cmdInfo.Module.Name, //todo: command module name?
+                ModuleName = cmdInfo.Module.Name,
+                CommandGroupName = cmdInfo.Module.SlashGroupName,
                 CommandName = cmdInfo.Name,
                 MethodName = cmdInfo.MethodName,
                 Arguments = GetOptionsString(context.Interaction.Data)
