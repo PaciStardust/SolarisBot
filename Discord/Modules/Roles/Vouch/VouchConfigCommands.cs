@@ -66,12 +66,22 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             [Summary(description: "[Opt] Include missing")] bool missing = false,
             [Summary(description: "[Opt] Limit of vouch entries"), MinValue(1)] int limit = 10
         )
+            => await GetInfoAsync(user.Id, missing, limit);
+
+        [SlashCommand("info-id", "View a users vouch history")]
+        public async Task GetVouchHistoryCommand
+        (
+            [Summary(description: "Target user")] string userId,
+            [Summary(description: "[Opt] Include missing")] bool missing = false,
+            [Summary(description: "[Opt] Limit of vouch entries"), MinValue(1)] int limit = 10
+        )
         {
-            var res = await _vouchService.GetVouchInfoAsync(Context.Guild, user.Id, limit, missing);
-            await res.Match(
-                success => Interaction.ReplyAsync(GenerateVouchInfoEmbed(success.Value.Item1, success.Value.Item2, success.Value.Item3)),
-                error => Interaction.ReplyErrorAsync(error.Value)
-            );
+            if (!ulong.TryParse(userId, out var parsedUserId))
+            {
+                await Interaction.ReplyErrorAsync(StandardError.InvalidParameter("user ID"));
+                return;
+            }
+            await GetInfoAsync(parsedUserId, missing, limit);
         }
 
         #region Utils
@@ -102,6 +112,21 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             var res = await _vouchService.GetVouchHistoryAsync(Context.Guild, userId, maxDepth);
             await res.Match(
                 success => Interaction.ReplyAsync(GenerateVouchHistoryEmbed(success.Value)),
+                error => Interaction.ReplyErrorAsync(error.Value)
+            );
+        }
+
+        /// <summary>
+        /// Responds with info of a specific user
+        /// </summary>
+        /// <param name="userId">Target user id</param>
+        /// <param name="missing">Also add missing users</param>
+        /// <param name="limit">Limit of data to fetch</param>
+        private async Task GetInfoAsync(ulong userId, bool missing, int limit)
+        {
+            var res = await _vouchService.GetVouchInfoAsync(Context.Guild, userId, limit, missing);
+            await res.Match(
+                success => Interaction.ReplyAsync(GenerateVouchInfoEmbed(success.Value.Item1, success.Value.Item2, success.Value.Item3)),
                 error => Interaction.ReplyErrorAsync(error.Value)
             );
         }
