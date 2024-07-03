@@ -32,7 +32,7 @@ namespace SolarisBot.Discord.Modules.Owner
         [SlashCommand("stats", "List runtime and command count")]
         public async Task StatsAsync()
         {
-            var statsString = _ownerService.GetStatsString();
+            var statsString = await _ownerService.GetStatsString();
             await Interaction.ReplyAsync("Statistics", statsString);
         }
 
