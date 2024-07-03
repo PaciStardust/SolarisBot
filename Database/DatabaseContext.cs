@@ -17,6 +17,7 @@ namespace SolarisBot.Database
         public DbSet<DbRegexChannel> RegexChannels { get; set; }
         public DbSet<DbCustomColorRole> CustomColorRoles { get; set; }
         public DbSet<DbVouchAction> VouchActions { get; set; }
+        public DbSet<DbInteractionRecord> InteractionRecords { get; set; }
 
         /// <summary>
         /// Attempts to save changes to the database
