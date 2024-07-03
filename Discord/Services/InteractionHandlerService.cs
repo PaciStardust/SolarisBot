@@ -136,7 +136,7 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
         {
-            var record = new DbInteractionRecord()
+            var record = new DbInteractionRecord() //todo: context type, interaction type, customid
             {
                 InteractionCreatedAt = Convert.ToUInt64(context.Interaction.CreatedAt.ToUniversalTime().ToUnixTimeSeconds()),
                 InteractionCompletedAt = Utils.GetCurrentUnix(),
@@ -203,10 +203,31 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private static string GetOptionsString(IDiscordInteractionData interactionData)
         {
-            if (interactionData is not IApplicationCommandInteractionData commandInteractionData)
-                return string.Empty;
+            if (interactionData is IApplicationCommandInteractionData commandInteractionData)
+                return string.Join("|", commandInteractionData.Options.Select(x => $"{x.Name}({string.Join("|", x.Options.Select(y => $"{y.Name}({Regex.Escape(y.Value.ToString() ?? string.Empty)})"))})"));
 
-            return string.Join("|", commandInteractionData.Options.Select(x => $"{x.Name}({string.Join("|", x.Options.Select(y => Regex.Escape(y.Value.ToString() ?? string.Empty)))})"));
+            if (interactionData is IComponentInteractionData componentInteractionData)
+            {
+                var contents = new List<string>();
+                if ((componentInteractionData.Channels?.Count ?? 0) > 0)
+                    contents.Add($"channels({string.Join("|", componentInteractionData.Channels!.Select(x => x.Id))})");
+                if ((componentInteractionData.Members?.Count ?? 0) > 0)
+                    contents.Add($"members({string.Join("|", componentInteractionData.Members!.Select(x => x.Id))})");
+                if ((componentInteractionData.Roles?.Count ?? 0) > 0)
+                    contents.Add($"roles({string.Join("|", componentInteractionData.Roles!.Select(x => x.Id))})");
+                if ((componentInteractionData.Users?.Count ?? 0) > 0)
+                    contents.Add($"users({string.Join("|", componentInteractionData.Users!.Select(x => x.Id))})");
+                if (componentInteractionData.Value is not null)
+                    contents.Add($"value({Regex.Escape(componentInteractionData.Value)})");
+                if ((componentInteractionData.Values?.Count ?? 0) > 0)
+                    contents.Add($"values({string.Join("|", componentInteractionData.Values!.Select(x => Regex.Escape(x)))})");
+
+                if (contents.Count == 0)
+                    return string.Empty;
+                return string.Join("|", contents);
+            }
+
+            return string.Empty;
         }
     }
 }
