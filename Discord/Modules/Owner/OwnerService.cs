@@ -68,50 +68,50 @@ namespace SolarisBot.Discord.Modules.Owner
             var interactionsTotal = await dbCtx.InteractionRecords.CountAsync();
             if (interactionsTotal > 0)
             {
-                sb.AppendLine($"Interactions: **{interactionsTotal}**");
+                sb.AppendLine($"\nInteractions: **{interactionsTotal}**");
 
                 var interactionsSuccess = await dbCtx.InteractionRecords.CountAsync(x => x.Success);
-                double successPercent = interactionsSuccess / interactionsTotal * 100;
+                double successPercent = interactionsSuccess / (double)interactionsTotal * 100;
                 sb.AppendLine($"- Success: **{interactionsSuccess}** *({Math.Round(successPercent, 2)}%)*");
 
                 var interactionsFailed = interactionsTotal - interactionsSuccess;
-                double failedPercent = interactionsFailed / interactionsTotal * 100;
+                double failedPercent = interactionsFailed / (double)interactionsTotal * 100;
                 sb.AppendLine($"- Failed: **{interactionsFailed}** *({Math.Round(failedPercent, 2)}%)*");
-                double? failureRate = interactionsSuccess > 0 ? interactionsFailed / interactionsSuccess : null;
-                sb.AppendLine($"- F/S: **{(failureRate.HasValue ? failureRate.Value.ToString() : "N/A")}**");
+                double? failureRate = interactionsSuccess > 0 ? interactionsFailed / (double)interactionsSuccess : null;
+                sb.AppendLine($"- F/S: **{(failureRate.HasValue ? Math.Round(failureRate.Value, 2) + "f/s" : "N/A")}**");
 
                 var sessionStartedUnix = Convert.ToUInt64(((DateTimeOffset)sessionStarted.ToUniversalTime()).ToUnixTimeSeconds());
-                var sessionQuery = $"SELECT COUNT(InteractionRecordId) FROM InteractionRecords WHERE InteractionCreatedAt >= {sessionStartedUnix}";
-                var interactionsTotalSession = await dbCtx.Database.SqlQueryRaw<int>(sessionQuery).FirstOrDefaultAsync();
+                var sessionQuery = $"SELECT InteractionRecordId FROM InteractionRecords WHERE InteractionCreatedAt >= {sessionStartedUnix}";
+                var interactionsTotalSession = await dbCtx.InteractionRecords.FromSqlRaw(sessionQuery).CountAsync();
                 if (interactionsTotalSession > 0)
                 {
-                    double sessionPercent = interactionsTotalSession / interactionsTotal * 100;
-                    sb.AppendLine($"\nSession: **{interactionsTotalSession}** *({Math.Round(sessionPercent, 2)}%)*");
+                    double sessionPercent = interactionsTotalSession / (double)interactionsTotal * 100;
+                    sb.AppendLine($"\nInteractions in session: **{interactionsTotalSession}** *({Math.Round(sessionPercent, 2)}%)*");
 
                     sessionQuery += " AND success = 1";
-                    var interactionsSuccessSession = await dbCtx.Database.SqlQueryRaw<int>(sessionQuery).FirstOrDefaultAsync();
+                    var interactionsSuccessSession = await dbCtx.InteractionRecords.FromSqlRaw(sessionQuery).CountAsync();
 
                     var minutesSession = Math.Max(timeSinceStartup.TotalMinutes, 1);
                     var interactionsPerMinuteSession = interactionsTotalSession / minutesSession;
 
-                    double successPercentSession = interactionsSuccessSession / interactionsTotalSession * 100;
+                    double successPercentSession = interactionsSuccessSession / (double)interactionsTotalSession * 100;
                     double successPerMinuteSession = interactionsTotalSession / minutesSession;
-                    double successPercentSessionOfTotal = interactionsSuccessSession / interactionsSuccess * 100;
+                    double successPercentSessionOfTotal = interactionsSuccessSession / (double)interactionsSuccess * 100;
                     sb.AppendLine($"- Success: **{interactionsSuccessSession}** *({Math.Round(successPercentSession, 2)}% | {Math.Round(successPerMinuteSession, 2)}/min | {Math.Round(successPercentSessionOfTotal, 2)}%t)*");
 
                     var interactionsFailedSession = interactionsTotalSession - interactionsSuccessSession;
-                    double failedPercentSession = interactionsFailedSession / interactionsTotalSession * 100;
+                    double failedPercentSession = interactionsFailedSession / (double)interactionsTotalSession * 100;
                     double failedPerMinuteSession = interactionsFailedSession / minutesSession;
-                    double failedPercentSessionOfTotal = interactionsFailedSession / interactionsFailed * 100;
+                    double failedPercentSessionOfTotal = interactionsFailedSession / (double)interactionsFailed * 100;
                     sb.AppendLine($"- Failed: **{interactionsFailedSession}** *({Math.Round(failedPercentSession, 2)}% | {Math.Round(failedPerMinuteSession, 2)}/min | {Math.Round(failedPercentSessionOfTotal, 2)}%t)*");
-                    double? failureRateSession = interactionsSuccessSession > 0 ? interactionsFailedSession / interactionsSuccessSession : null;
-                    sb.AppendLine($"- F/S: **{(failureRateSession.HasValue ? failureRateSession.Value.ToString() : "N/A")}**");
+                    double? failureRateSession = interactionsSuccessSession > 0 ? interactionsFailedSession / (double)interactionsSuccessSession : null;
+                    sb.AppendLine($"- F/S: **{(failureRateSession.HasValue ? Math.Round(failureRateSession.Value, 2) + "f/s" : "N/A")}**");
                 }
                 else
                     sb.AppendLine("\nNo interactions created this session");
             }
             else
-                sb.AppendLine("No interactions created");
+                sb.AppendLine("\nNo interactions created");
 
             return sb.ToString();
         }
