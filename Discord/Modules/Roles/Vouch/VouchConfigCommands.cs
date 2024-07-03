@@ -32,10 +32,6 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             );
         }
 
-        [UserCommand("Vouch History")] //todo: [REFACTOR] Disable user commands?
-        public async Task GetVouchHistoryUser(IUser user)
-            => await GetHistoryAsync(user.Id, 10);
-
         [SlashCommand("history", "View a users vouch history")]
         public async Task GetVouchHistoryCommand
         (

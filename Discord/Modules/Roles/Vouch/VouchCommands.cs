@@ -15,7 +15,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             _vouchService = vouchService;
         }
 
-        [UserCommand("Vouch"), SlashCommand("vouch", "Vouch for a user"), RequireBotPermission(GuildPermission.ManageRoles)]
+        [SlashCommand("vouch", "Vouch for a user"), RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task VouchUserAsync(IUser user)
         {
             var res = await _vouchService.VouchUserAsync(Context.Guild, Context.User, user);

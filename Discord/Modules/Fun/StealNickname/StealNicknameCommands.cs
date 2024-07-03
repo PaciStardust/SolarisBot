@@ -27,7 +27,7 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
             );
         }
 
-        [UserCommand("Steal Nickname"), SlashCommand("stealnick", "Steal a persons nick"), RequireBotPermission(GuildPermission.ManageNicknames)]
+        [SlashCommand("stealnick", "Steal a persons nick"), RequireBotPermission(GuildPermission.ManageNicknames)]
         public async Task StealNicknameUserAsync(IUser user)
         {
             var res = await _snService.StealNicknameAsync(Context.User, user);

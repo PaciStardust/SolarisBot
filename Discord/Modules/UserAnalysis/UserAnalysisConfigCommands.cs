@@ -31,7 +31,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             );
         }
 
-        [UserCommand("Analyze"), SlashCommand("analyze", "Analyze a user")]
+        [SlashCommand("analyze", "Analyze a user")]
         public async Task AnalyzeUserAsync(IUser user)
         {
             var res = _userAnalysisService.AnalyzeUser(user);

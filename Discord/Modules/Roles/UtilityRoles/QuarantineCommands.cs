@@ -27,7 +27,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             );
         }
 
-        [UserCommand("Quarantine"), SlashCommand("quarantine", "Quarantine a user"), RequireBotPermission(GuildPermission.ManageRoles), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
+        [SlashCommand("quarantine", "Quarantine a user"), RequireBotPermission(GuildPermission.ManageRoles), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task QuarantineUserAsync(IUser user)
         {
             var res = await _roleService.QuarantineUserAsync(Context.Guild, Context.User, user);
