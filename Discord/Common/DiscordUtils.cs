@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Common
 {
-    internal static class DiscordUtils //todo: [FEATURE] logging all executed commands
+    internal static class DiscordUtils
     {
         #region Extention Methods
         /// <summary>
