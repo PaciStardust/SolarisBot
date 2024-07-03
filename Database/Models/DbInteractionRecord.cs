@@ -8,12 +8,14 @@ namespace SolarisBot.Database.Models
         public ulong InteractionRecordId { get; set; } = ulong.MinValue;
         public ulong InteractionCreatedAt { get; set; } = ulong.MinValue;
         public ulong InteractionCompletedAt { get; set; } = ulong.MinValue;
+        public ulong InteractionId { get; set; } = ulong.MinValue;
+        public string InteractionType { get; set; } = string.Empty;
+        public string ContextType { get; set; } = string.Empty;
+        public bool Success { get; set; } = false;
+        public string ModuleName { get; set; } = string.Empty;
         public ulong GuildId { get; set; } = ulong.MinValue;
         public ulong ChannelId { get; set; } = ulong.MinValue;
         public ulong UserId { get; set; } = ulong.MinValue;
-        public ulong InteractionId { get; set; } = ulong.MinValue;
-        public bool Success { get; set; } = false;
-        public string ModuleName { get; set; } = string.Empty;
         public string CommandGroupName { get; set; } = string.Empty;
         public string CommandName { get; set; } = string.Empty;
         public string MethodName { get; set; } = string.Empty;

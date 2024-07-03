@@ -136,16 +136,18 @@ namespace SolarisBot.Discord.Services
         /// </summary>
         private async Task HandleInteractionExecuted(ICommandInfo cmdInfo, IInteractionContext context, IResult result)
         {
-            var record = new DbInteractionRecord() //todo: context type, interaction type, customid
+            var record = new DbInteractionRecord()
             {
                 InteractionCreatedAt = Convert.ToUInt64(context.Interaction.CreatedAt.ToUniversalTime().ToUnixTimeSeconds()),
                 InteractionCompletedAt = Utils.GetCurrentUnix(),
+                InteractionId = context.Interaction.Id,
+                InteractionType = context.Interaction.Type.ToString(),
+                ContextType = context.Interaction.ContextType?.ToString() ?? string.Empty,
+                Success = result.IsSuccess,
+                ModuleName = cmdInfo.Module.Name,
                 GuildId = context.Interaction.GuildId ?? ulong.MinValue,
                 ChannelId = context.Interaction.ChannelId ?? ulong.MinValue,
                 UserId = context.Interaction.User.Id,
-                InteractionId = context.Interaction.Id,
-                Success = result.IsSuccess,
-                ModuleName = cmdInfo.Module.Name,
                 CommandGroupName = cmdInfo.Module.SlashGroupName,
                 CommandName = cmdInfo.Name,
                 MethodName = cmdInfo.MethodName,
@@ -208,7 +210,7 @@ namespace SolarisBot.Discord.Services
 
             if (interactionData is IComponentInteractionData componentInteractionData)
             {
-                var contents = new List<string>();
+                var contents = new List<string>() { $"customId({componentInteractionData.CustomId})" };
                 if ((componentInteractionData.Channels?.Count ?? 0) > 0)
                     contents.Add($"channels({string.Join("|", componentInteractionData.Channels!.Select(x => x.Id))})");
                 if ((componentInteractionData.Members?.Count ?? 0) > 0)
@@ -222,8 +224,6 @@ namespace SolarisBot.Discord.Services
                 if ((componentInteractionData.Values?.Count ?? 0) > 0)
                     contents.Add($"values({string.Join("|", componentInteractionData.Values!.Select(x => Regex.Escape(x)))})");
 
-                if (contents.Count == 0)
-                    return string.Empty;
                 return string.Join("|", contents);
             }
 
