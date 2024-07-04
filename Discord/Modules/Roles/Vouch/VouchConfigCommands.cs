@@ -91,7 +91,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         {
             var sb = new StringBuilder($"<@{vouchActions[0].TargetUserId}> *({vouchActions[0].TargetUserId})*");
 
-            foreach (var action in vouchActions) //todo: [REFACTOR] Check for newline errors on string.join and append
+            foreach (var action in vouchActions)
             {
                 sb.Append($"\n:arrow_up: @ <t:{action.VouchedAt}:f>\n<@{action.ExecutingUserId}> *({action.ExecutingUserId})*");
             }
