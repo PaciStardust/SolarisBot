@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 namespace SolarisBot.Discord.Modules.Fun.RegexChannel
 {
     [Module("fun/regex"), Group("cfg-regex", "[MANAGE CHANNELS ONLY] RegEx channel config commands")]
-    [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)] //todo: [FEATURE] Info commands
+    [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageChannels), RequireUserPermission(GuildPermission.ManageChannels)]
     public sealed class RegexChannelConfigCommands : SolarisInteractionModuleBase
     {
         private readonly RegexChannelService _rcService;
