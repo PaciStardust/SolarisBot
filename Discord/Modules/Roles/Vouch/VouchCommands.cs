@@ -20,7 +20,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         {
             var res = await _vouchService.VouchUserAsync(Context.Guild, Context.User, user);
             await res.Match(
-                success => Interaction.ReplyAsync($"Vouched for {user.Mention}, welcome to the server!"),
+                success => Interaction.ReplyAsync(success.Value),
                 error => Interaction.ReplyErrorAsync(error.Value),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );

@@ -9,7 +9,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
 {
     [Module("roles/vouch"), Group("cfg-vouch", "[MANAGE ROLES ONLY] Set up vouching")]
     [RequireContext(ContextType.Guild), DefaultMemberPermissions(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
-    public sealed class VouchConfigCommands : SolarisInteractionModuleBase //todo: [FEATURE] Custom message
+    public sealed class VouchConfigCommands : SolarisInteractionModuleBase
     {
         private readonly VouchService _vouchService;
 
@@ -22,10 +22,11 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         public async Task ConfigVouchingAsync
         (
             [Summary(description: "[Opt] Role required for vouching (none to disable)")] IRole? permission = null,
-            [Summary(description: "[Opt] Role aquired through vouching (none to disable)")] IRole? vouch = null
+            [Summary(description: "[Opt] Role aquired through vouching (none to disable)")] IRole? vouch = null,
+            [Summary(description: "[Opt] Vouch message (\"@person\" will be replaced with ping)")] string message = ""
         )
         {
-            var res = await _vouchService.ConfigVouchingAsync(Context.Guild, permission, vouch);
+            var res = await _vouchService.ConfigVouchingAsync(Context.Guild, permission, vouch, message);
             await res.Match(
                 success => Interaction.ReplyAsync($"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**"),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
