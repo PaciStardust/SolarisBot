@@ -57,7 +57,7 @@ namespace SolarisBot
                 .AddEnvironmentVariables()
                 .Build();
 
-        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger, Assembly assembly) //todo: [FEATURE] Backups of database, counting?
+        private static IHost CreateHost(IConfiguration configuration, BotConfig botConfig, ILogger logger, Assembly assembly)
             => Host.CreateDefaultBuilder() 
                 .ConfigureAppConfiguration(config => config.AddConfiguration(configuration))
                 .ConfigureServices(services =>
