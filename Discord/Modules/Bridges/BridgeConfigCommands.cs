@@ -39,7 +39,8 @@ namespace SolarisBot.Discord.Modules.Bridges
         (
             [MinLength(2), MaxLength(20), Summary(description: "Bridge name")] string name,
             [Summary(description: "Id of target guild")] string guildId,
-            [Summary(description: "Id of target channel")] string channelId
+            [Summary(description: "Id of target channel")] string channelId,
+            [Summary(description: "[Opt] Allow links")] bool links = false
         )
         {
             if (!ulong.TryParse(guildId, out var parsedGuildId) || parsedGuildId == 0)
@@ -56,7 +57,7 @@ namespace SolarisBot.Discord.Modules.Bridges
             //Long interaction, so deffered
             await Interaction.DeferAsync();
 
-            var serviceResult = await _bridgeService.CreateBridgeAsync(name, parsedGuildId, parsedChannelId, Context.Channel.Id, Context.Guild.Id, Context.User.Id);
+            var serviceResult = await _bridgeService.CreateBridgeAsync(name, parsedGuildId, parsedChannelId, Context.Channel.Id, Context.Guild.Id, Context.User.Id, links);
             await serviceResult.Match(
                 success => Interaction.ReplyAsync($"Created bridge {success.Value.ToDiscordInfoString()}"),
                 error => Interaction.ReplyErrorAsync(error.Value),

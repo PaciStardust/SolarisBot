@@ -7,6 +7,7 @@ using OneOf.Types;
 using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
+using System.Text.RegularExpressions;
 
 namespace SolarisBot.Discord.Modules.Bridges
 {
@@ -56,7 +57,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="executingGuildId">Id of executing guild</param>
         /// <param name="executingUserId">Id of executing user</param>
         /// <returns>DbGuild on success, Reason on fail</returns>
-        internal async Task<OneOf<Success<DbBridge>, Error<string>, Error<Exception>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId)
+        internal async Task<OneOf<Success<DbBridge>, Error<string>, Error<Exception>>> CreateBridgeAsync(string bridgeName, ulong targetGuildId, ulong targetChannelId, ulong executingChannelId, ulong executingGuildId, ulong executingUserId, bool allowLinks)
         {
             if (executingChannelId == targetChannelId)
                 return new Error<string>("A bridge can not be created to the same channel");
@@ -118,7 +119,8 @@ namespace SolarisBot.Discord.Modules.Bridges
                 GuildAId = executingGuildId,
                 ChannelAId = executingChannelId,
                 GuildBId = targetGuild.Id,
-                ChannelBId = targetChannel.Id
+                ChannelBId = targetChannel.Id,
+                AllowLinks = allowLinks
             };
             dbCtx.Bridges.Add(dbBridge);
 
@@ -244,7 +246,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// Checks if a message should be sent to any bridges
         /// </summary>
         /// <param name="message">Sent message</param>
-        private async Task CheckForBridgesAsync(SocketMessage message) //todo: [FEATURE] Files and links?
+        private async Task CheckForBridgesAsync(SocketMessage message)
         {
             if (message.Author.IsWebhook || message.Author.IsBot || string.IsNullOrWhiteSpace(message.CleanContent) || message.Channel is not IGuildChannel guildChannel) 
                 return;
@@ -273,6 +275,8 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
         }
 
+        private static readonly Regex _linkRemover = new(@"[a-zA-Z]+:\/\/[^ \/]+(?:\.[^ \/]+)*(?:\/[^ \/]+)*"); //this is REALLY improvised
+
         /// <summary>
         /// Sends a message over a bridge
         /// </summary>
@@ -281,10 +285,12 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="targetMessageChannel">Channel to send to</param>
         private async Task SendMessageViaBridgeAsync(SocketMessage message, DbBridge bridge, IMessageChannel targetMessageChannel)
         {
+            var cleanMessage = $"**[{bridge.Name}] {message.Author.GlobalName}:** {(bridge.AllowLinks ? message.CleanContent : _linkRemover.Replace(message.CleanContent, "*[BLOCKED LINK]*"))}";
+
             try
             {
                 _logger.LogDebug("Sending message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
-                await targetMessageChannel.SendMessageAsync($"**[{bridge.Name}] {message.Author.GlobalName}:** {message.CleanContent}");
+                await targetMessageChannel.SendMessageAsync(cleanMessage);
                 _logger.LogInformation("Sent message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
             }
             catch (Exception ex)

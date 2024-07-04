@@ -11,6 +11,7 @@ namespace SolarisBot.Database
         public ulong ChannelAId { get; set; } = ulong.MinValue;
         public ulong GuildBId { get; set; } = ulong.MinValue;
         public ulong ChannelBId { get; set; } = ulong.MinValue;
+        public bool AllowLinks { get; set; } = false; 
 
         public DbBridge() { }
 
