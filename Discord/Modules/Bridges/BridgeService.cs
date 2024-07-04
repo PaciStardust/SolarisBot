@@ -285,7 +285,7 @@ namespace SolarisBot.Discord.Modules.Bridges
         /// <param name="targetMessageChannel">Channel to send to</param>
         private async Task SendMessageViaBridgeAsync(SocketMessage message, DbBridge bridge, IMessageChannel targetMessageChannel)
         {
-            var cleanMessage = $"**[{bridge.Name}] {message.Author.GlobalName}:** {(bridge.AllowLinks ? message.CleanContent : _linkRemover.Replace(message.CleanContent, "*[BLOCKED LINK]*"))}";
+            var cleanMessage = $"**[{bridge.Name}] {message.Author.GlobalName}:** {(bridge.AllowLinks ? message.CleanContent : _linkRemover.Replace(message.CleanContent, "`[BLOCKED LINK]`"))}";
 
             try
             {
