@@ -67,7 +67,7 @@ namespace SolarisBot.Discord.Common
             => ErrorBuilder()
                 .WithTitle(title)
                 .WithDescription(content)
-                .WithFooter("DM reports like this can be disabled with []") //todo: implement
+                .WithFooter("DM reports like this can be disabled with /cfg-errordm")
                 .Build();
         #endregion
     }
