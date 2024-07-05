@@ -62,6 +62,13 @@ namespace SolarisBot.Discord.Common
         /// </summary>
         internal static Embed Error(Exception exception)
             => Error(exception.GetType().Name, exception.Message);
+
+        internal static Embed SystemError(string title, string content)
+            => ErrorBuilder()
+                .WithTitle(title)
+                .WithDescription(content)
+                .WithFooter("DM reports like this can be disabled with []") //todo: implement
+                .Build();
         #endregion
     }
 
