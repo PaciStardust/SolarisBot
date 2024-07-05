@@ -63,6 +63,9 @@ namespace SolarisBot.Discord.Common
         internal static Embed Error(Exception exception)
             => Error(exception.GetType().Name, exception.Message);
 
+        /// <summary>
+        /// Generates an embed error for DMs with the "Can be disabled" tooltip
+        /// </summary>
         internal static Embed SystemError(string title, string content)
             => ErrorBuilder()
                 .WithTitle(title)
