@@ -66,7 +66,10 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
 
             var role = guild.FindRole(dbGuild.MagicRoleId);
             if (role is null)
+            {
+                _logger.LogDebug("MagicRole for guild {guild} with id {roleId}", dbGuild, dbGuild.MagicRoleId);
                 return new Error<string>(StandardError.DeletedRole("Magic"));
+            }
 
             var currentTime = Utils.GetCurrentUnix();
             if (currentTime < dbGuild.MagicRoleNextUse)
@@ -167,7 +170,10 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             if (dbGuild is null || dbGuild.QuarantineRoleId == ulong.MinValue)
                 return new Error<string>(StandardError.DisabledFeature("Quarantine"));
             if (guild.FindRole(dbGuild.QuarantineRoleId) is null)
+            {
+                _logger.LogDebug("Could not locate QuarantineRole for guild {guild} with id {roleId}", dbGuild, dbGuild.QuarantineRoleId);
                 return new Error<string>(StandardError.DeletedRole("Quarantine"));
+            }
 
             if (targetGuildUser.FindRole(dbGuild.QuarantineRoleId) is not null)
             {

@@ -206,8 +206,9 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             if (regexChannel.AppliedRoleId > 0)
             {
                 var role = gUser.Guild.FindRole(regexChannel.AppliedRoleId);
-                if (role is null) //todo: [FEATURE] Notify for this?
+                if (role is null)
                 {
+                    _logger.LogDebug("Could not locate RegexRole for RegexChannel {channel} with id {roleId}", regexChannel, regexChannel.AppliedRoleId);
                     return;
                 }
                 else

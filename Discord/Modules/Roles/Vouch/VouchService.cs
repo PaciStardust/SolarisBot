@@ -44,11 +44,17 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
                 return new Error<string>(StandardError.DisabledFeature("Vouching"));
 
             if (guild.FindRole(dbGuild.VouchPermissionRoleId) is null)
+            {
+                _logger.LogDebug("Could not locate VouchPermissionRole for guild {guild} with id {roleId}", dbGuild, dbGuild.VouchPermissionRoleId);
                 return new Error<string>(StandardError.DeletedRole("Vouch permission"));
+            }
             if (executingGuildUser.FindRole(dbGuild.VouchPermissionRoleId) is null)
                 return new Error<string>($"You do not have the required role <@&{dbGuild.VouchPermissionRoleId}>");
             if (guild.FindRole(dbGuild.VouchRoleId) is null)
+            {
+                _logger.LogDebug("Could not locate VouchRole for guild {guild} with id {roleId}", dbGuild, dbGuild.VouchRoleId);
                 return new Error<string>(StandardError.DeletedRole("Vouch"));
+            }
             if (targetGuildUser.FindRole(dbGuild.VouchRoleId) is not null)
                 return new Error<string>($"{targetGuildUser.Mention} has already been vouched");
 

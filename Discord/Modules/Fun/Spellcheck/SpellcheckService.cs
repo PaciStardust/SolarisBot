@@ -7,6 +7,7 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 namespace SolarisBot.Discord.Modules.Fun.Spellcheck
 {
@@ -109,8 +110,14 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
 
             using var dbCtx = _dbService.GetContext();
             var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
-            if (guild is null || guild.SpellcheckRoleId == ulong.MinValue || gUser.Guild.FindRole(guild.SpellcheckRoleId) is null) //todo: [FEATURE] Notify for this?
+            if (guild is null || guild.SpellcheckRoleId == ulong.MinValue || gUser.Guild.FindRole(guild.SpellcheckRoleId) is null)
                 return;
+
+            if (gUser.Guild.FindRole(guild.SpellcheckRoleId) is null)
+            {
+                _logger.LogDebug("Could not locate SpellcheckRole for guild {guild} with id {roleId}", guild, guild.SpellcheckRoleId);
+                return;
+            }
 
             if (!gUser.RoleIds.Contains(guild.SpellcheckRoleId))
                 return;

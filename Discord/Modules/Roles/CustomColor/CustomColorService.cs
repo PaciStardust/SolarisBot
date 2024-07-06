@@ -43,7 +43,10 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             if (dbGuild is null || dbGuild.CustomColorPermissionRoleId == ulong.MinValue)
                 return new Error<string>(StandardError.DisabledFeature("Custom color"));
             if (guild.FindRole(dbGuild.CustomColorPermissionRoleId) is null)
+            {
+                _logger.LogDebug("Could not locate CustomColorPermissionRole for guild {guild} with id {roleId}", dbGuild, dbGuild.CustomColorPermissionRoleId);
                 return new Error<string>(StandardError.DeletedRole("Custom color"));
+            }
             if (gUser.FindRole(dbGuild.CustomColorPermissionRoleId) is null)
                 return new Error<string>(StandardError.RoleRequired(dbGuild.CustomColorPermissionRoleId));
 

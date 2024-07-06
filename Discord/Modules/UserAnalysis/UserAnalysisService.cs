@@ -134,22 +134,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var channel = await _client.GetChannelAsync(dbGuild.UserAnalysisChannelId);
             if (channel is null || channel is not IMessageChannel msgChannel)
             {
-                if (dbGuild.DisableErrorDm)
-                    _logger.LogDebug("Could not locate UserAnalysisChannel for guild {guild} with id {channelId}, not notifying owner {owner}, feature disabled", dbGuild, dbGuild.UserAnalysisChannelId, user.Guild.Owner.Log());
-                else
-                {
-                    _logger.LogDebug("Could not locate UserAnalysisChannel for guild {guild} with id {channelId}, notifying owner {owner}", dbGuild, dbGuild.UserAnalysisChannelId, user.Guild.Owner.Log());
-                    try
-                    {
-                        var embed = EmbedFactory.SystemError("User Analysis Error", $"Unable to locate set user analysis channel **{dbGuild.UserAnalysisChannelId}** in your guild **{user.Guild.Name}***{user.Guild.Id}*, consider changing the channel or disabling the feature");
-                        await user.Guild.Owner.SendMessageAsync(embed: embed);
-                        _logger.LogDebug("Could not locate UserAnalysisChannel for guild {guild} with id {channelId}, notified owner {owner}", dbGuild, dbGuild.UserAnalysisChannelId, user.Guild.Owner.Log());
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Could not locate UserAnalysisChannel for guild {guild} with id {channelId}, failed to notifying owner {owner}", dbGuild, dbGuild.UserAnalysisChannelId, user.Guild.Owner.Log()); //todo: [REFACTOR] Tweak error priorities
-                    }
-                }
+                _logger.LogDebug("Could not locate UserAnalysisChannel for guild {guild} with id {channelId}", dbGuild, dbGuild.UserAnalysisChannelId);
                 return;
             }
 

@@ -8,7 +8,6 @@ namespace SolarisBot.Database
     public class DbGuildConfig : DbModelBase
     {
         public ulong GuildId { get; set; } = ulong.MinValue;
-        public bool DisableErrorDm { get; set; } = false;
         public ulong VouchRoleId { get; set; } = ulong.MinValue;
         public ulong VouchPermissionRoleId { get; set; } = ulong.MinValue;
         public string VouchMessage { get; set; } = string.Empty;
