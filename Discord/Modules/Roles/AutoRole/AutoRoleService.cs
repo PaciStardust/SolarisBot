@@ -59,8 +59,29 @@ namespace SolarisBot.Discord.Modules.Roles.AutoRole
         {
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetGuildByIdAsync(user.Guild.Id);
-            if (dbGuild is null || dbGuild.AutoRoleId == ulong.MinValue || user.Guild.FindRole(dbGuild.AutoRoleId) is null) //todo: [FEATURE] Notify for this?
+            if (dbGuild is null || dbGuild.AutoRoleId == ulong.MinValue)
                 return;
+
+            if (user.Guild.FindRole(dbGuild.AutoRoleId) is null) //todo: [REFACTOR] Unify?
+            {
+                if (dbGuild.DisableErrorDm)
+                    _logger.LogDebug("Could not locate AutoRole for guild {guild} with id {roleId}, not notifying owner {owner}, feature disabled", dbGuild, dbGuild.AutoRoleId, user.Guild.Owner.Log());
+                else
+                {
+                    _logger.LogDebug("Could not locate AutoRole for guild {guild} with id {roleId}, notifying owner {owner}", dbGuild, dbGuild.AutoRoleId, user.Guild.Owner.Log());
+                    try
+                    {
+                        var embed = EmbedFactory.SystemError("Auto Role Error", $"Unable to locate auto role **{dbGuild.AutoRoleId}** in your guild **{user.Guild.Name}***{user.Guild.Id}*, consider changing the role or disabling the feature");
+                        await user.Guild.Owner.SendMessageAsync(embed: embed);
+                        _logger.LogDebug("Could not locate AutoRole for guild {guild} with id {roleId}, notified owner {owner}", dbGuild, dbGuild.AutoRoleId, user.Guild.Owner.Log());
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Could not locate AutoRole for guild {guild} with id {roleId}, failed to notifying owner {owner}", dbGuild, dbGuild.AutoRoleId, user.Guild.Owner.Log());
+                    }
+                }
+                return;
+            }
 
             try
             {
