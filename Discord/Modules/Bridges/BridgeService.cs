@@ -295,7 +295,17 @@ namespace SolarisBot.Discord.Modules.Bridges
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed sending message via brigde {bridge}", bridge); //todo: [FEATURE] notify for this?
+                _logger.LogError(ex, "Failed sending message via brigde {bridge}, notifying origin", bridge); 
+                try
+                {
+                    var embed = EmbedFactory.Error(ex);
+                    await message.Channel.SendMessageAsync("Failed sending message over bridge", embed: embed);
+                    _logger.LogInformation(ex, "Failed sending message via brigde {bridge}, notified origin", bridge);
+                }
+                catch (Exception ex2)
+                {
+                    _logger.LogError(ex2, "Failed sending message via brigde {bridge}, failed notifying origin", bridge);
+                }
             }
         }
 
