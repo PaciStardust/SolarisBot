@@ -11,7 +11,7 @@ using SolarisBot.Discord.Common.Attributes;
 namespace SolarisBot.Discord.Modules.Roles.RoleSelect
 {
     [Module("roles/roleselect"), AutoLoadService]
-    internal class RoleSelectService //todo: [FEATURE] Reaction Roles
+    internal class RoleSelectService
     {
         private readonly ILogger<RoleSelectService> _logger;
         private readonly DatabaseService _dbService;
