@@ -208,8 +208,9 @@ namespace SolarisBot.Discord.Modules.Reminders
         /// Starts the timer when the client is ready
         /// </summary>
         /// <returns></returns>
-        private Task OnClientReady() //todo: [REFACTOR] Logging?
+        private Task OnClientReady()
         {
+            _logger.LogInformation("Started reminder timer");
             _timer.Start();
             return Task.CompletedTask;
         }
