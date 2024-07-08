@@ -122,7 +122,16 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
             if (!gUser.RoleIds.Contains(guild.SpellcheckRoleId))
                 return;
 
-            await userMessage.ReplyAsync($"You misspelled the following: {string.Join(", ", errors)}"); //todo: [REFACTOR] Error handling, logging
+            try
+            {
+                _logger.LogTrace("Notifying user {user} of failed spellcheck in message ({errorCount} errors)", userMessage.Author.Log(), errors.Count);
+                await userMessage.ReplyAsync($"You misspelled the following: {string.Join(", ", errors)}");
+                _logger.LogDebug("Notified user {user} of failed spellcheck in message ({errorCount} errors)", userMessage.Author.Log(), errors.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed notifying user {user} of failed spellcheck in message ({errorCount} errors)", userMessage.Author.Log(), errors.Count);
+            }
         }
 
         /// <summary>
