@@ -70,21 +70,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             if (roleGroup.RequiredRoleId != ulong.MinValue && gUser.FindRole(roleGroup.RequiredRoleId) is null)
                 return new Error<string>(StandardError.RoleRequired(roleGroup.RequiredRoleId));
 
-            var dbRoles = roleGroup.RoleConfigs;
-            var invalidRoles = new List<string>();
-            var selectedRoles = new List<DbRoleConfig>();
-            if (roleGroup.AllowOnlyOne)
-                selections = selections[0..1]; //remove all but first
-            foreach (var selection in selections)
-            {
-                var match = dbRoles.FirstOrDefault(x => x.Identifier == selection);
-                if (match is null)
-                    invalidRoles.Add(selection);
-                else
-                    selectedRoles.Add(match);
-            }
-
-            return await AssignRolesToUser(gUser, selectedRoles, invalidRoles);
+            return await AssignRolesToUser(gUser, roleGroup, selections);
         }
 
         /// <summary>
@@ -94,90 +80,129 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
         /// <param name="roleConfigs">RoleConfigs to assing</param>
         /// <param name="rolesInvalid">Invalid supplied roles</param>
         /// <returns>An embed summarizing the result on success / Error string / Exception</returns>
-        private async Task<OneOf<Success<Embed>, Error<string>, Error<Exception>>> AssignRolesToUser(IUser user, IEnumerable<DbRoleConfig>? roleConfigs = null, IEnumerable<string>? rolesInvalid = null)
+        private async Task<OneOf<Success<Embed>, Error<string>, Error<Exception>>> AssignRolesToUser(IUser user, DbRoleGroup roleGroup, params string[] selections)
         {
             if (user is not SocketGuildUser gUser)
                 return new Error<string>(StandardError.FailedConversion("executing user", "SocketGuildUser"));
 
-            var groupFields = new List<EmbedFieldBuilder>();
+            var userRoleIds = gUser.Roles.Select(x => x.Id);
+            var rolesToAdd = new List<DbRoleConfig>();
+            var rolesToRemove = new List<DbRoleConfig>();
+            var rolesMissing = new List<DbRoleConfig>();
+            var selectionsInvalid = new List<string>();
 
-            if (roleConfigs?.Any() ?? false)
+            if (roleGroup.AllowOnlyOne)
             {
-                var userRoleIds = gUser.Roles.Select(x => x.Id);
-                var rolesToAdd = new List<DbRoleConfig>();
-                var rolesToRemove = new List<DbRoleConfig>();
-                var rolesMissing = new List<DbRoleConfig>();
-
-                foreach (var roleConfig in roleConfigs)
+                var matchFound = false;
+                foreach (var roleConfig in roleGroup.RoleConfigs)
                 {
-                    if (!gUser.Guild.Roles.Any(x => x.Id == roleConfig.RoleId))
-                        rolesMissing.Add(roleConfig);
-                    else if (userRoleIds.Contains(roleConfig.RoleId))
-                        rolesToRemove.Add(roleConfig);
+                    if (roleConfig.Identifier == selections[0])
+                    {
+                        matchFound = true;
+                        if (gUser.Guild.FindRole(roleConfig.RoleId) is null)
+                        {
+                            rolesMissing.Add(roleConfig);
+                            continue;
+                        }
+
+                        if (userRoleIds.Contains(roleConfig.RoleId))
+                            rolesToRemove.Add(roleConfig);
+                        else
+                            rolesToAdd.Add(roleConfig);
+                    }
                     else
-                        rolesToAdd.Add(roleConfig);
-                }
-
-                if (rolesToAdd.Count != 0)
-                {
-                    var rolesToAddText = GenerateRoleList(rolesToAdd);
-                    try
                     {
-                        _logger.LogTrace("Adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
-                        await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
-                        groupFields.Add(new EmbedFieldBuilder()
-                        {
-                            IsInline = true,
-                            Name = "Roles Added",
-                            Value = rolesToAddText
-                        });
-                        _logger.LogDebug("Added roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
-                        return new Error<Exception>(ex);
+                        if (userRoleIds.Contains(roleConfig.RoleId))
+                            rolesToRemove.Add(roleConfig);
                     }
                 }
-
-                if (rolesToRemove.Count != 0)
+                if (!matchFound)
+                    selectionsInvalid.Add(selections[0]);
+            }
+            else
+            {
+                foreach(var selection in selections)
                 {
-                    var rolesToRemoveText = GenerateRoleList(rolesToRemove);
-                    try
+                    var match = roleGroup.RoleConfigs.FirstOrDefault(x => x.Identifier == selection);
+                    if (match is null)
                     {
-                        _logger.LogTrace("Removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
-                        await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
-                        groupFields.Add(new EmbedFieldBuilder()
-                        {
-                            IsInline = true,
-                            Name = "Roles Removed",
-                            Value = rolesToRemoveText
-                        });
-                        _logger.LogDebug("Removed roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
+                        selectionsInvalid.Add(selection);
+                        continue;
                     }
-                    catch (Exception ex)
+                    if (gUser.Guild.FindRole(match.RoleId) is null)
                     {
-                        _logger.LogWarning(ex, "Failed removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
-                        return new Error<Exception>(ex);
+                        rolesMissing.Add(match);
+                        continue;
                     }
-                }
 
-                if (rolesMissing.Count != 0)
-                {
-                    var rolesMissingText = GenerateRoleList(rolesMissing);
-                    groupFields.Add(new EmbedFieldBuilder()
-                    {
-                        IsInline = true,
-                        Name = "Missing Roles",
-                        Value = rolesMissingText
-                    });
-                    _logger.LogDebug("Failed to find roles {missingRoles} guild role list, could not apply to user {userData}", rolesMissingText, gUser.Log());
+                    if (userRoleIds.Contains(match.RoleId))
+                        rolesToRemove.Add(match);
+                    else
+                        rolesToAdd.Add(match);
                 }
             }
 
-            if (rolesInvalid?.Any() ?? false)
+            var groupFields = new List<EmbedFieldBuilder>();
+
+            if (rolesToAdd.Count != 0)
             {
-                var rolesInvalidText = string.Join(", ", rolesInvalid);
+                var rolesToAddText = GenerateRoleList(rolesToAdd);
+                try
+                {
+                    _logger.LogTrace("Adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
+                    await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
+                    groupFields.Add(new EmbedFieldBuilder()
+                    {
+                        IsInline = true,
+                        Name = "Roles Added",
+                        Value = rolesToAddText
+                    });
+                    _logger.LogDebug("Added roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
+                    return new Error<Exception>(ex);
+                }
+            }
+
+            if (rolesToRemove.Count != 0)
+            {
+                var rolesToRemoveText = GenerateRoleList(rolesToRemove);
+                try
+                {
+                    _logger.LogTrace("Removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
+                    await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
+                    groupFields.Add(new EmbedFieldBuilder()
+                    {
+                        IsInline = true,
+                        Name = "Roles Removed",
+                        Value = rolesToRemoveText
+                    });
+                    _logger.LogDebug("Removed roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
+                    return new Error<Exception>(ex);
+                }
+            }
+
+            if (rolesMissing.Count != 0)
+            {
+                var rolesMissingText = GenerateRoleList(rolesMissing);
+                groupFields.Add(new EmbedFieldBuilder()
+                {
+                    IsInline = true,
+                    Name = "Missing Roles",
+                    Value = rolesMissingText
+                });
+                _logger.LogDebug("Failed to find roles {missingRoles} guild role list, could not apply to user {userData}", rolesMissingText, gUser.Log());
+            }
+
+            if (selectionsInvalid.Count != 0)
+            {
+                var rolesInvalidText = string.Join(", ", selectionsInvalid);
                 groupFields.Add(new EmbedFieldBuilder()
                 {
                     IsInline = true,
