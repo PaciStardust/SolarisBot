@@ -64,7 +64,7 @@ namespace SolarisBot.Discord.Modules.Roles.AutoRole
 
             if (user.Guild.FindRole(dbGuild.AutoRoleId) is null)
             {
-                _logger.LogDebug("Could not locate AutoRole for guild {guild} with id {roleId}", dbGuild, dbGuild.AutoRoleId); //todo: [REFACTOR] Tweak priorities for logging
+                _logger.LogDebug("Could not locate AutoRole for guild {guild} with id {roleId}", dbGuild, dbGuild.AutoRoleId);
                 return;
             }
 
