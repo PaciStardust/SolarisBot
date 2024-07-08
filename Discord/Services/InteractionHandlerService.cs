@@ -148,7 +148,7 @@ namespace SolarisBot.Discord.Services
                 GuildId = context.Interaction.GuildId ?? ulong.MinValue,
                 ChannelId = context.Interaction.ChannelId ?? ulong.MinValue,
                 UserId = context.Interaction.User.Id,
-                CommandGroupName = cmdInfo.Module.SlashGroupName,
+                CommandGroupName = cmdInfo.Module.SlashGroupName ?? string.Empty,
                 CommandName = cmdInfo.Name,
                 MethodName = cmdInfo.MethodName,
                 Arguments = GetOptionsString(context.Interaction.Data)
