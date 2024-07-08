@@ -55,8 +55,8 @@ namespace SolarisBot.Discord.Modules.Fun.Gifify
         /// </summary>
         /// <param name="guild">Origin guild</param>
         /// <param name="image">Image to convert</param>
-        /// <returns>Success / Error as string</returns>
-        internal async Task<OneOf<Success<FileAttachment>, Error<string>>> GififyAsync(IGuild guild, IAttachment image)
+        /// <returns>Success / Error as string / Exception</returns>
+        internal async Task<OneOf<Success<FileAttachment>, Error<string>, Error<Exception>>> GififyAsync(IGuild guild, IAttachment image)
         {
             if (!IsValidImage(image))
                 return new Error<string>($"Attachment must be an image below {_botConfig.MaxImageSizeInBytes}MB");
@@ -67,15 +67,21 @@ namespace SolarisBot.Discord.Modules.Fun.Gifify
             if (dbGuild is null || !dbGuild.GififyOn)
                 return new Error<string>(StandardError.DisabledFeature("Gifify"));
 
-            //todo: [REFACTOR] Catch exception
-            _logger.LogTrace("Converting image {image} to gif for guild {guild} - Downloading image", guild.Log(), image.Url);
-            var bytes = await _httpClient.GetByteArrayAsync(image.Url);
-            _logger.LogTrace("Converting image {image} to gif for guild {guild} - Conversion", guild.Log(), image.Url);
-            var imageStream = new MemoryStream();
-            Image.Load(bytes).SaveAsGif(imageStream);
-            _logger.LogInformation("Converted image {image} for guild {guild} to gif", guild.Log(), image.Url);
-            var attachment = new FileAttachment(imageStream, "gifify.gif");
-            return new Success<FileAttachment>(attachment);
+            try
+            {
+                _logger.LogTrace("Converting image {image} to gif for guild {guild} - Downloading image", guild.Log(), image.Url);
+                var bytes = await _httpClient.GetByteArrayAsync(image.Url);
+                _logger.LogTrace("Converting image {image} to gif for guild {guild} - Conversion", guild.Log(), image.Url);
+                var imageStream = new MemoryStream();
+                Image.Load(bytes).SaveAsGif(imageStream);
+                var attachment = new FileAttachment(imageStream, "gifify.gif");
+                _logger.LogInformation("Converted image {image} for guild {guild} to gif", guild.Log(), image.Url);
+                return new Success<FileAttachment>(attachment);
+            }
+            catch (Exception ex)
+            {
+                return new Error<Exception>(ex);
+            }
         }
 
         /// <summary>

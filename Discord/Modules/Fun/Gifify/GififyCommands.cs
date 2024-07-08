@@ -42,7 +42,8 @@ namespace SolarisBot.Discord.Modules.Fun
                         await Interaction.ReplyAttachmentAsync(success.Value, false);
                         success.Value.Dispose();
                     },
-                    err => Interaction.ReplyErrorAsync(err.Value)
+                    err => Interaction.ReplyErrorAsync(err.Value),
+                    exception => Interaction.ReplyErrorAsync(exception.Value)
                 );
             }
         }
@@ -63,7 +64,8 @@ namespace SolarisBot.Discord.Modules.Fun
                     await Interaction.ReplyAttachmentAsync(success.Value, isPrivate);
                     success.Value.Dispose();
                 },
-                err => Interaction.ReplyErrorAsync(err.Value)
+                err => Interaction.ReplyErrorAsync(err.Value),
+                exception => Interaction.ReplyErrorAsync(exception.Value)   
             );
         }
     }
