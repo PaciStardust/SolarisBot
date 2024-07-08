@@ -206,7 +206,7 @@ namespace SolarisBot.Discord.Services
         private static string GetOptionsString(IDiscordInteractionData interactionData)
         {
             if (interactionData is IApplicationCommandInteractionData commandInteractionData)
-                return string.Join("|", commandInteractionData.Options.Select(x => $"{x.Name}({string.Join("|", x.Options.Select(y => $"{y.Name}({Regex.Escape(y.Value.ToString() ?? string.Empty)})"))})"));
+                return string.Join("|", commandInteractionData.Options.Select(x => $"{x.Name}({string.Join("|", x.Options.Select(y => $"{y.Name}({GetStringFromObject(y.Value)})"))})"));
 
             if (interactionData is IComponentInteractionData componentInteractionData)
             {
@@ -228,6 +228,13 @@ namespace SolarisBot.Discord.Services
             }
 
             return string.Empty;
+        }
+
+        private static string GetStringFromObject(object obj)
+        {
+            if (obj is IEntity<ulong> entity)
+                return entity.Id.ToString();
+            return Regex.Escape(obj.ToString() ?? string.Empty);
         }
     }
 }
