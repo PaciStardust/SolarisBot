@@ -51,7 +51,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                     valueTextBuilder.Append(string.Join(", ", featuresList));
                 }
                 valueTextBuilder.AppendLine($"{(valueTextBuilder.Length == 0 ? "\n" : "\n\n")}Roles({roleGroup.RoleConfigs.Count})");
-                valueTextBuilder.Append(string.Join("\n", roles.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier}(<@&{x.RoleId}>)")));
+                valueTextBuilder.Append(string.Join("\n", roles.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier} => <@&{x.RoleId}>")));
 
                 var fieldBuilder = new EmbedFieldBuilder()
                 {

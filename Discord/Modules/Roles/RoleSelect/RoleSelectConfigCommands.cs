@@ -30,7 +30,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                 {
                     var title = $"{x.Identifier} ({(x.AllowOnlyOne ? "One of" : "Multi")}{(x.RequiredRoleId == ulong.MinValue ? string.Empty : $", <@&{x.RequiredRoleId}> Only")})";
                     var rolesText = x.RoleConfigs.Count != 0
-                        ? string.Join("\n", x.RoleConfigs.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier}(<@&{x.RoleId}>)"))
+                        ? string.Join("\n", x.RoleConfigs.OrderBy(x => x.Identifier).Select(x => $"┗ {x.Identifier} => <@&{x.RoleId}>"))
                         : "┗ (No roles assigned to group)";
 
                     return $"{title}\n{rolesText}";
