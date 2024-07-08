@@ -39,14 +39,14 @@ namespace SolarisBot.Discord.Modules.Fun.Gifify
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.GififyOn = enabled;
 
-            _logger.LogDebug("Setting gif conversion to {enabled} in guild {guild}", dbGuild.GififyOn, guild.Log());
+            _logger.LogTrace("Setting gif conversion to {enabled} in guild {guild}", dbGuild.GififyOn, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting gif conversion to {enabled} in guild {guild}", dbGuild.GififyOn, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Setting gif conversion to {enabled} in guild {guild}", dbGuild.GififyOn, guild.Log());
+            _logger.LogDebug("Setting gif conversion to {enabled} in guild {guild}", dbGuild.GififyOn, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -67,9 +67,10 @@ namespace SolarisBot.Discord.Modules.Fun.Gifify
             if (dbGuild is null || !dbGuild.GififyOn)
                 return new Error<string>(StandardError.DisabledFeature("Gifify"));
 
-            _logger.LogDebug("Converting image {image} to gif for guild {guild} - Downloading image", guild.Log(), image.Url);
+            //todo: [REFACTOR] Catch exception
+            _logger.LogTrace("Converting image {image} to gif for guild {guild} - Downloading image", guild.Log(), image.Url);
             var bytes = await _httpClient.GetByteArrayAsync(image.Url);
-            _logger.LogDebug("Converting image {image} to gif for guild {guild} - Conversion", guild.Log(), image.Url);
+            _logger.LogTrace("Converting image {image} to gif for guild {guild} - Conversion", guild.Log(), image.Url);
             var imageStream = new MemoryStream();
             Image.Load(bytes).SaveAsGif(imageStream);
             _logger.LogInformation("Converted image {image} for guild {guild} to gif", guild.Log(), image.Url);

@@ -61,7 +61,7 @@ namespace SolarisBot.Discord.Modules.Quotes
                 CreatedAt = Utils.GetCurrentUnix()
             };
 
-            _logger.LogDebug("Adding quote {quote} by user {user} to guild {guild}", dbQuote, executingUser.Log(), sourceGuild.Log());
+            _logger.LogTrace("Adding quote {quote} by user {user} to guild {guild}", dbQuote, executingUser.Log(), sourceGuild.Log());
             dbCtx.Quotes.Add(dbQuote);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
@@ -69,7 +69,7 @@ namespace SolarisBot.Discord.Modules.Quotes
                 _logger.LogError(err, "Failed adding quote {quote} by user {user} to guild {guild}", dbQuote, executingUser.Log(), sourceGuild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Added quote {quote} by user {user} to guild {guild}", dbQuote, executingUser.Log(), sourceGuild.Log());
+            _logger.LogDebug("Added quote {quote} by user {user} to guild {guild}", dbQuote, executingUser.Log(), sourceGuild.Log());
             return new Success<DbQuote>(dbQuote);
         }
 
@@ -90,7 +90,7 @@ namespace SolarisBot.Discord.Modules.Quotes
             if (dbQuote is null)
                 return new Error<string>(StandardError.NoResults);
 
-            _logger.LogDebug("Removing quote {quote}", dbQuote);
+            _logger.LogTrace("Removing quote {quote}", dbQuote);
             dbCtx.Quotes.Remove(dbQuote);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
@@ -98,7 +98,7 @@ namespace SolarisBot.Discord.Modules.Quotes
                 _logger.LogError(err, "Failed removing quote {quote}", dbQuote);
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Removed quote {quote}", dbQuote);
+            _logger.LogDebug("Removed quote {quote}", dbQuote);
             return new Success<DbQuote>(dbQuote);
         }
 
@@ -160,14 +160,14 @@ namespace SolarisBot.Discord.Modules.Quotes
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.QuotesOn = enabled;
 
-            _logger.LogDebug("Setting quotes to {enabled} in guild {guild}", enabled, guild.Log());
+            _logger.LogTrace("Setting quotes to {enabled} in guild {guild}", enabled, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting quotes to {enabled} in guild {guild}", enabled, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set quotes to {enabled} in guild {guild}", enabled, guild.Log());
+            _logger.LogDebug("Set quotes to {enabled} in guild {guild}", enabled, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -188,7 +188,7 @@ namespace SolarisBot.Discord.Modules.Quotes
             if (quotes.Length == 0)
                 return new Error<string>(StandardError.NoResults);
 
-            _logger.LogDebug("Wiping {quotes} from guild {guild}", quotes.Length, guild.Log());
+            _logger.LogTrace("Wiping {quotes} from guild {guild}", quotes.Length, guild.Log());
             dbCtx.Quotes.RemoveRange(quotes);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)

@@ -39,14 +39,14 @@ namespace SolarisBot.Discord.Modules.Roles.AutoRole
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.AutoRoleId = role?.Id ?? ulong.MinValue;
 
-            _logger.LogDebug("Setting auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+            _logger.LogTrace("Setting auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+            _logger.LogDebug("Set auto-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
         #endregion
@@ -70,13 +70,13 @@ namespace SolarisBot.Discord.Modules.Roles.AutoRole
 
             try
             {
-                _logger.LogDebug("Applying auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
+                _logger.LogTrace("Applying auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
                 await user.AddRoleAsync(dbGuild.AutoRoleId);
-                _logger.LogInformation("Applied auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
+                _logger.LogDebug("Applied auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to apply auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
+                _logger.LogWarning(ex, "Failed to apply auto-role {auto-role} to user {user} in guild {guild}", dbGuild.AutoRoleId, user.Log(), user.Guild.Log());
             }
         }
         #endregion

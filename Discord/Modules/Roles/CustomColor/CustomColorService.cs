@@ -58,13 +58,13 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             {
                 try
                 {    
-                    _logger.LogDebug("Creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), guild.Log());
+                    _logger.LogTrace("Creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), guild.Log());
                     customColorRoleDiscord = await guild.CreateRoleAsync(roleName, color: color, isMentionable: false);
-                    _logger.LogInformation("Created custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    _logger.LogDebug("Created custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), guild.Log());
+                    _logger.LogWarning(ex, "Failed creating custom color role {roleName} for user {user} in guild {guild}", roleName, gUser.Log(), guild.Log());
                     return new Error<Exception>(ex);
                 }
             }
@@ -72,18 +72,18 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             {
                 try
                 {
-                    _logger.LogDebug("Modifying custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    _logger.LogTrace("Modifying custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                     await customColorRoleDiscord.ModifyAsync(x => { x.Color = color; x.Name = roleName; });
-                    _logger.LogInformation("Modified custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    _logger.LogDebug("Modified custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed modifying custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    _logger.LogWarning(ex, "Failed modifying custom color role {role} for user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                     return new Error<Exception>(ex);
                 }
             }
 
-            _logger.LogDebug("Saving custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+            _logger.LogTrace("Saving custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
             customColorRoleDb ??= new()
             {
                 GuildId = guild.Id,
@@ -97,19 +97,19 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
                 _logger.LogError(err, "Failed saving custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Saved custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+            _logger.LogDebug("Saved custom color role {role} for user {user} in guild {guild} in DB", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
 
             if (!gUser.Roles.Contains(customColorRoleDiscord))
             {
                 try
                 {
-                    _logger.LogDebug("Adding custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    _logger.LogTrace("Adding custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                     await gUser.AddRoleAsync(customColorRoleDiscord);
-                    _logger.LogInformation("Added custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    _logger.LogDebug("Added custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed adding custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
+                    _logger.LogWarning(ex, "Failed adding custom color role {role} to user {user} in guild {guild}", customColorRoleDiscord.Log(), gUser.Log(), guild.Log());
                     return new Error<Exception>(ex);
                 }
             }
@@ -136,14 +136,14 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
 
             try
             {
-                _logger.LogDebug("Deleting custom color role {role} from {guild}", discordRole.Log(), guild.Log());
+                _logger.LogTrace("Deleting custom color role {role} from {guild}", discordRole.Log(), guild.Log());
                 await discordRole.DeleteAsync();
-                _logger.LogInformation("Deleted custom color role {role} from {guild}", discordRole.Log(), guild.Log());
+                _logger.LogDebug("Deleted custom color role {role} from {guild}", discordRole.Log(), guild.Log());
                 return new Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting custom color role {role} from {guild}", discordRole.Log(), guild.Log());
+                _logger.LogWarning(ex, "Failed deleting custom color role {role} from {guild}", discordRole.Log(), guild.Log());
                 return new Error<Exception>(ex);
             }
         }
@@ -163,14 +163,14 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
             dbGuild.CustomColorPermissionRoleId = role?.Id ?? ulong.MinValue;
             dbGuild.CustomColorIndicator = indicator;
 
-            _logger.LogDebug("Setting custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
+            _logger.LogTrace("Setting custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
+            _logger.LogDebug("Set custom colors to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -190,15 +190,15 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
 
             try
             {
-                _logger.LogDebug("Deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
+                _logger.LogTrace("Deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
                 foreach (var role in discordRoles)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
+                _logger.LogDebug("Deleted {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
                 return new Success<IRole[]>(discordRoles);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
+                _logger.LogWarning(ex, "Failed deleting {roleCount} custom color roles in guild {guild}", discordRoles.Length, guild.Log());
                 return new Error<Exception>(ex);
             }
         }
@@ -239,15 +239,15 @@ namespace SolarisBot.Discord.Modules.Roles.CustomColor
 
             try
             {
-                _logger.LogDebug("Deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
+                _logger.LogTrace("Deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
                 foreach (var role in rolesWithoutOwner)
                     await role.DeleteAsync();
-                _logger.LogInformation("Deleted {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
+                _logger.LogDebug("Deleted {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
                 return new Success<List<IRole>>(rolesWithoutOwner);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
+                _logger.LogWarning(ex, "Failed deleting {roleCount} custom color roles without owner in guild {guild}", rolesWithoutOwner.Count, guild.Log());
                 return new Error<Exception>(ex);
             }
         }

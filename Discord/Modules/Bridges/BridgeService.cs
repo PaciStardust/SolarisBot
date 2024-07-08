@@ -124,14 +124,14 @@ namespace SolarisBot.Discord.Modules.Bridges
             };
             dbCtx.Bridges.Add(dbBridge);
 
-            _logger.LogDebug("Adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
+            _logger.LogTrace("Adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed adding bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Added bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
+            _logger.LogDebug("Added bridge {bridge} between channel {channel} in guild {guild} and channel {otherChannel} in guild {otherGuild}", dbBridge, executingChannel.Log(), executingGuild.Log(), targetChannel.Log(), targetGuild.Log());
 
             await NotifyChannelOfBridgeCreationAsync(dbBridge, targetChannel, executingChannel, executingUser);
             await NotifyChannelOfBridgeCreationAsync(dbBridge,executingChannel, targetChannel, executingUser);
@@ -160,14 +160,14 @@ namespace SolarisBot.Discord.Modules.Bridges
                 return new Error<string>(StandardError.NoResults);
 
             dbCtx.Bridges.RemoveRange(bridges);
-            _logger.LogDebug("Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
+            _logger.LogTrace("Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Removing {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Removed {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
+            _logger.LogDebug("Removed {bridgeCount} bridges in guild {guild}", bridges.Length, guildId);
 
             foreach (var bridge in bridges)
             {
@@ -199,15 +199,15 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             try
             {
-                _logger.LogDebug("Notifying channel {channel} in guild {guild} of created bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
+                _logger.LogTrace("Notifying channel {channel} in guild {guild} of created bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
                 var notifyEmbed = EmbedFactory.Default($"{executingUser.Mention} created bridge {dbBridge.ToDiscordInfoString()} to channel {executingChannel.ToDiscordInfoString()} in guild {executingChannel.Guild.ToDiscordInfoString()}");
                 await targetMessageChannel.SendMessageAsync(embed: notifyEmbed);
-                _logger.LogInformation("Notified channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
+                _logger.LogDebug("Notified channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Log(), dbBridge);
                 return new Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
+                _logger.LogWarning(ex, "Failed notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
                 return new Error<Exception>(ex);
             }
         }
@@ -226,16 +226,16 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             try
             {
-                _logger.LogDebug("Notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
+                _logger.LogTrace("Notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
                 var targetGroupA = dbBridge.ChannelAId == targetChannel.Guild.Id;
                 var notifyEmbed = EmbedFactory.Default($"Bridge {dbBridge.ToDiscordInfoString()} to channel {executingChannel?.ToDiscordInfoString() ?? (targetGroupA ? dbBridge.ChannelBId : dbBridge.ChannelAId).ToString()} in guild {executingChannel?.Guild.ToDiscordInfoString() ?? $"**{(targetGroupA ? dbBridge.GuildBId : dbBridge.GuildAId)}**"} has been broken");
                 await targetMessageChannel.SendMessageAsync(embed: notifyEmbed);
-                _logger.LogInformation("Notified channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
+                _logger.LogDebug("Notified channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
                 return new Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
+                _logger.LogWarning(ex, "Failed notifying channel {channel} in guild {guild} of broken bridge {bridge}", targetChannel.Log(), targetChannel.Guild.Log(), dbBridge);
                 return new Error<Exception>(ex);
             }
         }
@@ -289,22 +289,22 @@ namespace SolarisBot.Discord.Modules.Bridges
 
             try
             {
-                _logger.LogDebug("Sending message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
+                _logger.LogTrace("Sending message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
                 await targetMessageChannel.SendMessageAsync(cleanMessage);
-                _logger.LogInformation("Sent message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
+                _logger.LogDebug("Sent message from user {user} via bridge {bridge}", message.Author.Log(), bridge);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed sending message via brigde {bridge}, notifying origin", bridge); 
+                _logger.LogWarning(ex, "Failed sending message via brigde {bridge}, notifying origin", bridge); 
                 try
                 {
                     var embed = EmbedFactory.Error(ex);
                     await message.Channel.SendMessageAsync("Failed sending message over bridge", embed: embed);
-                    _logger.LogInformation(ex, "Failed sending message via brigde {bridge}, notified origin", bridge);
+                    _logger.LogDebug(ex, "Failed sending message via brigde {bridge}, notified origin", bridge);
                 }
                 catch (Exception ex2)
                 {
-                    _logger.LogError(ex2, "Failed sending message via brigde {bridge}, failed notifying origin", bridge);
+                    _logger.LogWarning(ex2, "Failed sending message via brigde {bridge}, failed notifying origin", bridge);
                 }
             }
         }
@@ -320,12 +320,12 @@ namespace SolarisBot.Discord.Modules.Bridges
             using var tempCtx = _dbService.GetContext();
             tempCtx.Bridges.Remove(bridge);
 
-            _logger.LogDebug("Deleting bridge {bridge}, could not locate channel {channel}", bridge, missingChannelId);
+            _logger.LogTrace("Deleting bridge {bridge}, could not locate channel {channel}", bridge, missingChannelId);
             var (_, err) = await tempCtx.TrySaveChangesAsync();
             if (err is not null)
                 _logger.LogError(err, "Failed deleting bridge {bridge}, could not locate channel {channel}", bridge, missingChannelId);
             else
-                _logger.LogInformation("Deleted bridge {bridge}, could not locate channel {channel}", bridge, missingChannelId);
+                _logger.LogDebug("Deleted bridge {bridge}, could not locate channel {channel}", bridge, missingChannelId);
 
             await NotifyChannelOfBridgeDeletionAsync(bridge, originChannel, null);
         }

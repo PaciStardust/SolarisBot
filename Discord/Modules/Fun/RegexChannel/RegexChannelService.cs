@@ -67,14 +67,14 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             dbChannel.PunishmentTimeout = punishmentTimeout;
 
             dbCtx.RegexChannels.Update(dbChannel);
-            _logger.LogDebug("Setting regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
+            _logger.LogTrace("Setting regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
+            _logger.LogDebug("Set regex to rx={channelRegex}, role={punishmentRole}, msg={punishmentMsg}, del={delete}, timeout={timeout} for channel {channel} in guild {guild}", dbChannel.Regex, dbChannel.PunishmentTimeout, dbChannel.AppliedRoleId, dbChannel.PunishmentMessage, dbChannel.PunishmentDelete, channel.Log(), guild.Log());
 
             return new Success<DbRegexChannel>(dbChannel);
         }
@@ -113,14 +113,14 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
                 return new Error<string>(StandardError.NoResults);
 
             dbCtx.RegexChannels.RemoveRange(regexChannels);
-            _logger.LogDebug("Removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
+            _logger.LogTrace("Removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed removing {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Removed {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
+            _logger.LogDebug("Removed {channelCount} regex channels in guild {guild}", regexChannels.Length, guild.Log());
             return new Success<DbRegexChannel[]>(regexChannels);
         }
         #endregion
@@ -148,7 +148,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to compile regex {regex}", regexChannel);
+                _logger.LogWarning(ex, "Failed to compile regex {regex}", regexChannel); //todo: [REFACTOR] Should these be warnings?
                 return;
             }
 
@@ -158,20 +158,20 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
                 {
                     if (regexChannel.PunishmentDelete)
                     {
-                        _logger.LogDebug("Sending message to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                        _logger.LogTrace("Sending message to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                         await message.Channel.SendMessageAsync($"{message.Author.Mention} {regexChannel.PunishmentMessage}");
-                        _logger.LogInformation("Sent message to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                        _logger.LogDebug("Sent message to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     }
                     else
                     {
-                        _logger.LogDebug("Responding to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                        _logger.LogTrace("Responding to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                         await userMessage.ReplyAsync(regexChannel.PunishmentMessage);
-                        _logger.LogInformation("Responded to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                        _logger.LogDebug("Responded to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to reply to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                    _logger.LogWarning(ex, "Failed to reply to regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                 }
             }
 
@@ -179,9 +179,9 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             {
                 try
                 {
-                    _logger.LogDebug("Deleting message of regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                    _logger.LogTrace("Deleting message of regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     await message.DeleteAsync();
-                    _logger.LogInformation("Deleted message of regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                    _logger.LogDebug("Deleted message of regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                 }
                 catch (Exception ex)
                 {
@@ -193,13 +193,13 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             {
                 try
                 {
-                    _logger.LogDebug("Timing out for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                    _logger.LogTrace("Timing out for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     await gUser.SetTimeOutAsync(TimeSpan.FromSeconds(regexChannel.PunishmentTimeout));
-                    _logger.LogInformation("Timed out for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                    _logger.LogDebug("Timed out for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed timing out for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                    _logger.LogWarning(ex, "Failed timing out for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                 }
             }
 
@@ -208,20 +208,20 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
                 var role = gUser.Guild.FindRole(regexChannel.AppliedRoleId);
                 if (role is null)
                 {
-                    _logger.LogDebug("Could not locate RegexRole for RegexChannel {channel} with id {roleId}", regexChannel, regexChannel.AppliedRoleId);
+                    _logger.LogDebug("Could not locate RegexRole for RegexChannel {channel} with id {roleId}", regexChannel, regexChannel.AppliedRoleId); //todo: [REFACTOR] Should this be debug?
                     return;
                 }
                 else
                 {
                     try
                     {
-                        _logger.LogDebug("Applying role {role} for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", role.Log(), regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                        _logger.LogTrace("Applying role {role} for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", role.Log(), regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                         await gUser.AddRoleAsync(role);
-                        _logger.LogInformation("Applied role {role} for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", role.Log(), regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                        _logger.LogDebug("Applied role {role} for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", role.Log(), regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed applying role {role} for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", role.Log(), regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
+                        _logger.LogWarning(ex, "Failed applying role {role} for regex {regex} violation by user {user} in channel {channel} of guild {guild} with message {message}", role.Log(), regexChannel, message.Author.Log(), message.Channel.Log(), gUser.Guild.Log(), message.CleanContent);
                     }
                 }
             }

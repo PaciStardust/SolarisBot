@@ -33,14 +33,14 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
 
             dbGuild.StealNicknameOn = enabled;
 
-            _logger.LogDebug("Setting nickname stealing to {enabled} in guild {guild}", dbGuild.StealNicknameOn, guild.Log());
+            _logger.LogTrace("Setting nickname stealing to {enabled} in guild {guild}", dbGuild.StealNicknameOn, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting nickname stealing to {enabled} in guild {guild}", dbGuild.StealNicknameOn, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set nickname stealing to {enabled} in guild {guild}", dbGuild.StealNicknameOn, guild.Log());
+            _logger.LogDebug("Set nickname stealing to {enabled} in guild {guild}", dbGuild.StealNicknameOn, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -91,15 +91,15 @@ namespace SolarisBot.Discord.Modules.Fun.StealNickname
 
             try
             {
-                _logger.LogDebug("Renaming user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", executingGuildUser.Log(), gNameNew, targetGuildUser.Log(), gTargetNameNew);
+                _logger.LogTrace("Renaming user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", executingGuildUser.Log(), gNameNew, targetGuildUser.Log(), gTargetNameNew);
                 await executingGuildUser.ModifyAsync(x => x.Nickname = gNameNew);
                 await targetGuildUser.ModifyAsync(x => x.Nickname = gTargetNameNew);
-                _logger.LogInformation("Renamed user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", executingGuildUser.Log(), gNameNew, targetGuildUser.Log(), gTargetNameNew);
+                _logger.LogDebug("Renamed user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", executingGuildUser.Log(), gNameNew, targetGuildUser.Log(), gTargetNameNew);
                 return new Success<(string, string, char)>((executingName, targetName, stolenLetter));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed renaming user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", executingGuildUser.Log(), gNameNew, targetGuildUser.Log(), gTargetNameNew);
+                _logger.LogWarning(ex, "Failed renaming user {user} => {renamed} and {targetUser} => {targetRenamed} after stealing nick", executingGuildUser.Log(), gNameNew, targetGuildUser.Log(), gTargetNameNew);
                 return new Error<Exception>(ex);
             }
         }

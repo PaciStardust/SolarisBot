@@ -34,7 +34,7 @@ namespace SolarisBot.Discord.Modules.Owner
         /// <returns>Succss / Error string / Exception</returns>
         internal async Task<OneOf<Success, Error<string>, Error<Exception>>> SetStatusAsync(string status)
         {
-            _logger.LogDebug("Setting discord client status to {discordStatus}", status);
+            _logger.LogInformation("Setting discord client status to {discordStatus}", status);
             _botConfig.DefaultStatus = status;
 
             if (!_botConfig.SaveAt(Utils.PathConfigFile))

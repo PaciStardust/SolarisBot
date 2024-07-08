@@ -58,7 +58,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             if (targetGuildUser.FindRole(dbGuild.VouchRoleId) is not null)
                 return new Error<string>($"{targetGuildUser.Mention} has already been vouched");
 
-            _logger.LogDebug("Recording vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
+            _logger.LogTrace("Recording vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
             var vouchAction = new DbVouchAction()
             {
                 GuildId = guild.Id,
@@ -72,19 +72,19 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
                 _logger.LogError(err, "Failed recording vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Recorded vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
+            _logger.LogDebug("Recorded vouch of user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
 
-            _logger.LogDebug("Giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
+            _logger.LogTrace("Giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
             try
             {
                 await targetGuildUser.AddRoleAsync(dbGuild.VouchRoleId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
+                _logger.LogWarning(ex, "Failed giving vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
                 return new Error<Exception>(ex);
             }
-            _logger.LogInformation("Gave vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
+            _logger.LogDebug("Gave vouch role to user {targetUserData}, has been vouched({vouchRoleId}) for in {guild} by {userData}", targetGuildUser.Log(), dbGuild.VouchRoleId, guild.Log(), executingGuildUser.Log());
             return new Success<string>(string.IsNullOrWhiteSpace(dbGuild.VouchMessage) ? $"Vouched for {targetUser.Mention}, welcome to the server!" : dbGuild.VouchMessage.Replace("@person", targetUser.Mention, StringComparison.OrdinalIgnoreCase));
         }
         #endregion
@@ -108,14 +108,14 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
             dbGuild.VouchRoleId = vouch?.Id ?? ulong.MinValue;
             dbGuild.VouchMessage = message;
 
-            _logger.LogDebug("Setting vouching to permission={vouchPermission}, vouch={vouch}, message={message} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", message, guild.Log());
+            _logger.LogTrace("Setting vouching to permission={vouchPermission}, vouch={vouch}, message={message} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", message, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting vouching to permission={vouchPermission}, vouch={vouch}, message={message} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", message, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set vouching to permission={vouchPermission}, vouch={vouch}, message={message} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", message, guild.Log());
+            _logger.LogDebug("Set vouching to permission={vouchPermission}, vouch={vouch}, message={message} in guild {guild}", permission?.Log() ?? "0", vouch?.Log() ?? "0", message, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 

@@ -70,7 +70,7 @@ namespace SolarisBot.Discord.Modules.Reminders
                 CreatedAt = currentUnix
             };
 
-            _logger.LogDebug("Creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", dbReminder, user.Log(), channel.Log(), guild.Log());
+            _logger.LogTrace("Creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", dbReminder, user.Log(), channel.Log(), guild.Log());
             dbCtx.Reminders.Add(dbReminder);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
@@ -78,7 +78,7 @@ namespace SolarisBot.Discord.Modules.Reminders
                 _logger.LogError(err, "Failed creating reminder {reminder} for user {user} in channel {channel} in guild {guild}", dbReminder, user.Log(), channel.Log(), guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", dbReminder, user.Log(), channel.Log(), guild.Log());
+            _logger.LogDebug("Created reminder {reminder} for user {user} in channel {channel} in guild {guild}", dbReminder, user.Log(), channel.Log(), guild.Log());
             return new Success<DbReminder>(dbReminder);
         }
 
@@ -106,7 +106,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed converting reminder time");
+                _logger.LogWarning(ex, "Failed converting reminder time");
                 return new Error<string>(StandardError.FailedConversion("provided time", "usable format"));
             }
         }
@@ -136,7 +136,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             if (reminder is null)
                 return new Error<string>(StandardError.NoResults);
 
-            _logger.LogDebug("Deleting reminder {reminder} from user {user} in DB", reminder, user.Log());
+            _logger.LogTrace("Deleting reminder {reminder} from user {user} in DB", reminder, user.Log());
             dbCtx.Reminders.Remove(reminder);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
@@ -144,7 +144,7 @@ namespace SolarisBot.Discord.Modules.Reminders
                 _logger.LogError(err, "Failed deleting reminder {reminder} from user {user} in DB", reminder, user.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Deleted reminder {reminder} from user {user} in DB", reminder, user.Log());
+            _logger.LogDebug("Deleted reminder {reminder} from user {user} in DB", reminder, user.Log());
             return new Success<DbReminder>(reminder);
         }
         #endregion
@@ -162,14 +162,14 @@ namespace SolarisBot.Discord.Modules.Reminders
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.RemindersOn = enabled;
 
-            _logger.LogDebug("Setting reminders to {enabled} in guild {guild}", enabled, guild.Log());
+            _logger.LogTrace("Setting reminders to {enabled} in guild {guild}", enabled, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting reminders to {enabled} in guild {guild}", enabled, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set reminders to {enabled} in guild {guild}", enabled, guild.Log());
+            _logger.LogDebug("Set reminders to {enabled} in guild {guild}", enabled, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -190,7 +190,7 @@ namespace SolarisBot.Discord.Modules.Reminders
             if (reminders.Length == 0)
                 return new Error<string>(StandardError.NoResults);
 
-            _logger.LogDebug("Wiping {reminders} reminders from guild {guild}", reminders.Length, guild.Log());
+            _logger.LogTrace("Wiping {reminders} reminders from guild {guild}", reminders.Length, guild.Log());
             dbCtx.Reminders.RemoveRange(reminders);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
@@ -198,7 +198,7 @@ namespace SolarisBot.Discord.Modules.Reminders
                 _logger.LogError(err, "Failed wiping {reminders} reminders from guild {guild}", reminders.Length, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Wiped {reminders} reminders from guild {guild}", reminders.Length, guild.Log());
+            _logger.LogDebug("Wiped {reminders} reminders from guild {guild}", reminders.Length, guild.Log());
             return new Success<DbReminder[]>(reminders);
         }
         #endregion
@@ -208,7 +208,7 @@ namespace SolarisBot.Discord.Modules.Reminders
         /// Starts the timer when the client is ready
         /// </summary>
         /// <returns></returns>
-        private Task OnClientReady()
+        private Task OnClientReady() //todo: [REFACTOR] Logging?
         {
             _timer.Start();
             return Task.CompletedTask;
@@ -248,18 +248,18 @@ namespace SolarisBot.Discord.Modules.Reminders
 
             if (remindersToDelete.Count == 0)
             {
-                _logger.LogInformation("Reminders finished, no reminders to delete");
+                _logger.LogDebug("Reminders finished, no reminders to delete");
                 return;
             }
 
-            _logger.LogInformation("Reminders finished, removing {reminders} reminders from DB", remindersToDelete.Count);
+            _logger.LogTrace("Reminders finished, removing {reminders} reminders from DB", remindersToDelete.Count);
             dbCtx.Reminders.RemoveRange(remindersToDelete);
 
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
-                _logger.LogError(err, "Failed to remove {reminders} reminders from DB", remindersToDelete.Count);
+                _logger.LogError(err, "Reminders finished, failed to remove {reminders} reminders from DB", remindersToDelete.Count);
             else
-                _logger.LogInformation("Removed {reminders} reminders from DB", remindersToDelete.Count);
+                _logger.LogDebug("Reminders finished, removed {reminders} reminders from DB", remindersToDelete.Count);
         }
 
         /// <summary>
@@ -286,14 +286,14 @@ namespace SolarisBot.Discord.Modules.Reminders
                 }
                 _logger.LogDebug("Received data for channel {channel} and user {user} for reminder {reminder}", msgChannel.Log(), user.Log(), reminder);
 
-                _logger.LogDebug("Reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
+                _logger.LogTrace("Reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                 var embed = EmbedFactory.Default($"**{reminder.Text}**\n*(Created <t:{reminder.CreatedAt}:f>)*");
                 await msgChannel.SendMessageAsync($"Here is your reminder <@{reminder.UserId}>!", embed: embed);
-                _logger.LogInformation("Reminded user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
+                _logger.LogDebug("Reminded user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
+                _logger.LogWarning(ex, "Failed reminding user {user} in channel {channel} in guild {guild} / Removing from DB", reminder.UserId, reminder.ChannelId, reminder.GuildId);
                 return false;
             }
 

@@ -49,10 +49,10 @@ namespace SolarisBot.Discord.Services
                 var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
                 if (attribute?.IsDisabled(_config.DisabledModules) ?? false)
                 {
-                    _logger.LogDebug("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, moduleNamesText);
+                    _logger.LogInformation("Skipping adding InteractionModule {intModule} from disabled module {module}", type.FullName, moduleNamesText);
                     continue;
                 }
-                _logger.LogDebug("Adding InteractionModule {intModule} from module {module}", type.FullName, moduleNamesText);
+                _logger.LogInformation("Adding InteractionModule {intModule} from module {module}", type.FullName, moduleNamesText);
                 await _intService.AddModuleAsync(type, _services);
             }
 
@@ -120,13 +120,13 @@ namespace SolarisBot.Discord.Services
                 cmdName = scb.CommandName;
 
             var context = new SocketInteractionContext(_client, interaction);
-            _logger.LogDebug("Executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+            _logger.LogTrace("Executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
             var result = await _intService.ExecuteCommandAsync(context, _services);
 
             //this will happen when the command cant be found
             if (!result.IsSuccess)
             {
-                _logger.LogError("Failed executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
+                _logger.LogWarning("Failed executing interaction \"{interactionName}\"({interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdName, interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
                 await context.Interaction.ReplyErrorAsync($"{result.Error!}: {result.ErrorReason}");
             }
         }
@@ -168,14 +168,14 @@ namespace SolarisBot.Discord.Services
                 record.ErrorMessage = exception.Message;
                 record.ErrorTrace = record.ErrorTrace;
 
-                _logger.LogError(exeResult.Exception, "Failed to execute interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
+                _logger.LogWarning(exeResult.Exception, "Failed to execute interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A");
             }
             else
             {
                 record.ErrorType = result.Error!.Value.ToString();
                 record.ErrorMessage = result.ErrorReason;
 
-                _logger.LogError("Failed to execute interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
+                _logger.LogWarning("Failed to execute interaction \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", result.Error.ToString()!, result.ErrorReason);
             }
 
             if (!record.Success)
@@ -186,18 +186,18 @@ namespace SolarisBot.Discord.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed responding to interaction failing \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", record.ErrorType, record.ErrorMessage);
+                    _logger.LogWarning(ex, "Failed responding to interaction failing \"{interactionModule}\"(Module {module}, Id {interactionId}) for user {user} in channel {channel} of guild {guild} => {error}: {reason}", cmdInfo?.Name ?? "N/A", cmdInfo?.Module.Name ?? "N/A", context.Interaction.Id, context.User.Log(), context.Channel?.Log() ?? "N/A", context.Guild?.Log() ?? "N/A", record.ErrorType, record.ErrorMessage);
                 }
             }
 
-            _logger.LogDebug("Saving log of interaction {interactionId} in DB", context.Interaction.Id);
+            _logger.LogTrace("Saving log of interaction {interactionId} in DB", context.Interaction.Id);
             using var dbCtx = _databaseService.GetContext();
             dbCtx.InteractionRecords.Add(record);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
                 _logger.LogError(err, "Failed saving log of interaction {interactionId} in DB", context.Interaction.Id);
             else
-                _logger.LogDebug("Saved log of interaction {interactionId} in DB", context.Interaction.Id);
+                _logger.LogTrace("Saved log of interaction {interactionId} in DB", context.Interaction.Id);
         }
 
         /// <summary>

@@ -45,14 +45,14 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
             dbGuild.JokeRenameTimeoutMax = maxTimeout;
             dbGuild.JokeRenameTimeoutMin = minTimeout > maxTimeout ? maxTimeout : minTimeout;
 
-            _logger.LogDebug("Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+            _logger.LogTrace("Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+            _logger.LogDebug("Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -70,14 +70,14 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
             if (jokeTimeouts.Length == 0)
                 return new Error<string>(StandardError.NoResults);
 
-            _logger.LogDebug("Deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
+            _logger.LogTrace("Deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed deleting all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Deleted all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
+            _logger.LogDebug("Deleted all {delCount} joke timeout cooldowns for guild {guild}", jokeTimeouts.Length, guild.Log());
             return new Success<DbJokeTimeout[]>(jokeTimeouts);
         }
         #endregion
@@ -122,7 +122,7 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
                 : Utils.Faker.Random.ULong(guild.JokeRenameTimeoutMin, guild.JokeRenameTimeoutMax);
             timeOut.NextUse = currTime + cooldown;
 
-            _logger.LogDebug("Setting renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
+            _logger.LogTrace("Setting renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
             dbCtx.JokeTimeouts.Update(timeOut);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
@@ -130,19 +130,19 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
                 _logger.LogError(err, "Failed to set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
                 return;
             }
-            _logger.LogInformation("Set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
+            _logger.LogDebug("Set renaming nextUse for user {user} in guild {guild} to {timeout}", gUser.Log(), gUser.Guild.Log(), timeOut.NextUse);
 
             var logTimespan = TimeSpan.FromSeconds(cooldown);
             try
             {
-                _logger.LogDebug("Changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
+                _logger.LogTrace("Changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
                 await gUser.ModifyAsync(x => x.Nickname = name);
                 _logger.LogDebug("Changed user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
                 await userMessage.ReplyAsync($"Hello {gUser.Mention}, I am {_client.CurrentUser.Username}!");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
+                _logger.LogWarning(ex, "Failed changing user {user} nickname to {nickname} in guild {guild}, timeout is {time}", gUser.Log(), name, gUser.Guild.Log(), logTimespan);
             }
         }
         #endregion

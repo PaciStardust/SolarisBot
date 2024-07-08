@@ -7,7 +7,7 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
+using System.Threading.Channels; //todo: [REFACTOR] Remove
 
 namespace SolarisBot.Discord.Modules.Fun.Spellcheck
 {
@@ -38,12 +38,12 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
         {
             try
             {
-                _logger.LogDebug("Loading dictionary for spellcheck");
+                _logger.LogInformation("Loading dictionary for spellcheck");
                 var dictPath = Path.Combine(Utils.PathConfigDirectory, _botConfig.DictionaryFile);
                 var words = File.ReadLines(dictPath);
                 foreach (var item in words)
                     _words.Add(item);
-                _logger.LogDebug("Loaded dictionary for spellcheck");
+                _logger.LogInformation("Loaded dictionary for spellcheck");
             }
             catch (Exception ex)
             {
@@ -68,14 +68,14 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
             dbGuild.SpellcheckRoleId = role?.Id ?? ulong.MinValue;
 
-            _logger.LogDebug("Setting spellcheck-role to role {role} for guild {guild}",role?.Log() ?? "0", guild.Log());
+            _logger.LogTrace("Setting spellcheck-role to role {role} for guild {guild}",role?.Log() ?? "0", guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting spellcheck-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set spellcheck-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
+            _logger.LogDebug("Set spellcheck-role to role {role} for guild {guild}", role?.Log() ?? "0", guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -122,7 +122,7 @@ namespace SolarisBot.Discord.Modules.Fun.Spellcheck
             if (!gUser.RoleIds.Contains(guild.SpellcheckRoleId))
                 return;
 
-            await userMessage.ReplyAsync($"You misspelled the following: {string.Join(", ", errors)}");
+            await userMessage.ReplyAsync($"You misspelled the following: {string.Join(", ", errors)}"); //todo: [REFACTOR] Error handling, logging
         }
 
         /// <summary>

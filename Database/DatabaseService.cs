@@ -108,7 +108,7 @@ namespace SolarisBot.Database
                 {
                     foreach (var query in queries)
                     {
-                        _logger.LogDebug("Adding {query} to SQL update transaction", query);
+                        _logger.LogInformation("Adding {query} to SQL update transaction", query);
                         await dbCtx.Database.ExecuteSqlRawAsync(query);
                         _logger.LogInformation("Added {query} to SQL update transaction", query);
                     }
@@ -117,10 +117,10 @@ namespace SolarisBot.Database
 
                 if (migrationVersion > version)
                 {
-                    _logger.LogDebug("Setting user_version of database to {version} in SQL update transaction", migrationVersion);
+                    _logger.LogInformation("Setting user_version of database to {version} in SQL update transaction", migrationVersion);
                     var query = $"PRAGMA user_version = {migrationVersion}";
                     await dbCtx.Database.ExecuteSqlRawAsync(query);
-                    _logger.LogDebug("Set user_version of database to {version} in SQL update transaction", migrationVersion);
+                    _logger.LogInformation("Set user_version of database to {version} in SQL update transaction", migrationVersion);
                 }
 
                 _logger.LogInformation($"Comitting SQL update transaction");

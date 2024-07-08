@@ -128,10 +128,10 @@ namespace SolarisBot
                 var moduleNamesText = attribute is null ? "NONE" : string.Join(" + ", attribute.ModuleNames);
                 if (attribute?.IsDisabled(botConfig.DisabledModules) ?? false)
                 {
-                    logger.Debug("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
+                    logger.Information("Skipping adding {serviceType} {service} from disabled module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
                     continue;
                 }
-                logger.Debug("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
+                logger.Information("Adding {serviceType} {service} from module {module}", isHosted ? "HostedService" : "Service", service.FullName, moduleNamesText);
 
                 if (isHosted)
                     services.AddSingleton(typeof(IHostedService), service);

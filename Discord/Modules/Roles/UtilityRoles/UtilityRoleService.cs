@@ -40,14 +40,14 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             dbGuild.MagicRoleTimeout = timeout >= ulong.MinValue ? timeout : ulong.MinValue;
             dbGuild.MagicRoleRenameOn = renaming;
 
-            _logger.LogDebug("Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", role?.Log() ?? "0", dbGuild.MagicRoleTimeout, dbGuild.MagicRoleRenameOn, guild.Log());
+            _logger.LogTrace("Setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", role?.Log() ?? "0", dbGuild.MagicRoleTimeout, dbGuild.MagicRoleRenameOn, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", role?.Log() ?? "0", dbGuild.MagicRoleTimeout, dbGuild.MagicRoleRenameOn, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", role?.Log() ?? "0", dbGuild.MagicRoleTimeout, dbGuild.MagicRoleRenameOn, guild.Log());
+            _logger.LogDebug("Set magic to role={role}, timeout={magicTimeout}, rename={magicRename} in guild {guild}", role?.Log() ?? "0", dbGuild.MagicRoleTimeout, dbGuild.MagicRoleRenameOn, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -80,21 +80,21 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
 
             try
             {
-                _logger.LogDebug("Using Magic({magicRoleId}) in guild {guild} - Updating role", dbGuild.MagicRoleId, guild.Log());
+                _logger.LogTrace("Using Magic({magicRoleId}) in guild {guild} - Updating role", dbGuild.MagicRoleId, guild.Log());
                 await role.ModifyAsync(x =>
                 {
                     x.Name = dbGuild.MagicRoleRenameOn ? GenerateMagicName(faker) : x.Name;
                     x.Color = color;
                 });
-                _logger.LogInformation("Using Magic({magicRoleId}) in guild {guild} - Updated role", dbGuild.MagicRoleId, guild.Log());
+                _logger.LogDebug("Using Magic({magicRoleId}) in guild {guild} - Updated role", dbGuild.MagicRoleId, guild.Log());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed using Magic({magicRoleId}) in guild {guild} - Failed updating role", dbGuild.MagicRoleId, guild.Log());
+                _logger.LogWarning(ex, "Failed using Magic({magicRoleId}) in guild {guild} - Failed updating role", dbGuild.MagicRoleId, guild.Log());
                 return new Error<Exception>(ex);
             }
 
-            _logger.LogDebug("Using Magic({magicRoleId}) in guild {guild} - Updating next use to {nextUse}", dbGuild.MagicRoleId, guild.Log(), dbGuild.MagicRoleNextUse);
+            _logger.LogTrace("Using Magic({magicRoleId}) in guild {guild} - Updating next use to {nextUse}", dbGuild.MagicRoleId, guild.Log(), dbGuild.MagicRoleNextUse);
             dbGuild.MagicRoleNextUse = currentTime + dbGuild.MagicRoleTimeout;
             dbCtx.GuildConfigs.Update(dbGuild);
             var (_, err) = await dbCtx.TrySaveChangesAsync();
@@ -103,7 +103,7 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
                 _logger.LogError(err, "Failed using Magic({magicRoleId}) in guild {guild} - Failed updating next use to {nextUse}", dbGuild.MagicRoleId, guild.Log(), dbGuild.MagicRoleNextUse);
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Used Magic({magicRoleId}) in guild {guild} - Updated next use to {nextUse}", dbGuild.MagicRoleId, guild.Log(), dbGuild.MagicRoleNextUse);
+            _logger.LogDebug("Used Magic({magicRoleId}) in guild {guild} - Updated next use to {nextUse}", dbGuild.MagicRoleId, guild.Log(), dbGuild.MagicRoleNextUse);
             return new Success<IRole>(role);
         }
 
@@ -139,14 +139,14 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
 
             dbGuild.QuarantineRoleId = role?.Id ?? ulong.MinValue;
 
-            _logger.LogDebug("Setting quarantine to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
+            _logger.LogTrace("Setting quarantine to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed setting quarantine to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Set quarantine to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
+            _logger.LogDebug("Set quarantine to role={role} in guild {guild}", role?.Log() ?? "0", guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -179,28 +179,28 @@ namespace SolarisBot.Discord.Modules.Roles.UtilityRoles
             {
                 try
                 {
-                    _logger.LogDebug("Removing quarantine role from user {targetUserData}, has been removed({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
+                    _logger.LogTrace("Removing quarantine role from user {targetUserData}, has been removed({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
                     await targetGuildUser.RemoveRoleAsync(dbGuild.QuarantineRoleId);
-                    _logger.LogInformation("Removed quarantine role from user {targetUserData}, has been removed({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
+                    _logger.LogDebug("Removed quarantine role from user {targetUserData}, has been removed({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
                     return new Success<bool>(false);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed removing quarantine role from user {targetUserData}, has been removed({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
+                    _logger.LogWarning(ex, "Failed removing quarantine role from user {targetUserData}, has been removed({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
                     return new Error<Exception>(ex);
                 }
             }
 
             try
             {
-                _logger.LogDebug("Giving quarantine role to user {targetUserData}, has been quarantined({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
+                _logger.LogTrace("Giving quarantine role to user {targetUserData}, has been quarantined({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
                 await targetGuildUser.AddRoleAsync(dbGuild.QuarantineRoleId);
-                _logger.LogInformation("Gave quarantine role to user {targetUserData}, has been quarantined({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
+                _logger.LogDebug("Gave quarantine role to user {targetUserData}, has been quarantined({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
                 return new Success<bool>(true);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed giving quarantine role to user {targetUserData}, has been quarantined({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
+                _logger.LogWarning(ex, "Failed giving quarantine role to user {targetUserData}, has been quarantined({quarantineRoleId}) in {guild} by {userData}", targetGuildUser.Log(), dbGuild.QuarantineRoleId, guild.Log(), executingGuildUser.Log());
                 return new Error<Exception>(ex);
             }
         }

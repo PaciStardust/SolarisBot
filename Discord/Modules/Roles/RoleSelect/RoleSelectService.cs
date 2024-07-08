@@ -123,7 +123,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                     var rolesToAddText = GenerateRoleList(rolesToAdd);
                     try
                     {
-                        _logger.LogDebug("Adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
+                        _logger.LogTrace("Adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
                         await gUser.AddRolesAsync(rolesToAdd.Select(x => x.RoleId));
                         groupFields.Add(new EmbedFieldBuilder()
                         {
@@ -131,11 +131,11 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                             Name = "Roles Added",
                             Value = rolesToAddText
                         });
-                        _logger.LogInformation("Added roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
+                        _logger.LogDebug("Added roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
+                        _logger.LogWarning(ex, "Failed adding roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
                         return new Error<Exception>(ex);
                     }
                 }
@@ -145,7 +145,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                     var rolesToRemoveText = GenerateRoleList(rolesToRemove);
                     try
                     {
-                        _logger.LogDebug("Removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
+                        _logger.LogTrace("Removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
                         await gUser.RemoveRolesAsync(rolesToRemove.Select(x => x.RoleId));
                         groupFields.Add(new EmbedFieldBuilder()
                         {
@@ -153,11 +153,11 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                             Name = "Roles Removed",
                             Value = rolesToRemoveText
                         });
-                        _logger.LogInformation("Removed roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
+                        _logger.LogDebug("Removed roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
+                        _logger.LogWarning(ex, "Failed removing roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
                         return new Error<Exception>(ex);
                     }
                 }
@@ -234,14 +234,14 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             dbCtx.RoleGroups.Update(roleGroup);
 
             var logVerb = isNew ? "Creat" : "Updat";
-            _logger.LogDebug("{verb}ing role group {roleGroup} for guild {guild}", logVerb, roleGroup, guild.Log());
+            _logger.LogTrace("{verb}ing role group {roleGroup} for guild {guild}", logVerb, roleGroup, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed {verb}ing role group {roleGroup} for guild {guild}", logVerb.ToLower(), roleGroup, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("{verb}ed role group {roleGroup} for guild {guild}", logVerb, roleGroup, guild.Log());
+            _logger.LogDebug("{verb}ed role group {roleGroup} for guild {guild}", logVerb, roleGroup, guild.Log());
             return new Success<(bool, DbRoleGroup)>((isNew, roleGroup));
         }
 
@@ -261,14 +261,14 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
 
             dbCtx.RoleGroups.Remove(match);
 
-            _logger.LogDebug("Deleting role group {roleGroup} from guild {guild}", match, guild.Log());
+            _logger.LogTrace("Deleting role group {roleGroup} from guild {guild}", match, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed deleting role group {roleGroup} from guild {guild}", match, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Deleted role group {roleGroup} from guild {guild}", match, guild.Log());
+            _logger.LogDebug("Deleted role group {roleGroup} from guild {guild}", match, guild.Log());
             return new Success<DbRoleGroup>(match);
         }
 
@@ -317,14 +317,14 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
 
             dbCtx.RoleConfigs.Add(dbRole);
 
-            _logger.LogDebug("Registering role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, guild.Log());
+            _logger.LogTrace("Registering role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed registering role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Registered role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, guild.Log());
+            _logger.LogDebug("Registered role {role} to group {roleGroup} in guild {guild}", dbRole, roleGroup, guild.Log());
             return new Success<DbRoleConfig>(dbRole);
         }
 
@@ -348,14 +348,14 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
 
             dbCtx.RoleConfigs.Remove(dbRole);
 
-            _logger.LogDebug("Unregistering role {role} from group {group} in guild {guild}", dbRole, dbGroup, guild.Log());
+            _logger.LogTrace("Unregistering role {role} from group {group} in guild {guild}", dbRole, dbGroup, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
                 _logger.LogError(err, "Failed unregistering role {role} from group {group} in guild {guild}", dbRole, dbGroup, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogInformation("Unregistered role {role} from group {group} in guild {guild}", dbRole, dbGroup, guild.Log());
+            _logger.LogDebug("Unregistered role {role} from group {group} in guild {guild}", dbRole, dbGroup, guild.Log());
             return new Success<DbRoleConfig>(dbRole);
         }
         #endregion
