@@ -154,7 +154,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                     groupFields.Add(new EmbedFieldBuilder()
                     {
                         IsInline = true,
-                        Name = "Roles Added",
+                        Name = $"Role{(rolesToAdd.Count > 1 ? "s" : string.Empty)} Added",
                         Value = rolesToAddText
                     });
                     _logger.LogDebug("Added roles {addedRoles} to user {userData} in guild {guild}", rolesToAddText, gUser.Log(), gUser.Guild.Log());
@@ -176,7 +176,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                     groupFields.Add(new EmbedFieldBuilder()
                     {
                         IsInline = true,
-                        Name = "Roles Removed",
+                        Name = $"Role{(rolesToRemove.Count > 1 ? "s" : string.Empty)} Removed",
                         Value = rolesToRemoveText
                     });
                     _logger.LogDebug("Removed roles {removedRoles} from user {userData} in guild {guild}", rolesToRemoveText, gUser.Log(), gUser.Guild.Log());
@@ -194,7 +194,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                 groupFields.Add(new EmbedFieldBuilder()
                 {
                     IsInline = true,
-                    Name = "Missing Roles",
+                    Name = $"Missing Role{(rolesMissing.Count > 1 ? "s" : string.Empty)}",
                     Value = rolesMissingText
                 });
                 _logger.LogDebug("Failed to find roles {missingRoles} guild role list, could not apply to user {userData}", rolesMissingText, gUser.Log());
@@ -206,7 +206,7 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
                 groupFields.Add(new EmbedFieldBuilder()
                 {
                     IsInline = true,
-                    Name = "Invalid Roles",
+                    Name = $"Invalid Selection{(selectionsInvalid.Count > 1 ? "s" : string.Empty)}",
                     Value = rolesInvalidText
                 });
                 _logger.LogDebug("Failed to find roles {invalidRoles} DB role list, could not apply to user {userData}", rolesInvalidText, gUser.Log());
@@ -398,8 +398,8 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var menuBuilder = new SelectMenuBuilder()
             {
                 CustomId = $"solaris_roleselector.{roleGroup.RoleGroupId}",
-                Placeholder = roleGroup.AllowOnlyOne ? "Select a role..." : "Select roles...",
-                MaxValues = roleGroup.AllowOnlyOne ? 1 : roles.Count,
+                Placeholder = "Select a role...",
+                MaxValues = 1,
                 Type = ComponentType.SelectMenu
             };
 
