@@ -148,7 +148,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to compile regex {regex}", regexChannel); //todo: [REFACTOR] Should these be warnings?
+                _logger.LogWarning(ex, "Failed to compile regex {regex}", regexChannel);
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace SolarisBot.Discord.Modules.Fun.RegexChannel
                 var role = gUser.Guild.FindRole(regexChannel.AppliedRoleId);
                 if (role is null)
                 {
-                    _logger.LogDebug("Could not locate RegexRole for RegexChannel {channel} with id {roleId}", regexChannel, regexChannel.AppliedRoleId); //todo: [REFACTOR] Should this be debug?
+                    _logger.LogDebug("Could not locate RegexRole for RegexChannel {channel} with id {roleId}", regexChannel, regexChannel.AppliedRoleId);
                     return;
                 }
                 else
