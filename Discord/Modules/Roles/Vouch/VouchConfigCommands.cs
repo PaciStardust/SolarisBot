@@ -28,7 +28,7 @@ namespace SolarisBot.Discord.Modules.Roles.Vouch
         {
             var res = await _vouchService.ConfigVouchingAsync(Context.Guild, permission, vouch, message);
             await res.Match(
-                success => Interaction.ReplyAsync($"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**"),
+                success => Interaction.ReplyAsync($"Vouching is currently **{(permission is not null && vouch is not null ? "enabled" : "disabled")}**\n\nPermission: **{permission?.Mention ?? "None"}**\nVouch: **{vouch?.Mention ?? "None"}**\nMessage: **{(string.IsNullOrWhiteSpace(success.Value.VouchMessage) ? "Default" : success.Value.VouchMessage)}**"),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
