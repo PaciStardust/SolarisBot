@@ -7,7 +7,6 @@ using SolarisBot.Database;
 using SolarisBot.Discord.Common;
 using SolarisBot.Discord.Common.Attributes;
 using System.Text.RegularExpressions;
-using System.Threading.Channels; //todo: [REFACTOR] Remove
 
 namespace SolarisBot.Discord.Modules.Fun.Spellcheck
 {
