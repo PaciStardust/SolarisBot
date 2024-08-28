@@ -6,6 +6,24 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
 {
     internal class UserAnalysis
     {
+        //All code regarding accessing a users online state has been disabled as the bot does not have access to this info
+        //internal UserAnalysisOnlineState OnlineState {  get; private set; } = UserAnalysisOnlineState.Online;
+
+        private const UserProperties _userBadgeFlags = UserProperties.Staff | UserProperties.Partner | UserProperties.HypeSquadEvents | UserProperties.BugHunterLevel1
+            | UserProperties.HypeSquadBalance | UserProperties.HypeSquadBravery | UserProperties.HypeSquadBrilliance | UserProperties.EarlySupporter | UserProperties.BugHunterLevel2
+            | UserProperties.EarlyVerifiedBotDeveloper | UserProperties.DiscordCertifiedModerator | UserProperties.ActiveDeveloper; //All important badges as a flag for AND with user flags
+
+        private const int _failedOldDiscriminatorCheckPenalty = 20;
+        private const int _failedDefaultPfpCheckPenalty = 75;
+        private const int _noBadgesPenalty = 25;
+        //private const int _userOfflinePenalty = 50;
+        //private const int _userInvisiblePenalty = 15;
+        private const int _rejoinPenalty = 0;
+
+        private const int _badgeBonus = -20;
+        private const int _decorationBonus = -10;
+        private const int _mutualBonus = -10;
+
         private readonly SocketGuildUser _user;
 
         private UserAnalysis(SocketGuildUser user)
@@ -18,19 +36,10 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         internal TimeCredibilityRule? FailedTimeRule { get; private set; } = null;
         internal bool FailedOldDiscriminatorCheck { get; private set; } = false;
         internal bool FailedDefaultPfpCheck { get; private set; } = false;
+        internal bool HasRejoined { get; private set; } = false;
+        internal bool HasDecoration { get; private set; } = false;
         internal ulong UserBadges { get; private set; } = 0;
-        //All code regarding accessing a users online state has been disabled as the bot does not have access to this info
-        //internal UserAnalysisOnlineState OnlineState {  get; private set; } = UserAnalysisOnlineState.Online;
-
-        private const UserProperties _userBadgeFlags = UserProperties.Staff | UserProperties.Partner | UserProperties.HypeSquadEvents | UserProperties.BugHunterLevel1
-            | UserProperties.HypeSquadBalance | UserProperties.HypeSquadBravery | UserProperties.HypeSquadBrilliance | UserProperties.EarlySupporter | UserProperties.BugHunterLevel2
-            | UserProperties.EarlyVerifiedBotDeveloper | UserProperties.DiscordCertifiedModerator | UserProperties.ActiveDeveloper; //All important badges as a flag for AND with user flags
-        private const int _failedOldDiscriminatorCheckPenalty = 30;
-        private const int _failedDefaultPfpCheckPenalty = 75;
-        private const int _noBadgesPenalty = 30;
-        private const int _badgeValue = -15;
-        //private const int _userOfflinePenalty = 50;
-        //private const int _userInvisiblePenalty = 15;
+        internal int MutualGuilds { get; private set; } = 0;
 
         /// <summary>
         /// Does user analysis on a user
@@ -67,19 +76,26 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var failedDiscriminatorCheck = user.DiscriminatorValue != 0;
             var failedProfileCheck = user.GetAvatarUrl() == null;
 
+            var hasDecoration = user.AvatarDecorationHash is not null; //todo: impl
+            var mutualGuildCount = user.MutualGuilds.Count; //todo: impl
+            var rejoined = user.Flags.HasFlag(GuildUserFlags.DidRejoin); //todo: impl
+
             ulong userBadges = 0;
             if (user.PublicFlags.HasValue)
             {
+                
                 var flags = user.PublicFlags.Value & _userBadgeFlags;
                 userBadges = ulong.PopCount((ulong)flags);
             }
-            var badgeValue = userBadges == 0 ? 30 : Convert.ToInt32(userBadges) * _badgeValue;
+            var badgeValue = userBadges == 0 ? 30 : Convert.ToInt32(userBadges) * _badgeBonus;
 
             //var onlineState = user.Status.HasFlag(UserStatus.Offline)
             //    ? UserAnalysisOnlineState.Offline
             //    : user.Status.HasFlag(UserStatus.Invisible)
             //    ? UserAnalysisOnlineState.Invisible
             //    : UserAnalysisOnlineState.Online;
+
+
 
             return new UserAnalysis(user)
             {
@@ -88,6 +104,9 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 FailedTimeRule = failedTimeCheck,
                 FailedOldDiscriminatorCheck = failedDiscriminatorCheck,
                 FailedDefaultPfpCheck = failedProfileCheck,
+                HasDecoration = hasDecoration,
+                MutualGuilds = mutualGuildCount,
+                HasRejoined = rejoined,
                 UserBadges = userBadges,
                 //OnlineState = onlineState,
             };
@@ -107,10 +126,16 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 score += _failedOldDiscriminatorCheckPenalty;
             if (FailedDefaultPfpCheck)
                 score += _failedDefaultPfpCheckPenalty;
+            if (MutualGuilds > 1)
+                score += _mutualBonus;
+            if (HasDecoration)
+                score += _decorationBonus;
+            if (HasRejoined)
+                score += _rejoinPenalty;
 
             score += UserBadges == 0
                 ? _noBadgesPenalty
-                : Convert.ToInt32(UserBadges) * _badgeValue;
+                : Convert.ToInt32(UserBadges) * _badgeBonus;
 
             //if (OnlineState != UserAnalysisOnlineState.Online)
             //    score += OnlineState == UserAnalysisOnlineState.Invisible
@@ -142,13 +167,12 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             if (FailedDefaultPfpCheck)
                 othersStrings.Add($"No PFP *({_failedDefaultPfpCheckPenalty})*");
             othersStrings.Add($"{(UserBadges == 0 ? "No " : string.Empty)}Badges *({CalculateBadgeScore()})*");
-            //if (OnlineState != UserAnalysisOnlineState.Online)
-            //{
-            //    othersStrings.Add(OnlineState == UserAnalysisOnlineState.Invisible
-            //        ? $"Invisible({_userInvisiblePenalty})"
-            //        : $"Offline({_userOfflinePenalty})"
-            //        );
-            //}
+            if (MutualGuilds > 1)
+                othersStrings.Add($"Has multiple mutual guilds *({_mutualBonus})*");
+            if (HasDecoration)
+                othersStrings.Add($"Has decoration *({_decorationBonus})*");
+            if (HasRejoined)
+                othersStrings.Add($"Has rejoined *({_rejoinPenalty})*");
             if (othersStrings.Count > 0)
                 summaryStrings.Add($"**Other**:\n{string.Join(", ", othersStrings)}");
 
@@ -173,7 +197,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
         internal int CalculateBadgeScore()
             => UserBadges == 0
             ? _noBadgesPenalty
-            : Convert.ToInt32(UserBadges) * _badgeValue;
+            : Convert.ToInt32(UserBadges) * _badgeBonus;
 
         internal static int CalculateRuleScoreSum<T>(IEnumerable<T> enumerable) where T : CredibilityRule
             => enumerable.Sum(x => x.Score);
