@@ -73,7 +73,7 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
                 var flags = user.PublicFlags.Value & _userBadgeFlags;
                 userBadges = ulong.PopCount((ulong)flags);
             }
-            var badgeValue = userBadges == 0 ? 30 : Convert.ToInt32(userBadges) * -15;
+            var badgeValue = userBadges == 0 ? 30 : Convert.ToInt32(userBadges) * _badgeValue;
 
             //var onlineState = user.Status.HasFlag(UserStatus.Offline)
             //    ? UserAnalysisOnlineState.Offline
@@ -160,7 +160,8 @@ namespace SolarisBot.Discord.Modules.UserAnalysis
             var embed = EmbedFactory.Builder()
                 .WithTitle($"Analysis of {_user.DisplayName} ({score} Score)")
                 .WithThumbnailUrl(_user.GetAvatarUrl())
-                .WithDescription(string.Join("\n\n", summaryStrings));
+                .WithDescription(string.Join("\n\n", summaryStrings))
+                .WithFooter("Lower score is better");
 
             return embed.Build();
         }
