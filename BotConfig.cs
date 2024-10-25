@@ -32,7 +32,7 @@ namespace SolarisBot
         /// Saves the BotConfig
         /// </summary>
         /// <param name="path">Path to save at</param>
-        /// <returns>Success?n</returns>
+        /// <returns>Success?</returns>
         internal bool SaveAt(string path)
         {
             try

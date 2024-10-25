@@ -36,7 +36,7 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
         /// <param name="minTimeout">Minimum timeout for renaming</param>
         /// <param name="maxTimeout">Maximum timeout for renaming</param>
         /// <returns>Config on success / Exception</returns>
-        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigureRenamingAsync(IGuild guild, bool enabled, ulong minTimeout, ulong maxTimeout)
+        internal async Task<OneOf<Success<DbGuildConfig>, Error<Exception>>> ConfigureRenamingAsync(IGuild guild, bool enabled, ulong minTimeout, ulong maxTimeout, bool nameBlock)
         {
             using var dbCtx = _dbService.GetContext();
             var dbGuild = await dbCtx.GetOrCreateTrackedGuildAsync(guild.Id);
@@ -44,15 +44,16 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
             dbGuild.JokeRenameOn = enabled;
             dbGuild.JokeRenameTimeoutMax = maxTimeout;
             dbGuild.JokeRenameTimeoutMin = minTimeout > maxTimeout ? maxTimeout : minTimeout;
+            dbGuild.JokeRenameNameBlock = nameBlock;
 
-            _logger.LogTrace("Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+            _logger.LogTrace("Setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout}, nameBlock={dspNameBlock} in guild {guild}", enabled, minTimeout, maxTimeout, nameBlock, guild.Log());
             var (_, err) = await dbCtx.TrySaveChangesAsync();
             if (err is not null)
             {
-                _logger.LogError(err, "Failed setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+                _logger.LogError(err, "Failed setting joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout}, nameBlock={dspNameBlock} in guild {guild}", enabled, minTimeout, maxTimeout, nameBlock, guild.Log());
                 return new Error<Exception>(err);
             }
-            _logger.LogDebug("Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout} in guild {guild}", enabled, minTimeout, maxTimeout, guild.Log());
+            _logger.LogDebug("Set joke renaming to enabled={role}, mintimeout={minTimeout}, maxtimeout={maxTimeout}, dspNameBlock={nameBlock} in guild {guild}", enabled, minTimeout, maxTimeout, nameBlock, guild.Log());
             return new Success<DbGuildConfig>(dbGuild);
         }
 
@@ -84,6 +85,7 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
 
         #region Message Handling
         private static readonly Regex _amVerification = new(@"\b(?:am(?!\s+i)|i'?m)\s+(.+)$", RegexOptions.IgnoreCase);
+        private static readonly Regex _displayNameValidCharacterIsolator = new(@"[^0-9A-Za-z\ \-_\.\?\!]+");
         /// <summary>
         /// Automatically renames a user after saying "I am..." when enabled
         /// </summary>
@@ -105,6 +107,13 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
             var guild = await dbCtx.GetGuildByIdAsync(gUser.GuildId);
             if (guild is null || guild.JokeRenameOn == false)
                 return;
+
+            if (guild.JokeRenameNameBlock)
+            {
+                var textOmitted = _displayNameValidCharacterIsolator.Replace(name, string.Empty);
+                if (textOmitted.Contains(gUser.GlobalName, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
 
             var timeOut = await dbCtx.JokeTimeouts.ForGuild(gUser.GuildId).ForUser(gUser.Id).FirstOrDefaultAsync();
             var currTime = Utils.GetCurrentUnix();

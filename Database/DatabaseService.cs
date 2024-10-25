@@ -104,6 +104,15 @@ namespace SolarisBot.Database
                     migrationVersion = 1;
                 }
 
+                if (version < 2)
+                {
+                    queries.AddRange([
+                        "ALTER TABLE GuildConfigs ADD JokeRenameNameBlock BOOL NOT NULL DEFAULT 0",
+                        "UPDATE GuildConfigs SET JokeRenameNameBlock = 1 WHERE JokeRenameOn = 1"
+                    ]);
+                    migrationVersion = 2;
+                }
+
                 if (queries.Count > 0)
                 {
                     foreach (var query in queries)

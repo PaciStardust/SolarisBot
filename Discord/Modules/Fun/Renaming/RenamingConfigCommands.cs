@@ -20,7 +20,8 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
         (
             [Summary(description: "Is feature enabled?")] bool enabled,
             [Summary(description: "[Opt] Minimum time between renaming (in sec)")] string minTimeout = "1800",
-            [Summary(description: "[Opt] Maximum time between renaming (in sec)")] string maxTimeout = "86400"
+            [Summary(description: "[Opt] Maximum time between renaming (in sec)")] string maxTimeout = "86400",
+            [Summary(description: "[Opt] Block renaming to user's display name")] bool nameBlock = true
         )
         {
             if (!ulong.TryParse(minTimeout, out var parsedMinTimeout))
@@ -34,9 +35,9 @@ namespace SolarisBot.Discord.Modules.Fun.Renaming
                 return;
             }
 
-            var res = await _renamingService.ConfigureRenamingAsync(Context.Guild, enabled, parsedMinTimeout, parsedMaxTimeout);
+            var res = await _renamingService.ConfigureRenamingAsync(Context.Guild, enabled, parsedMinTimeout, parsedMaxTimeout, nameBlock);
             await res.Match(
-                success => Interaction.ReplyAsync($"Joke Renaming is currently **{(success.Value.JokeRenameOn ? "enabled" : "disabled")}**\n\nTime: **{success.Value.JokeRenameTimeoutMin} - {success.Value.JokeRenameTimeoutMax} seconds**"),
+                success => Interaction.ReplyAsync($"Joke Renaming is currently **{(success.Value.JokeRenameOn ? "enabled" : "disabled")}**\n\nTime: **{success.Value.JokeRenameTimeoutMin} - {success.Value.JokeRenameTimeoutMax} seconds**\nName Block: **{(success.Value.JokeRenameNameBlock ? "enabled" : "disabled")}**"),
                 exception => Interaction.ReplyErrorAsync(exception.Value)
             );
         }
