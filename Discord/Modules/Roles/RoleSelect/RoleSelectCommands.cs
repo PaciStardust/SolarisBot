@@ -71,9 +71,9 @@ namespace SolarisBot.Discord.Modules.Roles.RoleSelect
             var embedBuilder = EmbedFactory.Builder()
                 .WithTitle("Self-Assignable Roles")
                 .WithFields(groupFields)
-                .WithFooter($"Use \"/roles select *[groupname/rolename]*\" to pick roles from a group");
+                .WithFooter($"Use \"/roleselect select *[groupname/rolename]*\" to pick roles from a group");
 
-            await Interaction.ReplyAsync(embedBuilder.Build(), visible);
+            await Interaction.ReplyAsync(embedBuilder.Build(), !visible);
         }
 
         [SlashCommand("select", "Select roles from a group"), RequireBotPermission(GuildPermission.ManageRoles)]
